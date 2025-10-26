@@ -1,6 +1,8 @@
+import { useTranslation } from 'react-i18next'
 import { useLiveSearch } from '../hooks/useLiveSearch'
 
 export default function SearchBar() {
+  const { t } = useTranslation()
   const { query, setQuery, results, loading } = useLiveSearch()
 
   // Función para resaltar la palabra buscada
@@ -37,7 +39,7 @@ export default function SearchBar() {
         minHeight: '100vh'
       }}
     >
-      {/* Título */}
+      {/* TÍTULO TRADUCIDO */}
       <h1
         style={{
           marginBottom: '28px',
@@ -47,15 +49,15 @@ export default function SearchBar() {
           textAlign: 'center'
         }}
       >
-        Study – Navegador de Biblias
+        {t('title')}
       </h1>
 
-      {/* Input de búsqueda */}
+      {/* INPUT TRADUCIDO */}
       <input
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Escribe para buscar en tiempo real..."
+        placeholder={t('placeholder')}
         style={{
           width: '100%',
           padding: '16px 18px',
@@ -76,7 +78,7 @@ export default function SearchBar() {
         }}
       />
 
-      {/* Estado de carga */}
+      {/* ESTADO DE CARGA TRADUCIDO */}
       {loading && (
         <p
           style={{
@@ -87,15 +89,16 @@ export default function SearchBar() {
             fontSize: '1rem'
           }}
         >
-          Buscando...
+          {t('searching')}
         </p>
       )}
 
-      {/* Resultados */}
+      {/* RESULTADOS */}
       <div style={{ marginTop: '24px', display: 'grid', gap: '16px' }}>
+        {/* SIN RESULTADOS TRADUCIDO */}
         {results.length === 0 && query.length >= 2 && !loading && (
           <p style={{ textAlign: 'center', color: '#94a3b8', fontStyle: 'italic' }}>
-            No se encontraron resultados.
+            {t('noResults')}
           </p>
         )}
 
@@ -114,7 +117,7 @@ export default function SearchBar() {
             onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-1px)')}
             onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
           >
-            {/* Referencia */}
+            {/* REFERENCIA */}
             <div
               style={{
                 fontWeight: '600',
@@ -132,11 +135,11 @@ export default function SearchBar() {
                   marginLeft: '10px'
                 }}
               >
-                ({v.version})
+                ({t('version')}: {v.version})
               </span>
             </div>
 
-            {/* Texto con highlight */}
+            {/* TEXTO CON HIGHLIGHT */}
             <p
               style={{
                 margin: 0,
