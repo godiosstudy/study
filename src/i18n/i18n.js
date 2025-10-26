@@ -2,31 +2,21 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
-
-// Carga dinámica de JSONs
-const loadTranslations = async (lng) => {
-  const response = await fetch(`/locales/${lng}/translation.json`)
-  return await response.json()
-}
+import HttpBackend from 'i18next-http-backend'  // ← AÑADIR
 
 i18n
-  .use({
-    type: 'backend',
-    read: (language, namespace, callback) => {
-      loadTranslations(language)
-        .then(data => callback(null, data))
-        .catch(error => callback(error, null))
-    }
-  })
+  .use(HttpBackend)  // ← AÑADIR
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
+    lng: 'es',
     fallbackLng: 'es',
     supportedLngs: ['es', 'en', 'fr', 'pt', 'it'],
-    interpolation: { escapeValue: false },
-    detection: {
-      order: ['localStorage', 'navigator'],
-      caches: ['localStorage']
+    backend: {
+      loadPath: '/locales/{{lng}}/translation.json'
+    },
+    interpolation: {
+      escapeValue: false
     }
   })
 
