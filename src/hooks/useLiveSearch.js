@@ -13,29 +13,67 @@ export function useLiveSearch() {
       return
     }
 
-    const timer = setTimeout(async () => {
+    const search = async () => {
       setLoading(true)
 
-      try {
-        // Búsqueda parcial con ilike (insensible a mayúsculas)
-        const { data, error } = await supabase
+      // NORMALIZAR TILDES
+      const normalize = (str) => str
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+
+      const normalizedQuery = normalize(query)
+
+      // REFERENCIA: "Isaías 41:10"
+      const refMatch = normalizedQuery.match(/^(\w+)\s+(\d+)(?::(\d+))?$/)
+      if (refMatch) {
+        const [_, bookPart, chapter, verse] = refMatch
+        const qb = supabase
           .from('verses')
-          .select('id, book, chapter, verse, text, version')
-          .ilike('text', `%${query}%`)  // ← Aquí está la clave
-          .limit(15)
+          .select('id, version_name, book_name, chapter, verse, text')
+          .ilike('book_id', `%${bookPart}%`)
+          .eq('chapter', parseInt(chapter))
 
-        if (error) throw error
+        if (verse) qb.eq('verse', parseInt(verse)).limit(1)
+        else qb.order('verse', { ascending: true }).limit(100)
 
-        setResults(data || [])
-      } catch (err) {
-        console.error('Error en búsqueda:', err)
-        setResults([])
-      } finally {
+        const { data } = await qb
+        setResults((data || []).map(v => ({
+          id: v.id,
+          version: v.version_name,
+          book: v.book_name,
+          chapter: v.chapter,
+          verse: v.verse,
+          text: v.text
+        })))
         setLoading(false)
+        return
       }
-    }, 300)
 
-    return () => clearTimeout(timer)
+      // BÚSQUEDA NORMAL
+      const { data } = await supabase
+        .from('verses')
+        .select('id, version_name, book_name, chapter, verse, text')
+        .ilike('search_text', `%${normalizedQuery}%`)
+        .order('book_order', { ascending: true })
+        .order('chapter', { ascending: true })
+        .order('verse', { ascending: true })
+        .limit(50)
+
+      setResults((data || []).map(v => ({
+        id: v.id,
+        version: v.version_name,
+        book: v.book_name,
+        chapter: v.chapter,
+        verse: v.verse,
+        text: v.text
+      })))
+
+      setLoading(false)
+    }
+
+    const timeout = setTimeout(search, 300)
+    return () => clearTimeout(timeout)
   }, [query])
 
   return { query, setQuery, results, loading }
