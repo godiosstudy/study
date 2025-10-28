@@ -2,13 +2,12 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../services/supabase'
 
-export function useLiveSearch() {
-  const [query, setQuery] = useState('')
+export function useLiveSearch(query) {
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (query.length < 2) {
+    if (!query || query.length < 2) {
       setResults([])
       return
     }
@@ -16,7 +15,6 @@ export function useLiveSearch() {
     const search = async () => {
       setLoading(true)
 
-      // NORMALIZAR TILDES
       const normalize = (str) => str
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
@@ -24,7 +22,6 @@ export function useLiveSearch() {
 
       const normalizedQuery = normalize(query)
 
-      // REFERENCIA: "Isaías 41:10"
       const refMatch = normalizedQuery.match(/^(\w+)\s+(\d+)(?::(\d+))?$/)
       if (refMatch) {
         const [_, bookPart, chapter, verse] = refMatch
@@ -35,7 +32,7 @@ export function useLiveSearch() {
           .eq('chapter', parseInt(chapter))
 
         if (verse) qb.eq('verse', parseInt(verse)).limit(1)
-        else qb.order('verse', { ascending: true }).limit(100)
+        else qb.order('verse').limit(100)
 
         const { data } = await qb
         setResults((data || []).map(v => ({
@@ -50,7 +47,6 @@ export function useLiveSearch() {
         return
       }
 
-      // BÚSQUEDA NORMAL
       const { data } = await supabase
         .from('verses')
         .select('id, version_name, book_name, chapter, verse, text')
@@ -76,5 +72,5 @@ export function useLiveSearch() {
     return () => clearTimeout(timeout)
   }, [query])
 
-  return { query, setQuery, results, loading }
+  return { results, loading }
 }

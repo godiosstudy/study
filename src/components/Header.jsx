@@ -1,26 +1,69 @@
 // src/components/Header.jsx
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
+import SearchBar from './SearchBar'
 import { supabase } from '../services/supabase'
-import { useState } from 'react'
 
-export default function Header({ query, setQuery, theme, toggleTheme }) {
+export default function Header({ theme, toggleTheme, currentBible, setCurrentBible, biblePath, setBiblePath }) {
   const { t, i18n } = useTranslation()
-  const { user } = useAuth()
-  const [authOpen, setAuthOpen] = useState(false)
-  const [authView, setAuthView] = useState('sign_in')
-  const [profileOpen, setProfileOpen] = useState(false)
+  const { user, login, logout } = useAuth() // USAR login y logout del contexto
+  const [query, setQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [offset, setOffset] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
+  const PAGE_SIZE = 100
 
-  const getBlessedName = () => {
-    if (!user?.user_metadata?.first_name) return t('auth.login')
-    return i18n.language === 'en' 
-      ? `Blessed ${user.user_metadata.first_name}` 
-      : `Bendecido ${user.user_metadata.first_name}`
+  const normalize = (str) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+
+  // BÚSQUEDA EN HEADER
+  useEffect(() => {
+    if (query.length < 2) {
+      setSearchResults([])
+      setOffset(0)
+      setHasMore(false)
+      return
+    }
+
+    const load = async () => {
+      const { data, error, count } = await supabase
+        .from('verses')
+        .select('id, book_name, chapter, verse, text, testament_id', { count: 'exact' })
+        .eq('version_name', currentBible)
+        .ilike('text', `%${normalize(query)}%`)
+        .range(offset, offset + PAGE_SIZE - 1)
+        .order('book_order', { ascending: true })
+        .order('chapter', { ascending: true })
+        .order('verse', { ascending: true })
+
+      if (error) {
+        console.error('Error:', error)
+        setSearchResults([])
+        setHasMore(false)
+        return
+      }
+
+      const newResults = offset === 0 ? data : [...searchResults, ...data]
+      setSearchResults(newResults)
+      setHasMore((count || 0) > offset + PAGE_SIZE)
+    }
+    load()
+  }, [query, currentBible, offset])
+
+  const loadMore = () => setOffset(prev => prev + PAGE_SIZE)
+
+  const handleResultClick = (result) => {
+    setQuery('')
+    setSearchResults([])
+    setOffset(0)
+    setBiblePath([result.testament_id, result.book_name, result.chapter, result.verse])
   }
 
-  const themeStyle = theme === 'Oscuro' 
-    ? { background: '#1e293b', color: '#f1f5f9' }
-    : { background: '#f8fafc', color: '#1e293b' }
+  const handleBack = () => {
+    setQuery('')
+    setSearchResults([])
+    setOffset(0)
+  }
 
   return (
     <header style={{
@@ -28,177 +71,134 @@ export default function Header({ query, setQuery, theme, toggleTheme }) {
       top: 0,
       left: 0,
       right: 0,
-      background: themeStyle.background,
+      background: theme === 'Oscuro' ? '#1e293b' : '#f8fafc',
       borderBottom: `1px solid ${theme === 'Oscuro' ? '#334155' : '#e2e8f0'}`,
-      zIndex: 1000,
-      padding: '12px 16px',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-      maxHeight: '80px',
-      overflow: 'hidden'
+      padding: '12px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      zIndex: 1000
     }}>
-      <div style={{ 
-        maxWidth: '1200px', 
-        margin: '0 auto', 
-        display: 'flex', 
-        gap: '8px', 
-        alignItems: 'center', 
-        flexWrap: 'wrap',
-        fontSize: '0.9rem'
-      }}>
-        {/* IZQUIERDA: NOMBRE DE LA APP */}
-        <h1 style={{ 
-          margin: 0, 
-          fontSize: '1.3rem', 
-          fontWeight: '700', 
-          flex: 1,
-          color: themeStyle.color
-        }}>
-          {t('appName')}
-        </h1>
+      <div style={{ fontWeight: '600', color: theme === 'Oscuro' ? '#f1f5f9' : '#1e293b' }}>
+        estudio.godios.org
+      </div>
 
-        {/* BUSCADOR */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <input
           type="text"
-          placeholder={t('search.placeholder')}
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            setOffset(0)
+          }}
+          placeholder={t('search.placeholder') || 'Buscar...'}
           style={{
-            flex: 2,
-            minWidth: '200px',
             padding: '8px 12px',
-            borderRadius: '8px',
-            border: `1px solid ${theme === 'Oscuro' ? '#475569' : '#cbd5e1'}`,
-            background: theme === 'Oscuro' ? '#334155' : '#ffffff',
-            color: themeStyle.color,
-            fontSize: '0.95rem'
+            borderRadius: '4px',
+            border: `1px solid ${theme === 'Oscuro' ? '#475569' : '#e2e8f0'}`,
+            background: theme === 'Oscuro' ? '#334155' : '#edf2f7',
+            color: theme === 'Oscuro' ? '#f1f5f9' : '#1e293b',
+            outline: 'none',
+            width: '200px'
           }}
         />
 
-        {/* SELECTOR DE IDIOMA */}
         <select
           value={i18n.language}
           onChange={(e) => i18n.changeLanguage(e.target.value)}
           style={{
-            padding: '6px 12px',
-            background: theme === 'Oscuro' ? '#334155' : '#e2e8f0',
-            color: themeStyle.color,
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '13px',
-            fontWeight: '600',
+            padding: '8px 12px',
+            borderRadius: '4px',
+            background: theme === 'Oscuro' ? '#334155' : '#edf2f7',
+            color: theme === 'Oscuro' ? '#f1f5f9' : '#1e293b',
+            border: `1px solid ${theme === 'Oscuro' ? '#475569' : '#e2e8f0'}`,
             cursor: 'pointer'
           }}
         >
           <option value="es">ES</option>
           <option value="en">EN</option>
           <option value="fr">FR</option>
+          <option value="de">DE</option>
           <option value="pt">PT</option>
-          <option value="it">IT</option>
         </select>
 
-        {/* BOTONES DE AUTENTICACIÓN */}
+        <button
+          onClick={toggleTheme}
+          style={{
+            padding: '8px 12px',
+            borderRadius: '4px',
+            background: theme === 'Oscuro' ? '#334155' : '#edf2f7',
+            color: theme === 'Oscuro' ? '#f1f5f9' : '#1e293b',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          {theme === 'Oscuro' ? 'Claro' : 'Oscuro'}
+        </button>
+
+        <select
+          value={currentBible}
+          onChange={(e) => setCurrentBible(e.target.value)}
+          style={{
+            padding: '8px 12px',
+            borderRadius: '4px',
+            background: theme === 'Oscuro' ? '#334155' : '#edf2f7',
+            color: theme === 'Oscuro' ? '#f1f5f9' : '#1e293b',
+            border: `1px solid ${theme === 'Oscuro' ? '#475569' : '#e2e8f0'}`,
+            cursor: 'pointer'
+          }}
+        >
+          <option value="Reina Valera 1960">Reina Valera 1960</option>
+          <option value="Nueva Versión Internacional">NVI</option>
+          <option value="King James Version">KJV</option>
+          <option value="La Biblia de las Américas">LBLA</option>
+          <option value="Nueva Traducción Viviente">NTV</option>
+        </select>
+
+        {/* BOTONES DE AUTENTICACIÓN FUNCIONANDO */}
         {user ? (
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <button
-              onClick={() => setProfileOpen(true)}
-              style={{
-                padding: '6px 12px',
-                background: '#6366f1',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {getBlessedName()}
-            </button>
-            <button
-              onClick={() => supabase.auth.signOut()}
-              style={{
-                padding: '6px 12px',
-                background: '#ef4444',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: '600',
-                cursor: 'pointer'
-              }}
-            >
-              {t('auth.logout')}
-            </button>
-            <button
-              onClick={toggleTheme}
-              style={{
-                padding: '6px 12px',
-                background: theme === 'Claro' ? '#e2e8f0' : '#334155',
-                color: theme === 'Claro' ? '#1e293b' : '#f1f5f9',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: '600',
-                cursor: 'pointer'
-              }}
-            >
-              {theme}
-            </button>
-          </div>
+          <button
+            onClick={logout}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '4px',
+              background: '#ef4444',
+              color: 'white',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            {t('auth.logout') || 'Cerrar sesión'}
+          </button>
         ) : (
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              onClick={() => { setAuthOpen(true); setAuthView('sign_in') }}
-              style={{
-                padding: '6px 12px',
-                background: '#6366f1',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: '600',
-                cursor: 'pointer'
-              }}
-            >
-              {t('auth.login')}
-            </button>
-            <button
-              onClick={() => { setAuthOpen(true); setAuthView('sign_up') }}
-              style={{
-                padding: '6px 12px',
-                background: '#10b981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: '600',
-                cursor: 'pointer'
-              }}
-            >
-              {t('auth.register')}
-            </button>
-            <button
-              onClick={toggleTheme}
-              style={{
-                padding: '6px 12px',
-                background: theme === 'Claro' ? '#e2e8f0' : '#334155',
-                color: theme === 'Claro' ? '#1e293b' : '#f1f5f9',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: '600',
-                cursor: 'pointer'
-              }}
-            >
-              {theme}
-            </button>
-          </div>
+          <button
+            onClick={login}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '4px',
+              background: '#10b981',
+              color: 'white',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            {t('auth.login') || 'Iniciar sesión'}
+          </button>
         )}
       </div>
 
-      {/* MODALES */}
-      {/* Puedes mover AuthModal y ProfileModal aquí o dejarlos en SearchBar */}
+      {query.length > 0 && (
+        <SearchBar
+          theme={theme}
+          query={query}
+          currentBible={currentBible}
+          results={searchResults}
+          hasMore={hasMore}
+          onLoadMore={loadMore}
+          onResultClick={handleResultClick}
+          onBack={handleBack}
+        />
+      )}
     </header>
   )
 }
