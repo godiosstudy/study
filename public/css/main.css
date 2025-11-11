@@ -3,29 +3,37 @@
 .grid { display: grid; grid-template-columns: 260px 1fr 420px; gap: 16px; }
 .verse { padding: 8px 10px; border-radius: 8px; }
 .verse:hover { background: var(--hover); }
-/* === Mobile Stack Fix (Navigation → Results → Focus) === */
-@media (max-width: 768px){
-  /* stack single column */
-  .app-grid{ 
-    display: block !important;
-  }
-  /* panels full-width */
-  .panel, .panel--nav, .panel--results, .panel--focus, 
-  .navigation, .results, .focus, #focus, [id*="focus"]{
-    width: 100% !important;
-    max-width: 100% !important;
-    float: none !important;
-    position: static !important;
-    box-sizing: border-box;
-  }
-  /* avoid side scroll */
-  html, body { overflow-x: hidden; }
-  /* spacing between sections */
-  .panel + .panel{ margin-top: 1rem; }
-  .navigation + .results, .results + .focus{ margin-top: 1rem; }
-  /* media inside focus */
-  #focus img, #focus video, .focus img, .focus video{
-    max-width: 100%; height: auto; display: block;
-  }
+/* === Responsive Pack (layout) === */
+.app-grid{
+  display: grid;
+  grid-template-columns: 260px 1fr 420px;
+  gap: var(--space-4);
+  align-items: start;
 }
-/* === /Mobile Stack Fix === */
+.panel{
+  background: #fff;
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  box-shadow: 0 1px 4px rgb(0 0 0 / .06);
+  font-size: var(--fs-sm);
+}
+.panel .title{
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  margin-bottom: var(--space-3);
+}
+@media (max-width: 1200px){
+  .app-grid{ grid-template-columns: 220px 1fr; }
+  .panel--focus{ grid-column: 1 / -1; }
+}
+@media (max-width: 992px){
+  .app-grid{ grid-template-columns: 1fr; gap: var(--space-3); }
+}
+@media (max-width: 768px){
+  .app-grid{ grid-template-columns: 1fr; }
+  .panel{ padding: var(--space-3); }
+  .toolbar .search{ width:100%; }
+  .header .right-actions{ gap: var(--space-2); }
+}
+.scroll-y{ max-height: 70dvh; overflow:auto; }
+/* === /Responsive Pack (layout) === */
