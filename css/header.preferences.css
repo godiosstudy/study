@@ -1,0 +1,47 @@
+/* Preferencias modal */
+.prefs-modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; z-index: 1200; }
+.prefs-modal.open { display: flex; }
+.prefs-dialog { width: 560px; max-width: 92vw; background: var(--card); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,.24); overflow: hidden; }
+.prefs-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+.prefs-body { padding: 18px; display: grid; grid-template-columns: 1fr; gap: 16px; }
+.prefs-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 18px; border-top: 1px solid var(--border); }
+.prefs-close { background: transparent; border: 1px solid var(--border); color: var(--fg); border-radius: 10px; padding: 6px 10px; cursor: pointer; }
+
+.prefs-field { display: flex; flex-direction: column; gap: 8px; }
+.prefs-field label { color: var(--muted); font-size: 0.95em; }
+
+/* Taller inputs */
+.prefs-field select,
+.prefs-field input[type="text"],
+.prefs-field input[type="color"] {
+  height: 44px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--fg);
+  font-size: 1rem;
+  line-height: 1.2;
+}
+.prefs-field input[type="color"] { padding: 6px; width: 64px; }
+
+/* Slider más alto */
+#pref-font-size {
+  height: 10px;
+}
+
+.prefs-color { display: flex; gap: 10px; align-items: center; }
+.prefs-toggle { display: flex; gap: 10px; }
+.toggle { padding: 10px 14px; border: 1px solid var(--border); background: transparent; color: var(--fg); border-radius: 12px; cursor: pointer; font-size: 0.95rem; }
+.toggle.active, .toggle:hover { border-color: var(--accent); }
+
+.btn { padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border); background: transparent; color: var(--fg); cursor: pointer; font-size: 0.95rem; }
+.btn.primary { border-color: var(--accent); }
+.btn.ghost:hover { background: var(--hover); }
+
+/* Color + Light en una fila */
+.prefs-inline { display: flex; gap: 18px; align-items: flex-end; }
+.prefs-inline .prefs-field { flex: 1; }
+@media (max-width: 560px){
+  .prefs-inline { flex-direction: column; align-items: stretch; }
+}

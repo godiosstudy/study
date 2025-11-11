@@ -1,0 +1,84 @@
+/* Header bar */
+.hdr-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: var(--header-bg);
+  color: var(--header-fg);
+  border-bottom: 1px solid var(--border);
+}
+.hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+}
+.hdr .logo {
+  color: var(--header-fg);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+/* Right side: buttons group */
+.hdr-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Shared chip style */
+.chip {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--header-fg);
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: border-color 120ms ease, background-color 120ms ease, transform 120ms ease;
+}
+.chip:hover {
+  border-color: var(--accent);
+}
+.chip:active {
+  transform: translateY(1px);
+}
+.chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.hdr .chip {
+  border-color: currentColor; /* el borde usa el color del header */
+}
+
+/* Icon-only variant */
+.chip.icon-only {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  justify-content: center;
+}
+.chip.icon-only .icon,
+.chip .icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  fill: currentColor; /* hereda var(--header-fg) */
+  stroke: none;
+}
+
+/* Mejor tactilidad en pantallas táctiles */
+@media (pointer: coarse) {
+  .chip.icon-only { width: 44px; height: 44px; }
+}
+
+/* Visually hidden text for a11y */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0);
+  white-space: nowrap; border: 0;
+}

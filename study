@@ -1,0 +1,138 @@
+Header [js/header.js] [css/header.css]
+    Logo [js/header.domain.js] [css/header.domain.css]
+    Users [js/header.users.js] [css/header.users.css]
+        Sign in [js/header.users.login.js]
+            Name
+            Last Name
+            Birthday
+            Gender
+            Phone
+            Email
+            Password
+            Address
+                Street
+                City
+                State
+                Zip Code
+                Country
+            Preferences
+                Content
+                Color
+                Font Type
+                    Inter
+                    Merriweather
+                    Space Grotesk
+                Font Size
+        Forget Password [js/header.users.forget.js]
+        My Account [js/header.users.account.js]
+        Log out [js/header.users.signout.js]
+    Preferences [js/header.preferences.js] [css/header.preferences.css]
+        Language [js/header.preferences.language.js]
+        Content 
+            Collection (Toma las opciones de level_1, si es de primera vez, toma el primero) 
+            Corpus (Toma las opciones de level_2, si es de primera vez, toma el primero de la Colleccion primera) 
+        Font Type (tomamos los fonts que tenemos en la carpeta fonts/ y se listan, si es la primera ves, se toma el primero) 
+        Font Size (8pt a 22pt con un slider, si es primera ves se setea en 12pt) 
+        Color (tiene un selector de colores con un campo  Hex#, si arranca por primera ves el color es #000000) 
+        Light (On | Off, si arranca por primera ves es On)
+
+        (notas:Entonces al terminar de iniciar y definir las preferencias del sistema se graban localmente en el equipo del usuario para que en la proxima cargada, se lean desde ahi y se carguen como datos de preferencia del sistema sin darle bola a los predeterminados. En adelante cuando tengamos login de users al iniciar sesion tambien sobre escribiran las preferencias locales del equipo del cliente y esas son las que se usen para el sistema)
+
+Toolbar [js/toolbar.js]
+    Breadcrumb [js/toolbar.breadcrumb.js]
+    Search [js/toolbar.search.js]
+Main [js/main.js]
+    Navegation (level_4 level_5) [js/main.navegation.js]
+    Title: Genesis 1
+    List: 
+    1 En el princ.....
+    2 qweoriuqwpoeiuqwrqpoiu
+    3 wkhfwfkbvmlsnvsa
+
+
+
+    Search-Results [js/main.search.results.js]
+    Focus (level_7) [js/main.focus.js]
+        Comments [js/main.focus.comments.js]
+        Likes [js/main.focus.likes.js]
+        Share [js/main.focus.share.js]
+    Characters [js/main.characters.js]
+    Entidades [js/main.entities.js]
+    Places [js/main.places.js]
+    Times [js/main.times.js]
+    Authors [js/main.authors.js]
+Loader
+    Cargador de data
+Footer [js/footer.js]
+    Version (Izquierda) [js/footer.changelog.js]
+    Copyright (Centro) [js/footer.copyrights.js]
+    Logo (Derecha) [js/footer.logo.js]
+Config
+    Translations [js/config.translations.js]
+
+UI
+    Header (Sticky at the top)
+        Domain (Left)
+        Users (Right)
+        Preferences (Right)
+    Toolbar (Sticky below Header)
+        Breadcrumb (Left)
+        Search (Right)
+    Main
+        Navigator
+        Results
+        Focus
+    Loader (Just between main and footer when loading data)      
+    Footer
+        Changelog (Left)
+        Logo (Right)
+
+Tables
+
+    Tabla: profiles
+        sqlid (uuid) → PK, FK → auth.users.id
+        first_name (text)
+        last_name (text)
+        email (text)
+        phone (text)
+        birth_date (date)
+        gender (text)
+        role (text)
+        updated_at (timestamp)
+        last_view (jsonb) → { collection, corpus, book, chapter, verse }
+        p_bible (text) → versión preferida?
+        p_color (text) → 'light' | 'dark'
+        p_font_type (text) → 'Inter' | 'Merriweather' | 'Space Grotesk'
+        p_font_size (text) → 'sm' | 'md' | 'lg' | 'xl'
+        p_light (bool) → modo claro
+        p_language_code (text) → 'es' | 'en' | etc.
+        p_level1 (text) → colección preferida
+        p_level2 (text) → corpus preferido
+
+
+    Tabla: entries
+        sqlid (uuid) → PK
+        language_code (text)
+        entry_order (int8)
+        level_1 (text) → Colección (ej: "Biblias", "Devocionales",)
+        level_2 (text) → Corpus (ej: "Reina Valera 1960", "Nueva Version Internacional",)
+        level_3 (text) → Testamento (ej: "Antiguo Testamento", "Nuevo Testamento")
+        level_4 (text) → Libro (ej: "Génesis", "Éxodo")
+        level_5 (text) → Capitulo (ej: "1", "2")
+        level_6 (text) → Versiculo (ej: "1", "2")
+        level_7 (text) → Texto del versículo
+        created_at (timestamptz)
+        updated_at (timestamptz)
+        created_by (uuid) → FK → auth.users.id
+        updated_by (uuid) → FK → auth.users.id
+        auth_users_id (uuid) → FK → auth.users.id (dueño del contenido)
+
+        level_1: Colección      → Biblias, Devocionales, etc.
+        └── level_2: Reina Valera 1960, Nueva Version Internacional 
+            └── level_3: Testamento → Antiguo Testamento, Nuevo Testamento
+                └── level_4: Libro → Genesis, Éxodo
+                        └── level_5: Capítulo → 1, 2 
+                            └── level_6: Versiculo → 1, 2   
+                                └── level_7: Texto del versículo,  → "En el principio Dios creó los cielos y la tierra.", etc.
+            
+            

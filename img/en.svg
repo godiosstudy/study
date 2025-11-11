@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7410 3900">
+  <path fill="#b22234" d="M0 0h7410v3900H0z"></path>
+  <path stroke="#fff" stroke-width="300" d="M0 450h7410M0 1050h7410M0 1650h7410M0 2250h7410M0 2850h7410M0 3450h7410"></path>
+  <path fill="#3c3b6e" d="M0 0h2964v2100H0z"></path>
+  <g fill="#fff">
+    <g id="s18">
+      <g id="s9">
+        <g id="s5">
+          <g id="s4">
+            <path id="s" d="M247 90l70 215H20l182-132-70 215 182-132 182 132-70-215 182 132H327l70-215-182 132z"></path>
+            <use href="#s" x="494"></use>
+            <use href="#s" x="988"></use>
+            <use href="#s" x="1482"></use>
+          </g>
+          <use href="#s" y="210"></use>
+        </g>
+        <use href="#s4" y="420"></use>
+      </g>
+      <use href="#s9" y="840"></use>
+    </g>
+    <use href="#s18" x="247" y="105"></use>
+    <use href="#s18" x="494" y="210"></use>
+  </g>
+</svg>

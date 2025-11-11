@@ -1,0 +1,14 @@
+/* Footer fijo abajo */
+.ftr-wrap {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 950;
+  border-top: 1px solid var(--border);
+  background: var(--footer-bg);
+  color: var(--footer-fg);
+}
+.ftr { display: flex; align-items: center; justify-content: space-between; height: var(--footer-h); }
+.ftr a { color: var(--footer-fg); text-decoration: none; }
+#ftr-logo { height: 28px; width: auto; display: block; }
+/* Make footer chip look like header chips but with footer color */
+.ftr .chip { color: var(--footer-fg); border-color: currentColor; }

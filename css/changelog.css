@@ -1,0 +1,11 @@
+/* Changelog modal centered with backdrop */
+.changelog-modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; z-index: 1300; }
+.changelog-modal.open { display: flex; }
+.cl-dialog { width: 680px; max-width: 94vw; background: var(--card); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,.24); overflow: hidden; outline: none; }
+.cl-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+.cl-close { background: transparent; border: 1px solid var(--border); color: var(--fg); border-radius: 10px; padding: 6px 10px; cursor: pointer; }
+.cl-body { padding: 16px 18px; max-height: 70vh; overflow: auto; }
+.cl-entry { padding: 10px 0; border-bottom: 1px dashed var(--border); }
+.cl-entry:last-child { border-bottom: 0; }
+.cl-meta { font-weight: 600; margin-bottom: 6px; }
+.cl-ver { display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); background: var(--badge-bg); color: var(--badge-fg); }
