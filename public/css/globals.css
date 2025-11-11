@@ -62,20 +62,6 @@ body {
 .list li:hover { background: var(--hover); }
 .badge { display: inline-block; font-size: 0.85em; padding: 2px 6px; border-radius: 6px; background: var(--badge-bg); border: 1px solid var(--badge-border); color: var(--badge-fg); }
 a { color: var(--accent); text-decoration: none; }
-/* === Fixed Footer on Mobile === */
-:root{ --footer-h: 64px; }
-@media (max-width: 768px){
-  body{ padding-bottom: calc(var(--footer-h) + env(safe-area-inset-bottom)); }
-  .footer{
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
-    height: var(--footer-h);
-    display: flex; align-items: center;
-    padding: 0 1rem;
-    z-index: 50;
-    /* optional backdrop for clarity */
-    background: var(--footer-bg, #fff);
-    border-top: 1px solid rgba(0,0,0,.06);
-  }
-}
-/* === /Fixed Footer on Mobile === */
+/* === Overflow-X Guard === */
+html, body { max-width: 100%; overflow-x: hidden; }
+/* === /Overflow-X Guard === */

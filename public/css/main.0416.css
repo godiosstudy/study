@@ -1,5 +1,0 @@
-/* Main */
-.main-wrap { padding: 16px 0 24px; background: var(--main-bg); font: var(--base-pt)/1.5 var(--app-font); }
-.grid { display: grid; grid-template-columns: 260px 1fr 420px; gap: 16px; }
-.verse { padding: 8px 10px; border-radius: 8px; }
-.verse:hover { background: var(--hover); }
