@@ -1,0 +1,11 @@
+Eliminar estos archivos/rutas del repo si existen (ya no se usan con Supabase-only):
+- api/exists-by-email.js
+- api/register.js
+- api/validate.js
+- js/backend.vercel.adapter.js
+- js/server/api/exists-by-email.js
+- js/server/api/register.js
+- js/server/api/validate.js
+- vercel.json
+
+Luego subir los cambios a GitHub para que Vercel despliegue.
