@@ -5,34 +5,31 @@
     'Talmud': ['Mishná','Guemará']
   };
 
-  // ---------- Fuentes desde @font-face en CSS ----------
+  // ---------- Fuentes leídas desde @font-face en CSS ----------
   let cachedFontFamilies = null;
 
   function cleanFontName(name) {
     if (!name) return '';
-    return name
-      .trim()
-      .replace(/^['"]+|['"]+$/g, ''); // quita comillas
+    return name.trim().replace(/^['"]+|['"]+$/g, '');
   }
 
-  function getFontFamiliesFromCSS(){
+  function getFontFamiliesFromCSS() {
     if (cachedFontFamilies) return cachedFontFamilies;
 
     const famSet = new Set();
-
     const sheets = Array.from(document.styleSheets || []);
+
     sheets.forEach(sheet => {
       let rules;
       try {
         rules = sheet.cssRules || sheet.rules;
       } catch (e) {
-        // algunas hojas pueden ser cross-origin, las ignoramos
+        // Algunas hojas (CDN, etc.) pueden dar error por CORS, las ignoramos
         return;
       }
       if (!rules) return;
 
       Array.from(rules).forEach(rule => {
-        // CSSFontFaceRule en la mayoría de navegadores
         const isFontFace =
           (window.CSSRule && rule.type === CSSRule.FONT_FACE_RULE) ||
           (rule.constructor && rule.constructor.name === 'CSSFontFaceRule') ||
@@ -54,6 +51,8 @@
     });
 
     let list = Array.from(famSet);
+
+    // Si no encontró nada, fallback
     if (!list.length) {
       list = ['System'];
     } else {
@@ -65,11 +64,9 @@
     return cachedFontFamilies;
   }
 
-  // Si en algún momento quisieras forzar otra cosa, esta función existe,
-  // pero ahora no inyectamos nada dinámico: todo viene de fontfaces.css
-  function ensureFontFaceInjected(/*family*/){
-    // no-op: las fuentes ya están definidas en CSS (fontfaces.css)
-  }
+  // No necesitamos inyectar nada dinámicamente porque ya definimos
+  // todas las fuentes en public/css/fontfaces.css
+  function ensureFontFaceInjected(/*family*/) {}
 
   // ---------- Estado del modal ----------
   let modal = null;
@@ -219,7 +216,7 @@
     updateLightText(lang, controls.light && controls.light.checked);
   }
 
-  // ---------- helpers de UI ----------
+  // ---------- helpers UI ----------
   function fillCollections(selectEl, current){
     selectEl.innerHTML='';
     const keys = Object.keys(CONTENT);
@@ -282,7 +279,7 @@
     const col = fillCollections(controls.collection, prefs.collection || null);
     fillCorpus(controls.corpus, col, prefs.corpus || null);
 
-    // Fuentes desde CSS (@font-face)
+    // Fuentes desde CSS
     const families = getFontFamiliesFromCSS();
     fillFonts(controls.font, families, prefs.font || null);
     ensureFontFaceInjected(controls.font.value);
@@ -312,7 +309,7 @@
   function hideModal(){
     if (!modal) return;
 
-    // Mover el foco fuera del modal para evitar el warning de aria-hidden
+    // evitar warning de aria-hidden con foco dentro del modal
     const active = document.activeElement;
     if (active && modal.contains(active)) {
       const trigger = document.getElementById('hdr-preferences');
