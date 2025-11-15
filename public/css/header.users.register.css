@@ -1,0 +1,101 @@
+/* =======================================
+   REGISTRO DE USUARIO (Sign up / Register)
+   Apariencia coherente con Preferencias,
+   pero aislado en su propio CSS.
+   ======================================= */
+
+.reg-panel {
+  max-width: 480px;
+  margin: 40px auto 0;
+  padding: 0 4px;
+}
+
+.reg-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;       /* aire vertical entre campos */
+}
+
+.reg-field {
+  width: 100%;
+}
+
+.reg-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Inputs tipo pill, igual estilo que el buscador / prefs */
+.reg-panel .reg-field input[type="text"],
+.reg-panel .reg-field input[type="email"],
+.reg-panel .reg-field input[type="password"] {
+  width: 100%;
+  box-sizing: border-box;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 0 12px;
+  font-size: 14px;
+  outline: none;
+  background: #ffffff;
+  color: var(--fg, #111827);
+}
+
+.reg-panel .reg-field input[type="text"]:focus-visible,
+.reg-panel .reg-field input[type="email"]:focus-visible,
+.reg-panel .reg-field input[type="password"]:focus-visible {
+  border-color: var(--accent, #4b6fff);
+  box-shadow: 0 0 0 1px var(--accent, #4b6fff);
+}
+
+/* Mensajes de estado bajo el campo de email */
+.auth-panel .auth-field-status {
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.auth-panel .auth-global-status {
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.auth-panel .auth-field-status.status-info {
+  color: #4b5563;
+}
+.auth-panel .auth-field-status.status-error {
+  color: #b91c1c;
+}
+.auth-panel .auth-field-status.status-success {
+  color: #15803d;
+}
+
+.auth-panel .auth-global-status.status-error {
+  color: #b91c1c;
+}
+.auth-panel .auth-global-status.status-success {
+  color: #15803d;
+}
+
+/* Footer de botones */
+.reg-foot {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* Estado "loading" del botón principal */
+.btn.primary.is-loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Responsive: un poco más de aire en mobile */
+@media (max-width: 768px) {
+  .reg-panel {
+    margin-top: 32px;
+  }
+}

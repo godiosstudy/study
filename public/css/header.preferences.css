@@ -1,112 +1,243 @@
-/* Preferencias embebidas en el main */
+/* ============================
+   PREFERENCIAS – LAYOUT GENERAL
+   ============================ */
 
 .prefs-panel {
-  max-width: 720px;
-  margin: 24px auto;
+  max-width: 960px;
+  margin: 24px auto 0;
+  padding: 0 4px;
 }
 
 .prefs-body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 20px;           /* aire vertical entre bloques */
 }
 
-/* Fila superior: idioma, color, luz */
-.prefs-row-top {
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.2fr) minmax(0, 0.8fr);
-  gap: 12px;
-}
-
-/* Fila de fuente y tamaño */
-.prefs-row-font {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.2fr);
-  gap: 12px;
-}
-
-@media (max-width: 640px) {
-  .prefs-row-top,
-  .prefs-row-font {
-    grid-template-columns: 1fr;
-  }
-}
-
-.prefs-field {
+/* Filas superiores (Idioma / Color / Luz, y Font type / size) */
+.prefs-row {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
+.prefs-row-top,
+.prefs-row-font {
+  align-items: flex-end;
+}
+
+/* Cada campo dentro de una fila */
+.prefs-field {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Etiquetas */
 .prefs-field label {
-  font-size: 13px;
-  font-weight: 500;
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
 }
 
-/* Color */
+/* ============================
+   CAMPOS TIPO “PILL”
+   (igual estilo que el buscador)
+   ============================ */
+
+.prefs-panel .prefs-field select,
+.prefs-panel .prefs-field input[type="text"] {
+  width: 100%;
+  box-sizing: border-box;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 0 12px;
+  font-size: 14px;
+  outline: none;
+  background: #ffffff;
+  color: var(--fg, #111827);
+}
+
+/* Hover / focus coherente con el buscador */
+.prefs-panel .prefs-field select:focus-visible,
+.prefs-panel .prefs-field input[type="text"]:focus-visible {
+  border-color: var(--accent, #4b6fff);
+  box-shadow: 0 0 0 1px var(--accent, #4b6fff);
+}
+
+/* ============================
+   COLOR (picker + hex)
+   ============================ */
+
 .prefs-color {
   display: flex;
-  gap: 8px;
   align-items: center;
-}
-.prefs-color input[type="color"] {
-  width: 40px;
-  height: 28px;
-  padding: 0;
-  border: none;
-  background: transparent;
+  gap: 8px;
 }
 
-/* Luz switch */
+/* Cuadradito de color, sin óvalo alrededor */
+.prefs-color input[type="color"] {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;      /* cuadrado suave */
+  background: transparent;
+  cursor: pointer;
+
+  /* borde sutil para que se vea sobre fondo blanco */
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+/* Hex usa el mismo estilo de texto que los inputs */
+#pref-color-hex {
+  flex: 1 1 auto;
+}
+
+/* ============================
+   SWITCH DE LUZ
+   (píldora blanca + toggle + texto)
+   ============================ */
+
+/* contenedor completo del control Luz */
 .prefs-switch {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  justify-content: flex-start;
+  gap: 10px;
+
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  box-sizing: border-box;
+
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+
   cursor: pointer;
-  user-select: none;
 }
 
-.prefs-switch input {
+/* ocultamos el checkbox nativo */
+.prefs-switch input[type="checkbox"] {
   display: none;
 }
 
+/* pista del switch (píldora pequeña) */
 .prefs-switch-track {
-  width: 40px;
-  height: 20px;
-  border-radius: 999px;
-  background: #e5e7eb;
   position: relative;
-  transition: background 120ms ease;
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  background: #e5e7eb;             /* gris cuando está apagado */
+  transition: background-color 140ms ease;
+  flex-shrink: 0;
 }
 
+/* bolita */
 .prefs-switch-thumb {
   position: absolute;
   top: 2px;
   left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+  transition: transform 140ms ease;
+}
+
+/* Encendido → verde/acento y bolita a la derecha */
+.prefs-switch input[type="checkbox"]:checked + .prefs-switch-track {
+  background: #bbf7d0;              /* verde suave, parecido a la captura */
+  /* si querés usar exactamente el color del sistema: 
+     background: var(--accent, #4b6fff); */
+}
+
+.prefs-switch
+  input[type="checkbox"]:checked
+  + .prefs-switch-track
+  .prefs-switch-thumb {
+  transform: translateX(18px);
+}
+
+/* texto Encendido / Apagado */
+.prefs-switch-text {
+  font-size: 14px;
+  color: #4b5563;
+  white-space: nowrap;
+}
+
+/* ============================
+   SLIDER TAMAÑO DE FUENTE
+   ============================ */
+
+.prefs-field-font-size {
+  min-width: 220px;
+}
+
+#pref-font-size {
+  width: 100%;
+  margin-top: 4px;
+}
+
+/* estilito suave del range */
+#pref-font-size::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: #e5e7eb;
+}
+#pref-font-size::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.4);
-  transition: transform 120ms ease;
+  background: var(--accent, #4b6fff);
+  margin-top: -6px; /* centra el thumb en el track */
 }
-
-.prefs-switch input:checked + .prefs-switch-track .prefs-switch-thumb {
-  transform: translateX(20px);
+#pref-font-size::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: #e5e7eb;
 }
-
-.prefs-switch input:checked + .prefs-switch-track {
+#pref-font-size::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
   background: var(--accent, #4b6fff);
 }
 
-.prefs-switch-text {
-  font-size: 13px;
-}
+/* ============================
+   FOOTER (botones)
+   ============================ */
 
-/* Footer botones */
 .prefs-foot {
-  margin-top: 12px;
+  margin-top: 24px;
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 12px;
+}
+
+/* ============================
+   RESPONSIVE
+   ============================ */
+
+@media (max-width: 768px) {
+  .prefs-panel {
+    margin-top: 16px;
+  }
+
+  .prefs-row,
+  .prefs-row-top,
+  .prefs-row-font {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .prefs-field-font-size {
+    min-width: 0;
+  }
 }
