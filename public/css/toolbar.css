@@ -1,56 +1,64 @@
-/* Barra de herramientas / breadcrumb fija bajo el header */
-
+/* Barra de herramientas debajo del header */
 .toolbar-wrap {
   position: fixed;
-  top: 60px;              /* altura del header (hdr) */
+  top: 60px; /* debajo del header fijo */
   left: 0;
   right: 0;
-  z-index: 900;
+  z-index: 800;
   background: var(--toolbar-bg, #f9fafb);
   border-bottom: 1px solid var(--border);
 }
 
+/* Contenedor interno */
 .tbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  flex-wrap: nowrap;      /* 👉 nunca se parte en 2 líneas */
   gap: 12px;
-  padding-block: 8px;
+  padding: 8px 16px;
 }
 
+/* Breadcrumb (Inicio / lo que venga) */
 .crumbs {
-  font-size: 13px;
-  color: var(--muted-fg, #4b5563);
+  flex: 0 0 auto;         /* no se estira, ocupa solo lo necesario */
+  max-width: 35%;         /* 👉 límite para que deje espacio al buscador */
+  font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: ellipsis; /* si es muy largo, pone "…" */
 }
 
+/* Contenedor del buscador: ocupa todo lo que sobra */
 .search {
-  flex: 0 0 260px;
+  flex: 1 1 auto;         /* se estira y se achica según el espacio disponible */
+  min-width: 0;           /* permite que pueda achicarse en pantallas muy chicas */
 }
 
+/* Input del buscador */
 .search input[type="search"] {
   width: 100%;
+  box-sizing: border-box;
   border-radius: 999px;
   border: 1px solid var(--border);
-  padding: 6px 10px;
+  padding: 6px 12px;
   font-size: 14px;
   outline: none;
 }
 
+/* Estilo al enfocar el input */
 .search input[type="search"]:focus-visible {
   border-color: var(--accent, #4b6fff);
+  box-shadow: 0 0 0 1px var(--accent, #4b6fff);
 }
 
-/* En pantallas pequeñas el breadcrumb se apila */
-@media (max-width: 640px) {
+/* Ajustes en pantallas muy pequeñas */
+@media (max-width: 480px) {
   .tbar {
-    flex-direction: column;
-    align-items: stretch;
+    padding-inline: 8px;
+    gap: 8px;
   }
-
-  .search {
-    flex: 1 1 auto;
+  .crumbs {
+    font-size: 13px;
+    max-width: 45%;  /* un poco más de espacio si el título no es tan largo */
   }
 }
