@@ -1,10 +1,9 @@
 {
   "version": "0.2.0",
   "date": "2025-11-14",
-  "notes": "Preferencias compactas, fuentes autodetectadas, header multi-idioma y footer fijo."
-}
-{
-  "version": "0.1.0",
-  "date": "2025-11-09",
-  "notes": "Start with basic UI | Initial commit."
+  "notes": [
+    "Preferencias compactas.",
+    "Header fijo arriba.",
+    "Fuentes desde CSS (@font-face)."
+  ]
 }
