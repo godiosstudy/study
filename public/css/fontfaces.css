@@ -1,78 +1,587 @@
-/* fontfaces.css: local font-face bindings to /fonts with resilient fallbacks */
-
-@font-face{
-  font-family: 'Inter';
-  src:
-    url('../fonts/Inter-VariableFont_slnt,wght.woff2') format('woff2'),
-    url('../fonts/Inter-VariableFont_slnt,wght.ttf') format('truetype'),
-    url('../fonts/Inter-Regular.woff2') format('woff2'),
-    url('../fonts/Inter-Regular.ttf') format('truetype');
+/* === Aclonica === */
+@font-face {
+  font-family: "Aclonica";
+  src: url("/public/fonts/Aclonica-Regular.ttf") format("truetype");
+  font-weight: 400;
   font-style: normal;
+  font-display: swap;
+}
+
+/* === Arimo (variable + regular + italic) === */
+@font-face {
+  font-family: "Arimo";
+  src: url("/public/fonts/Arimo[wght].ttf") format("truetype");
   font-weight: 100 900;
+  font-style: normal;
   font-display: swap;
 }
-@font-face{
-  font-family: 'Inter';
-  src:
-    url('../fonts/Inter-Italic-VariableFont_slnt,wght.woff2') format('woff2'),
-    url('../fonts/Inter-Italic-VariableFont_slnt,wght.ttf') format('truetype'),
-    url('../fonts/Inter-Italic.woff2') format('woff2'),
-    url('../fonts/Inter-Italic.ttf') format('truetype');
-  font-style: italic;
+@font-face {
+  font-family: "Arimo";
+  src: url("/public/fonts/Arimo-Italic[wght].ttf") format("truetype");
   font-weight: 100 900;
-  font-display: swap;
-}
-
-@font-face{
-  font-family: 'Merriweather';
-  src:
-    url('../fonts/Merriweather-VariableFont_wght.woff2') format('woff2'),
-    url('../fonts/Merriweather-VariableFont_wght.ttf') format('truetype'),
-    url('../fonts/Merriweather-Regular.woff2') format('woff2'),
-    url('../fonts/Merriweather-Regular.ttf') format('truetype');
-  font-style: normal;
-  font-weight: 300 900;
-  font-display: swap;
-}
-@font-face{
-  font-family: 'Merriweather';
-  src:
-    url('../fonts/Merriweather-Italic-VariableFont_wght.woff2') format('woff2'),
-    url('../fonts/Merriweather-Italic-VariableFont_wght.ttf') format('truetype'),
-    url('../fonts/Merriweather-Italic.woff2') format('woff2'),
-    url('../fonts/Merriweather-Italic.ttf') format('truetype');
   font-style: italic;
-  font-weight: 300 900;
   font-display: swap;
 }
-
-@font-face{
-  font-family: 'Space Grotesk';
-  src:
-    url('../fonts/SpaceGrotesk-VariableFont_wght.woff2') format('woff2'),
-    url('../fonts/SpaceGrotesk-VariableFont_wght.ttf') format('truetype'),
-    url('../fonts/SpaceGrotesk-Regular.woff2') format('woff2'),
-    url('../fonts/SpaceGrotesk-Regular.ttf') format('truetype');
+@font-face {
+  font-family: "Arimo";
+  src: url("/public/fonts/Arimo-Regular.ttf") format("truetype");
+  font-weight: 400;
   font-style: normal;
-  font-weight: 300 900;
   font-display: swap;
 }
 
-/* Optional: system fallback if local files are missing */
-@supports not (font-variation-settings: normal) {
-  @font-face{
-    font-family: 'Inter';
-    src: local('Inter'), local('Inter Regular');
-    font-weight: 400; font-style: normal; font-display: swap;
-  }
-  @font-face{
-    font-family: 'Merriweather';
-    src: local('Merriweather'), local('Merriweather Regular');
-    font-weight: 400; font-style: normal; font-display: swap;
-  }
-  @font-face{
-    font-family: 'Space Grotesk';
-    src: local('Space Grotesk'), local('SpaceGrotesk-Regular');
-    font-weight: 400; font-style: normal; font-display: swap;
-  }
+/* === Calligraffitti === */
+@font-face {
+  font-family: "Calligraffitti";
+  src: url("/public/fonts/Calligraffitti-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Cherry Cream Soda === */
+@font-face {
+  font-family: "Cherry Cream Soda";
+  src: url("/public/fonts/CherryCreamSoda-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Chewy === */
+@font-face {
+  font-family: "Chewy";
+  src: url("/public/fonts/Chewy-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Coming Soon === */
+@font-face {
+  font-family: "Coming Soon";
+  src: url("/public/fonts/ComingSoon-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Cousine === */
+@font-face {
+  font-family: "Cousine";
+  src: url("/public/fonts/Cousine-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Cousine";
+  src: url("/public/fonts/Cousine-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Cousine";
+  src: url("/public/fonts/Cousine-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Cousine";
+  src: url("/public/fonts/Cousine-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* === Crafty Girls === */
+@font-face {
+  font-family: "Crafty Girls";
+  src: url("/public/fonts/CraftyGirls-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Creepster Caps === */
+@font-face {
+  font-family: "Creepster Caps";
+  src: url("/public/fonts/CreepsterCaps-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Crushed === */
+@font-face {
+  font-family: "Crushed";
+  src: url("/public/fonts/Crushed-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Fontdiner Swanky === */
+@font-face {
+  font-family: "Fontdiner Swanky";
+  src: url("/public/fonts/FontdinerSwanky-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Homemade Apple === */
+@font-face {
+  font-family: "Homemade Apple";
+  src: url("/public/fonts/HomemadeApple-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Irish Grover === */
+@font-face {
+  font-family: "Irish Grover";
+  src: url("/public/fonts/IrishGrover-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === jsMath (familia técnica, si no la querés en el dropdown luego la filtramos) === */
+@font-face {
+  font-family: "jsMath";
+  src: url("/public/fonts/jsMath-cmbx10.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "jsMath";
+  src: url("/public/fonts/jsMath-cmex10.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "jsMath";
+  src: url("/public/fonts/jsMath-cmmi10.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "jsMath";
+  src: url("/public/fonts/jsMath-cmr10.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "jsMath";
+  src: url("/public/fonts/jsMath-cmsy10.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "jsMath";
+  src: url("/public/fonts/jsMath-cmti10.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* === Just Another Hand === */
+@font-face {
+  font-family: "Just Another Hand";
+  src: url("/public/fonts/JustAnotherHand-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Kosugi === */
+@font-face {
+  font-family: "Kosugi";
+  src: url("/public/fonts/Kosugi-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Kosugi Maru === */
+@font-face {
+  font-family: "Kosugi Maru";
+  src: url("/public/fonts/KosugiMaru-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Kranky === */
+@font-face {
+  font-family: "Kranky";
+  src: url("/public/fonts/Kranky-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Luckiest Guy === */
+@font-face {
+  font-family: "Luckiest Guy";
+  src: url("/public/fonts/LuckiestGuy-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Maiden Orange === */
+@font-face {
+  font-family: "Maiden Orange";
+  src: url("/public/fonts/MaidenOrange-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Montez === */
+@font-face {
+  font-family: "Montez";
+  src: url("/public/fonts/Montez-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Mountains of Christmas === */
+@font-face {
+  font-family: "Mountains of Christmas";
+  src: url("/public/fonts/MountainsofChristmas-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Mountains of Christmas";
+  src: url("/public/fonts/MountainsofChristmas-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Open Sans Hebrew === */
+@font-face {
+  font-family: "Open Sans Hebrew";
+  src: url("/public/fonts/OpenSansHebrew-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Open Sans Hebrew";
+  src: url("/public/fonts/OpenSansHebrew-LightItalic.ttf") format("truetype");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Open Sans Hebrew";
+  src: url("/public/fonts/OpenSansHebrew-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Open Sans Hebrew";
+  src: url("/public/fonts/OpenSansHebrew-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Open Sans Hebrew";
+  src: url("/public/fonts/OpenSansHebrew-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Open Sans Hebrew";
+  src: url("/public/fonts/OpenSansHebrew-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Open Sans Hebrew";
+  src: url("/public/fonts/OpenSansHebrew-ExtraBold.ttf") format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Open Sans Hebrew";
+  src: url("/public/fonts/OpenSansHebrew-ExtraBoldItalic.ttf") format("truetype");
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* === Open Sans Hebrew Condensed === */
+@font-face {
+  font-family: "Open Sans Hebrew Condensed";
+  src: url("/public/fonts/OpenSansHebrewCondensed-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Open Sans Hebrew Condensed";
+  src: url("/public/fonts/OpenSansHebrewCondensed-LightItalic.ttf") format("truetype");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Open Sans Hebrew Condensed";
+  src: url("/public/fonts/OpenSansHebrewCondensed-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Open Sans Hebrew Condensed";
+  src: url("/public/fonts/OpenSansHebrewCondensed-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Open Sans Hebrew Condensed";
+  src: url("/public/fonts/OpenSansHebrewCondensed-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Open Sans Hebrew Condensed";
+  src: url("/public/fonts/OpenSansHebrewCondensed-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Open Sans Hebrew Condensed";
+  src: url("/public/fonts/OpenSansHebrewCondensed-ExtraBold.ttf") format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Open Sans Hebrew Condensed";
+  src: url("/public/fonts/OpenSansHebrewCondensed-ExtraBoldItalic.ttf") format("truetype");
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* === Permanent Marker === */
+@font-face {
+  font-family: "Permanent Marker";
+  src: url("/public/fonts/PermanentMarker-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Rancho === */
+@font-face {
+  font-family: "Rancho";
+  src: url("/public/fonts/Rancho-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Redressed === */
+@font-face {
+  font-family: "Redressed";
+  src: url("/public/fonts/Redressed-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Roboto Slab (variable) === */
+@font-face {
+  font-family: "Roboto Slab";
+  src: url("/public/fonts/RobotoSlab[wght].ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Rochester === */
+@font-face {
+  font-family: "Rochester";
+  src: url("/public/fonts/Rochester-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Rock Salt === */
+@font-face {
+  font-family: "Rock Salt";
+  src: url("/public/fonts/RockSalt-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Satisfy === */
+@font-face {
+  font-family: "Satisfy";
+  src: url("/public/fonts/Satisfy-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Schoolbell === */
+@font-face {
+  font-family: "Schoolbell";
+  src: url("/public/fonts/Schoolbell-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Slackey === */
+@font-face {
+  font-family: "Slackey";
+  src: url("/public/fonts/Slackey-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Smokum === */
+@font-face {
+  font-family: "Smokum";
+  src: url("/public/fonts/Smokum-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Special Elite === */
+@font-face {
+  font-family: "Special Elite";
+  src: url("/public/fonts/SpecialElite-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Sunshiney === */
+@font-face {
+  font-family: "Sunshiney";
+  src: url("/public/fonts/Sunshiney-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Syncopate === */
+@font-face {
+  font-family: "Syncopate";
+  src: url("/public/fonts/Syncopate-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Syncopate";
+  src: url("/public/fonts/Syncopate-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Tinos === */
+@font-face {
+  font-family: "Tinos";
+  src: url("/public/fonts/Tinos-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Tinos";
+  src: url("/public/fonts/Tinos-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Tinos";
+  src: url("/public/fonts/Tinos-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Tinos";
+  src: url("/public/fonts/Tinos-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* === Ultra === */
+@font-face {
+  font-family: "Ultra";
+  src: url("/public/fonts/Ultra-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Unkempt === */
+@font-face {
+  font-family: "Unkempt";
+  src: url("/public/fonts/Unkempt-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Unkempt";
+  src: url("/public/fonts/Unkempt-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Walter Turncoat === */
+@font-face {
+  font-family: "Walter Turncoat";
+  src: url("/public/fonts/WalterTurncoat-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Yellowtail === */
+@font-face {
+  font-family: "Yellowtail";
+  src: url("/public/fonts/Yellowtail-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
