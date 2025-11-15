@@ -2,74 +2,112 @@
 ;(function(){
   // Requires SDK before this file:
   // <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  const SUPABASE_URL =
-    (typeof import !== 'undefined' && typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_SUPABASE_URL)
-    || (window && window.VITE_SUPABASE_URL);
-  const SUPABASE_ANON_KEY =
-    (typeof import !== 'undefined' && typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_SUPABASE_ANON_KEY)
-    || (window && window.VITE_SUPABASE_ANON_KEY);
+
+  var SUPABASE_URL = (typeof window !== 'undefined' && window.VITE_SUPABASE_URL) || '';
+  var SUPABASE_ANON_KEY = (typeof window !== 'undefined' && window.VITE_SUPABASE_ANON_KEY) || '';
 
   if (!window.supabase) {
-    console.error('[Supabase] SDK not found. Include: <script src=\"https://unpkg.com/@supabase/supabase-js@2\"></script>');
+    console.error('[Supabase] SDK not found. Include: <script src="https://unpkg.com/@supabase/supabase-js@2"></script>');
     return;
   }
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    console.error('[Supabase] Missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY envs.');
+    console.error('[Supabase] Missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY globals.');
+    return;
   }
 
-  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  var client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   function currentLang(){
-    try { return (window.PrefsStore && window.PrefsStore.load && window.PrefsStore.load().language) || 'es'; }
-    catch { return 'es'; }
+    try {
+      if (window.PrefsStore && typeof window.PrefsStore.load === 'function') {
+        var prefs = window.PrefsStore.load();
+        if (prefs && prefs.language) return prefs.language;
+      }
+    } catch (e){}
+    if (typeof navigator !== 'undefined' && navigator.language) {
+      return navigator.language.toLowerCase().startsWith('es') ? 'es' : 'en';
+    }
+    return 'es';
   }
 
-  async function signUp({ name, email, password, lang }){
-    const { data, error } = await client.auth.signUp({
-      email,
-      password,
+  async function signUp(args){
+    var name = args.name;
+    var email = args.email;
+    var password = args.password;
+    var lang = args.lang || currentLang();
+    var redirectTo = (window.APP_BASE_URL || window.location.origin) + '/';
+
+    var res = await client.auth.signUp({
+      email: email,
+      password: password,
       options: {
-        emailRedirectTo: (window.APP_BASE_URL || 'https://study.godios.org'),
-        data: { first_name: name, lang: (lang || currentLang() || 'es') }
+        data: { full_name: name, lang: lang },
+        emailRedirectTo: redirectTo
       }
     });
-    if (error) throw error;
-    return data;
+    if (res.error) throw res.error;
+    return res.data;
   }
 
-  async function signIn({ email, password }){
-    const { data, error } = await client.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    return data;
+  async function signIn(args){
+    var email = args.email;
+    var password = args.password;
+    var res = await client.auth.signInWithPassword({ email: email, password: password });
+    if (res.error) throw res.error;
+    return res.data;
   }
 
   async function signOut(){
-    const { error } = await client.auth.signOut();
-    if (error) throw error;
+    var res = await client.auth.signOut();
+    if (res.error) throw res.error;
     return true;
   }
 
   async function session(){
-    const { data: { session } } = await client.auth.getSession();
-    return session || null;
+    var res = await client.auth.getSession();
+    if (res.error) throw res.error;
+    return (res.data && res.data.session) || null;
   }
 
+  // API esperada por el UI
   window.App = window.App || {};
-  window.App.Auth = { client, signUp, signIn, signOut, session };
+  window.App.Auth = {
+    client: client,
+    signUp: signUp,
+    signIn: signIn,
+    signOut: signOut,
+    session: session
+  };
 
-  // Keep previous UI contract:
+  // El registro usa Profiles.create y Profiles.existsByEmail
   window.App.Profiles = {
-    async existsByEmail(){ return false; }, // Supabase returns error if email already registered
-    async create({ name, email, password }){
-      const lang = currentLang();
-      return await signUp({ name, email, password, lang });
+    async existsByEmail(/*email*/) {
+      // Con Supabase dejamos que signUp lance error si el mail ya existe
+      return false;
+    },
+    async create(payload) {
+      var name = payload.name;
+      var email = payload.email;
+      var password = payload.password;
+      var lang = currentLang();
+      return await signUp({ name: name, email: email, password: password, lang: lang });
     }
   };
-  window.App.Mailer = { async sendValidation(){ /* Supabase sends email via SMTP */ } };
 
-  // Notify UI on load
+  // Supabase ya envía correo de validación; aquí no hacemos nada
+  window.App.Mailer = {
+    async sendValidation(/*email, token*/){
+      // No-op
+    }
+  };
+
+  // Notificar estado de auth inicial al UI
   (async function init(){
-    const s = await session();
-    window.dispatchEvent(new CustomEvent('auth:changed', { detail: s }));
+    try {
+      var s = await session();
+      window.dispatchEvent(new CustomEvent('auth:changed', { detail: s }));
+    } catch (e) {
+      console.warn('[Supabase] session() failed on init', e);
+    }
   })();
 })();

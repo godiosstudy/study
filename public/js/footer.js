@@ -28,14 +28,14 @@
 
   onReady(async function(){
     try {
-      // Ensure modal CSS is present
-      ensureCssOnce('css/changelog.css');
+      // CSS del changelog (ruta correcta)
+      ensureCssOnce('/public/css/changelog.css');
 
-      // Load modules if not present
-      if (!window.Changelog) await loadScriptOnce('js/changelog.js');
-      if (!window.FooterLogo) await loadScriptOnce('js/logo.js');
+      // JS del changelog y del logo (rutas correctas)
+      if (!window.Changelog) await loadScriptOnce('/public/js/changelog.js');
+      if (!window.FooterLogo) await loadScriptOnce('/public/js/logo.js');
 
-      // Init modules
+      // Inicializar módulos
       window.Changelog && window.Changelog.init({
         targetId: 'ftr-changelog',
         versionUrl: 'version.json'

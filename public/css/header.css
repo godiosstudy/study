@@ -82,3 +82,42 @@
   overflow: hidden; clip: rect(0, 0, 0, 0);
   white-space: nowrap; border: 0;
 }
+/* === Iconos del header sin rectángulo, con sombra al pasar el mouse === */
+
+/* Contenedor de los botones del header (login, register, prefs) */
+.hdr-right .chip {
+  background: transparent;     /* sin fondo blanco */
+  border: none;                /* sin borde */
+  box-shadow: none;            /* sin sombra por defecto */
+
+  padding: 4px;                /* área clickeable cómoda */
+  border-radius: 999px;        /* por si el hover usa sombra redondeada */
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+}
+
+/* El icono Lucide en sí */
+.hdr-right .chip i[data-lucide] {
+  width: 22px;
+  height: 22px;
+  stroke-width: 1.8;
+  color: var(--header-fg, #1f2933);
+}
+
+/* Hover / focus: solo sombra por debajo y color de icono */
+.hdr-right .chip:hover,
+.hdr-right .chip:focus-visible {
+  background: transparent;   /* sigue sin rectángulo */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.80);  /* sombra por debajo */
+  transform: translateY(-1px);                  /* leve “elevación” */
+}
+
+/* Cambiar solo el color del icono al pasar encima */
+.hdr-right .chip:hover i[data-lucide],
+.hdr-right .chip:focus-visible i[data-lucide] {
+  color: var(--accent, #4b6fff);
+}

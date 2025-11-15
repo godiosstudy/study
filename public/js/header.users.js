@@ -1,118 +1,232 @@
-;(function(){
+;(function () {
   const bus = window;
-  const LS_KEY = 'auth.user';
+  const LS_KEY = "auth.user";
 
-  function getUser(){
-    try { return JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch { return null; }
+  function loadPrefs() {
+    try {
+      return window.PrefsStore && window.PrefsStore.load
+        ? window.PrefsStore.load()
+        : null;
+    } catch {
+      return null;
+    }
   }
-  function setUser(u){
+
+  function currentLang() {
+    const prefs = loadPrefs();
+    return (prefs && prefs.language) || "es";
+  }
+
+  function t(path, fallback) {
+    const lang = currentLang();
+    const TR = window.I18n && window.I18n.__TR;
+    let cur = TR && TR[lang];
+
+    if (cur && path) {
+      const parts = path.split(".");
+      for (const p of parts) {
+        if (cur == null) break;
+        cur = cur[p];
+      }
+    }
+
+    if (cur != null && cur !== "") return cur;
+    return fallback || path;
+  }
+
+  function getUser() {
+    try {
+      return JSON.parse(localStorage.getItem(LS_KEY) || "null");
+    } catch {
+      return null;
+    }
+  }
+
+  function setUser(u) {
     if (u) localStorage.setItem(LS_KEY, JSON.stringify(u));
     else localStorage.removeItem(LS_KEY);
-    bus.dispatchEvent(new CustomEvent('auth:changed', { detail: u }));
+    bus.dispatchEvent(new CustomEvent("auth:changed", { detail: u }));
   }
 
-    // i18n via global I18n
-  function t(key){ return (window.I18n && window.I18n.t) ? window.I18n.t(key) : key; }
-
-  function el(tag, attrs={}, children=[]){
+  function el(tag, attrs = {}, children = []) {
     const node = document.createElement(tag);
-    Object.entries(attrs).forEach(([k,v])=>{
-      if (k === 'class') node.className = v;
-      else if (k === 'text') node.textContent = v;
-      else if (k.startsWith('on') && typeof v === 'function') node.addEventListener(k.slice(2), v);
-      else node.setAttribute(k, v);
+    Object.entries(attrs).forEach(([k, v]) => {
+      if (k === "class") node.className = v;
+      else if (k === "text") node.textContent = v;
+      else if (k.startsWith("on") && typeof v === "function")
+        node.addEventListener(k.slice(2), v);
+      else if (v != null) node.setAttribute(k, v);
     });
-    children.forEach(c => node.appendChild(c));
+    children.forEach((c) => c && node.appendChild(c));
     return node;
   }
 
-  function chip({id, icon, label, aria, onClick}){
-    const btn = el('button', { class: 'chip icon-only', id, 'aria-label': label, title: label });
-    const i = el('i', { 'data-lucide': icon });
-    const sr = el('span', { class: 'sr-only', text: aria || label });
+  function chip({ id, icon, label, onClick }) {
+    const btn = el("button", {
+      class: "chip icon-only",
+      id,
+      "aria-label": label,
+      title: label,
+    });
+
+    const i = el("i", { "data-lucide": icon });
+    const sr = el("span", { class: "sr-only", text: label });
+
     btn.appendChild(i);
     btn.appendChild(sr);
-    if (onClick) btn.addEventListener('click', onClick);
+
+    if (typeof onClick === "function") {
+      btn.addEventListener("click", onClick);
+    }
+
     return btn;
   }
 
-  function render(){
-    const hdrRight = document.querySelector('.hdr-right');
+  function render() {
+    const hdrRight = document.querySelector(".hdr-right");
     if (!hdrRight) return;
-    // Remove any old dynamic group
-    let group = hdrRight.querySelector('.hdr-actions');
+
+    // limpiar grupo anterior
+    let group = hdrRight.querySelector(".hdr-actions");
     if (group) group.remove();
-    group = el('div', { class: 'hdr-actions' });
+    group = el("div", { class: "hdr-actions" });
 
     const user = getUser();
 
-    if (user){
-      group.appendChild(chip({
-        id: 'hdr-account',
-        icon: 'user',
-        label: t('buttons.myAccount'),
-        onClick: ()=> window.UsersAccount?.open?.(user)
-      }));
-      group.appendChild(chip({
-        id: 'hdr-logout',
-        icon: 'user',
-        label: t('buttons.logout'),
-        onClick: ()=> window.UsersSignOut?.run?.(setUser)
-      }));
+    if (user) {
+      // === LOGUEADO ===
+
+      // Mi cuenta
+      const accountLabel = t("buttons.myAccount", "My account");
+      group.appendChild(
+        chip({
+          id: "hdr-account",
+          icon: "user-pen",
+          label: accountLabel,
+          onClick: () => {
+            if (
+              window.UsersAccount &&
+              typeof window.UsersAccount.open === "function"
+            ) {
+              window.UsersAccount.open(user);
+            }
+          },
+        })
+      );
+
+      // Cerrar sesión
+      const logoutLabel = t("buttons.logout", "Log out");
+      group.appendChild(
+        chip({
+          id: "hdr-logout",
+          icon: "log-out",
+          label: logoutLabel,
+          onClick: () => {
+            if (
+              window.UsersSignOut &&
+              typeof window.UsersSignOut.run === "function"
+            ) {
+              window.UsersSignOut.run(setUser);
+            } else {
+              setUser(null);
+            }
+          },
+        })
+      );
     } else {
-      group.appendChild(chip({
-        id: 'hdr-signin',
-        icon: 'person-standing',
-        label: t('buttons.signIn'),
-        onClick: ()=> window.UsersLogin?.open?.(setUser)
-      }));
-      group.appendChild(chip({
-        id: 'hdr-register',
-        icon: 'user-plus',
-        label: t('buttons.register'),
-        onClick: ()=> window.UsersRegister?.open?.(setUser)
-      }));
+      // === INVITADO ===
+
+      // Iniciar sesión
+      const signInLabel = t("buttons.signIn", "Login");
+      group.appendChild(
+        chip({
+          id: "hdr-signin",
+          icon: "user-lock",
+          label: signInLabel,
+          onClick: () => {
+            if (
+              window.UsersLogin &&
+              typeof window.UsersLogin.open === "function"
+            ) {
+              window.UsersLogin.open(setUser);
+            }
+          },
+        })
+      );
+
+      // Registrarse
+      const registerLabel = t("buttons.register", "Register");
+      group.appendChild(
+        chip({
+          id: "hdr-register",
+          icon: "user-plus",
+          label: registerLabel,
+          onClick: () => {
+            if (
+              window.UsersRegister &&
+              typeof window.UsersRegister.open === "function"
+            ) {
+              window.UsersRegister.open(setUser);
+            }
+          },
+        })
+      );
     }
 
-    // Keep existing preferences button if there, else add one
-    let prefsBtn = hdrRight.querySelector('#hdr-preferences');
-if (!prefsBtn){
-  prefsBtn = chip({ id: 'hdr-preferences', icon: 'settings', label: t('buttons.preferences') });
-} else {
-  // Localize existing preferences button tooltip + a11y label
-  const prefLabel = t('buttons.preferences');
-  prefsBtn.setAttribute('title', prefLabel);
-  prefsBtn.setAttribute('aria-label', prefLabel);
-  const sr = prefsBtn.querySelector('.sr-only');
-  if (sr) sr.textContent = prefLabel;
-}
-// Move preferences into the group as the last button (no clone)
-group.appendChild(prefsBtn);
-    // Remove old users button if present
-    const oldUsers = hdrRight.querySelector('#hdr-users');
+    // === PREFERENCIAS (siempre, icono "settings") ===
+    let prefsBtn = hdrRight.querySelector("#hdr-preferences");
+    const prefsLabel = t("buttons.preferences", "Preferences");
+
+    if (!prefsBtn) {
+      prefsBtn = chip({
+        id: "hdr-preferences",
+        icon: "settings",
+        label: prefsLabel,
+        onClick: () => {
+          if (window.Prefs && typeof window.Prefs.open === "function") {
+            window.Prefs.open();
+          } else if (
+            window.PrefsStore &&
+            typeof window.PrefsStore.open === "function"
+          ) {
+            window.PrefsStore.open();
+          }
+        },
+      });
+    } else {
+      // solo actualizamos texto/tooltip si el botón ya existe en el HTML
+      prefsBtn.setAttribute("title", prefsLabel);
+      prefsBtn.setAttribute("aria-label", prefsLabel);
+      const sr = prefsBtn.querySelector(".sr-only");
+      if (sr) sr.textContent = prefsLabel;
+    }
+
+    group.appendChild(prefsBtn);
+
+    // quitar botón viejo de users si sigue ahí
+    const oldUsers = hdrRight.querySelector("#hdr-users");
     if (oldUsers) oldUsers.remove();
 
     hdrRight.appendChild(group);
 
-    // Cleanup: if another #hdr-preferences exists outside the group, remove it
-    hdrRight.querySelectorAll('#hdr-preferences').forEach((btn)=>{
-      if (btn.parentElement !== group) btn.remove();
-    });
-    if (window.lucide?.createIcons) window.lucide.createIcons();
+    // reconstruir íconos Lucide
+    if (window.lucide && typeof window.lucide.createIcons === "function") {
+      window.lucide.createIcons();
+    }
   }
 
-  function init(){
+  function init() {
     render();
-    window.addEventListener('prefs:applied', render);
-    window.addEventListener('auth:changed', render);
-    window.addEventListener('i18n:changed', render);
+    window.addEventListener("prefs:applied", render);
+    window.addEventListener("auth:changed", render);
   }
 
-  // Public API (simple)
   window.App = window.App || {};
   window.App.Users = { init, getUser, setUser };
 
-  // Autoinit
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 })();

@@ -5,172 +5,257 @@
     'Talmud': ['Mishná','Guemará']
   };
 
+  // ---------- Fuentes desde carpeta public/fonts ----------
   const FONT_EXTS = ['.woff2','.woff','.ttf','.otf','.ttc'];
   const FontMap = new Map();
+  let cachedFontFamilies = null;
 
-  function basename(path){ const i = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')); return i >= 0 ? path.slice(i+1) : path; }
+  function basename(path){
+    const i = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+    return i >= 0 ? path.slice(i+1) : path;
+  }
   function stripExt(name){
     const lower = name.toLowerCase();
-    for (const ext of FONT_EXTS){ if (lower.endsWith(ext)) return name.slice(0, -ext.length); }
+    for (const ext of FONT_EXTS){
+      if (lower.endsWith(ext)) return name.slice(0, -ext.length);
+    }
     return name;
   }
-  function guessFamilyFromFilename(file){
-    const base = stripExt(basename(file));
-    const idx = base.indexOf('-');
-    return (idx > 0 ? base.slice(0, idx) : base).replace(/[_]+/g,' ').trim();
+  function guessFamilyFromFilename(path){
+    const base = stripExt(basename(path));
+    return base
+      .replace(/[-_]*regular$/i,'')
+      .replace(/[-_]*italic$/i,'')
+      .replace(/[-_]*bold$/i,'')
+      || base;
   }
 
-  async function tryDirectoryListingOnce(url){
-    try {
-      const res = await fetch(url, { cache: 'no-store' });
-      if (!res.ok) return null;
-      const text = await res.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(text, 'text/html');
-      const anchors = Array.from(doc.querySelectorAll('a[href]'));
-      const hrefs = anchors.map(a => a.getAttribute('href'));
-      const files = hrefs.filter(h => (h||'').toLowerCase().endsWith('.woff2') || (h||'').toLowerCase().endsWith('.woff') || (h||'').toLowerCase().endsWith('.ttf') || (h||'').toLowerCase().endsWith('.otf') || (h||'').toLowerCase().endsWith('.ttc'));
-      if (!files.length) return null;
-      const norm = files.map(h => /^https?:\/\//i.test(h) ? h : (h.startsWith('/') ? h : ('fonts/' + h.replace(/^\.\//,''))));
-      return norm;
-    } catch { return null; }
-  }
   async function discoverFonts(){
-    const urls = await tryDirectoryListingOnce('fonts/');
-    if (urls && urls.length){
-      const map = new Map();
-      for (const f of urls){
-        const fam = guessFamilyFromFilename(f);
-        if (!map.has(fam)) map.set(fam, []);
-        map.get(fam).push(f);
-      }
-      for (const [fam, list] of map.entries()){
-        FontMap.set(fam, list);
-        ensureFontFaceInjected(fam, list);
-      }
-      return Array.from(map.keys());
+    if (cachedFontFamilies) return cachedFontFamilies;
+
+    const prefix = 'public/fonts/';
+    try {
+      const res = await fetch(prefix, { cache: 'no-store' });
+      if (!res.ok) throw new Error(String(res.status));
+      const text = await res.text();
+      const doc = new DOMParser().parseFromString(text, 'text/html');
+      const anchors = Array.from(doc.querySelectorAll('a[href]'));
+
+      const urls = [];
+      anchors.forEach(a=>{
+        const h = (a.getAttribute('href') || '').trim();
+        if (!h) return;
+        const lower = h.toLowerCase();
+        if (!FONT_EXTS.some(ext => lower.endsWith(ext))) return;
+
+        let url;
+        if (/^https?:\/\//i.test(h)) url = h;
+        else if (h.startsWith('/')) url = h;
+        else url = prefix + h.replace(/^\.\//,'');
+        urls.push(url);
+      });
+
+      const famSet = new Set();
+      urls.forEach(u=>{
+        const fam = guessFamilyFromFilename(u);
+        if (!fam) return;
+        famSet.add(fam);
+        if (!FontMap.has(fam)) FontMap.set(fam, []);
+        FontMap.get(fam).push(u);
+      });
+
+      let families = Array.from(famSet).sort();
+      if (!families.length) families = ['System'];
+      else if (!families.includes('System')) families.unshift('System');
+
+      cachedFontFamilies = families;
+      return families;
+    } catch(e){
+      console.warn('[prefs] No se pudieron descubrir fuentes en public/fonts/', e);
+      cachedFontFamilies = ['System'];
+      return cachedFontFamilies;
     }
-    // Fallback: try css/fonts.css
-    try{
-      const res = await fetch('css/fonts.css', { cache: 'no-store' });
-      if (res.ok){
-        const css = await res.text();
-        const fams = new Set();
-        const re = /@font-face[\s\S]*?font-family\s*:\s*(['\"]?)([^;'\"]+)\1\s*;/gi;
-        let m; while((m = re.exec(css))) fams.add(m[2].trim());
-        return Array.from(fams);
-      }
-    }catch{}
-    return [];
   }
-  function ensureFontFaceInjected(family, urls){
-    const id = 'dyn-fontface-' + family.replace(/\s+/g,'-').toLowerCase();
+
+  function ensureFontFaceInjected(family){
+    if (!family || family === 'System') return;
+    const id = 'dyn-font-' + family.replace(/[^a-z0-9_-]/gi, '_');
     if (document.getElementById(id)) return;
-    const w2 = urls.find(u=>u.toLowerCase().endsWith('.woff2'));
-    const w1 = urls.find(u=>u.toLowerCase().endsWith('.woff'));
-    const ttf = urls.find(u=>u.toLowerCase().endsWith('.ttf'));
-    const otf = urls.find(u=>u.toLowerCase().endsWith('.otf'));
-    const ttc = urls.find(u=>u.toLowerCase().endsWith('.ttc'));
-    const src = [];
-    if (w2) src.push(`url('${w2}') format('woff2')`);
-    if (w1) src.push(`url('${w1}') format('woff')`);
-    if (ttf) src.push(`url('${ttf}') format('truetype')`);
-    if (otf) src.push(`url('${otf}') format('opentype')`);
-    if (ttc) src.push(`url('${ttc}') format('truetype')`);
-    if (!src.length) return;
+
+    const urls = FontMap.get(family);
+    if (!urls || !urls.length) return;
+
+    const sources = urls.map(u=>{
+      const lower = u.toLowerCase();
+      let fmt = 'truetype';
+      if (lower.endsWith('.woff2')) fmt = 'woff2';
+      else if (lower.endsWith('.woff')) fmt = 'woff';
+      else if (lower.endsWith('.otf')) fmt = 'opentype';
+      return "url('"+u+"') format('"+fmt+"')";
+    });
+
     const style = document.createElement('style');
     style.id = id;
-    style.textContent = `@font-face{font-family:'${family}';src:${src.join(', ')};font-weight:100 900;font-style:normal;font-display:swap;}`;
+    style.textContent =
+      "@font-face{" +
+      "font-family:'"+family+"';" +
+      "src:"+sources.join(',')+";" +
+      "font-weight:100 900;" +
+      "font-style:normal;" +
+      "font-display:swap;" +
+      "}";
     document.head.appendChild(style);
   }
 
-  function createModal() {
-    if (document.getElementById('prefs-modal')) return;
-    const wrap = document.createElement('div');
-    wrap.id = 'prefs-modal';
-    wrap.className = 'prefs-modal';
-    wrap.setAttribute('aria-hidden','true');
-    wrap.setAttribute('inert','');
-    wrap.innerHTML = `
-      <div class="prefs-dialog" role="dialog" aria-modal="true" aria-labelledby="prefs-title" tabindex="-1">
-        <header class="prefs-head">
-          <h2 id="prefs-title">Preferencias</h2>
-          <button class="prefs-close" id="prefs-close" aria-label="Cerrar">×</button>
-        </header>
-        <div class="prefs-body">
-          <div class="prefs-field">
-            <label for="pref-language">Language</label>
-            <select id="pref-language"></select>
-          </div>
-          <div class="prefs-field">
-            <label for="pref-collection">Collection</label>
-            <select id="pref-collection"></select>
-          </div>
-          <div class="prefs-field">
-            <label for="pref-corpus">Corpus</label>
-            <select id="pref-corpus"></select>
-          </div>
-          <div class="prefs-field">
-            <label for="pref-font">Font Type</label>
-            <select id="pref-font"></select>
-          </div>
-          <div class="prefs-field">
-            <label for="pref-font-size">Font Size: <span id="pref-font-size-val">12pt</span></label>
-            <input id="pref-font-size" type="range" min="8" max="22" step="1" value="12">
-          </div>
-          <div class="prefs-inline">
-            <div class="prefs-field">
-              <label for="pref-color">Color (accent)</label>
-              <div class="prefs-color">
-                <input id="pref-color" type="color" value="#000000">
-                <input id="pref-color-hex" type="text" value="#000000" maxlength="7" pattern="^#([A-Fa-f0-9]{6})$">
+  // ---------- Estado del modal ----------
+  let modal = null;
+  let controls = {};
+  let lastSavedPrefs = null;
+  let initialized = false;
+
+  function ensureModal(){
+    if (initialized) return;
+    modal = document.getElementById('prefs-modal');
+    if (!modal){
+      modal = document.createElement('div');
+      modal.id = 'prefs-modal';
+      modal.className = 'prefs-modal';
+      modal.setAttribute('aria-hidden','true');
+      modal.setAttribute('inert','');
+      modal.innerHTML = `
+        <div class="prefs-dialog" role="dialog" aria-modal="true" aria-labelledby="prefs-title" tabindex="-1">
+          <header class="prefs-head">
+            <h2 id="prefs-title">Preferencias</h2>
+            <button class="prefs-close" id="prefs-close" aria-label="Cerrar">×</button>
+          </header>
+          <div class="prefs-body">
+            <div class="prefs-row prefs-row-top">
+              <div class="prefs-field">
+                <label for="pref-language">Idioma</label>
+                <select id="pref-language"></select>
+              </div>
+              <div class="prefs-field">
+                <label for="pref-color">Color (acento)</label>
+                <div class="prefs-color">
+                  <input id="pref-color" type="color" value="#000000">
+                  <input id="pref-color-hex" type="text" value="#000000" maxlength="7" pattern="^#([A-Fa-f0-9]{6})$">
+                </div>
+              </div>
+              <div class="prefs-field">
+                <label for="pref-light">Luz</label>
+                <label class="prefs-switch">
+                  <input id="pref-light" type="checkbox" checked>
+                  <span class="prefs-switch-track">
+                    <span class="prefs-switch-thumb"></span>
+                  </span>
+                  <span id="pref-light-text" class="prefs-switch-text">On</span>
+                </label>
               </div>
             </div>
             <div class="prefs-field">
-              <label>Light</label>
-              <div class="prefs-toggle">
-                <button id="pref-light-on"  data-val="on"  class="toggle active">On</button>
-                <button id="pref-light-off" data-val="off" class="toggle">Off</button>
+              <label for="pref-collection">Colección</label>
+              <select id="pref-collection"></select>
+            </div>
+            <div class="prefs-field">
+              <label for="pref-corpus">Corpus</label>
+              <select id="pref-corpus"></select>
+            </div>
+            <div class="prefs-row prefs-row-font">
+              <div class="prefs-field">
+                <label for="pref-font">Tipo de Fuente</label>
+                <select id="pref-font"></select>
+              </div>
+              <div class="prefs-field prefs-field-font-size">
+                <label for="pref-font-size">Tamaño de Fuente: <span id="pref-font-size-val">12pt</span></label>
+                <input id="pref-font-size" type="range" min="8" max="22" step="1" value="12">
               </div>
             </div>
           </div>
-        </div>
-        <footer class="prefs-foot">
-          <button id="prefs-cancel" class="btn ghost">Cancelar</button>
-          <button id="prefs-save" class="btn primary">Guardar</button>
-        </footer>
-      </div>`;
-    document.body.appendChild(wrap);
-  }
-
-  function firstFocusable(root){
-    return root.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-  }
-
-  function open(){
-    const m = document.getElementById('prefs-modal');
-    if (!m) return;
-    m.classList.add('open');
-    m.removeAttribute('aria-hidden');
-    m.removeAttribute('inert');
-    const dlg = m.querySelector('.prefs-dialog');
-    const first = firstFocusable(dlg) || dlg;
-    first && first.focus();
-  }
-
-  function close(opener){
-    const m = document.getElementById('prefs-modal');
-    if (!m) return;
-    // Move focus OUT before hiding
-    if (opener) try { opener.focus(); } catch {}
-    if (document.activeElement && m.contains(document.activeElement)) {
-      try { document.activeElement.blur(); } catch {}
+          <footer class="prefs-foot">
+            <button id="prefs-cancel" class="btn ghost">Cancelar</button>
+            <button id="prefs-save" class="btn primary">Guardar</button>
+          </footer>
+        </div>`;
+      document.body.appendChild(modal);
     }
-    m.classList.remove('open');
-    m.setAttribute('aria-hidden','true');
-    m.setAttribute('inert','');
+
+    const dlg = modal.querySelector('.prefs-dialog');
+    controls = {
+      dialog: dlg,
+      language: modal.querySelector('#pref-language'),
+      collection: modal.querySelector('#pref-collection'),
+      corpus: modal.querySelector('#pref-corpus'),
+      font: modal.querySelector('#pref-font'),
+      fontSize: modal.querySelector('#pref-font-size'),
+      fontSizeVal: modal.querySelector('#pref-font-size-val'),
+      color: modal.querySelector('#pref-color'),
+      colorHex: modal.querySelector('#pref-color-hex'),
+      light: modal.querySelector('#pref-light'),
+      lightText: modal.querySelector('#pref-light-text'),
+      btnClose: modal.querySelector('#prefs-close'),
+      btnCancel: modal.querySelector('#prefs-cancel'),
+      btnSave: modal.querySelector('#prefs-save'),
+    };
+
+    attachEventHandlers();
+    initialized = true;
   }
 
+  // ---------- i18n ----------
+  function getLang(prefs){
+    if (prefs && prefs.language) return prefs.language;
+    const store = window.PrefsStore;
+    return (store && store.DEFAULTS && store.DEFAULTS.language) || 'es';
+  }
+  function getTR(lang){
+    const base = window.I18n && window.I18n.__TR;
+    return base ? base[lang] : null;
+  }
+  function getPrefsSection(lang){
+    const tr = getTR(lang);
+    return tr && tr.prefs ? tr.prefs : null;
+  }
+  function updateLightText(lang, isOn){
+    if (!controls.lightText) return;
+    const P = getPrefsSection(lang);
+    let txt = isOn ? 'On' : 'Off';
+    if (P && P.light){
+      txt = isOn ? (P.light.on || txt) : (P.light.off || txt);
+    }
+    controls.lightText.textContent = txt;
+  }
+  function applyTranslations(lang){
+    const P = getPrefsSection(lang);
+    if (!P || !controls.dialog) {
+      updateLightText(lang, controls.light && controls.light.checked);
+      return;
+    }
+    const labels = P.labels || {};
+    const titleEl = controls.dialog.querySelector('#prefs-title');
+    if (titleEl && P.title) titleEl.textContent = P.title;
+
+    const map = [
+      ['label[for="pref-language"]', labels.language],
+      ['label[for="pref-color"]', labels.colorAccent],
+      ['label[for="pref-light"]', labels.light],
+      ['label[for="pref-collection"]', labels.collection],
+      ['label[for="pref-corpus"]', labels.corpus],
+      ['label[for="pref-font"]', labels.fontType],
+      ['label[for="pref-font-size"]', labels.fontSize],
+    ];
+    map.forEach(([sel, txt])=>{
+      const el = controls.dialog.querySelector(sel);
+      if (el && txt) el.textContent = txt;
+    });
+
+    const actions = P.actions || {};
+    if (controls.btnCancel && actions.cancel) controls.btnCancel.textContent = actions.cancel;
+    if (controls.btnSave && actions.save) controls.btnSave.textContent = actions.save;
+
+    updateLightText(lang, controls.light && controls.light.checked);
+  }
+
+  // ---------- helpers de UI ----------
   function fillCollections(selectEl, current){
     selectEl.innerHTML='';
     const keys = Object.keys(CONTENT);
@@ -204,184 +289,195 @@
     });
     return selectEl.value;
   }
-  function setLight(onBtn, offBtn, val){
-    [onBtn, offBtn].forEach(b=>b.classList.remove('active'));
-    if (val === 'off') offBtn.classList.add('active'); else onBtn.classList.add('active');
-  }
-  function syncHexFromPicker(picker, hex){ hex.value = picker.value.toUpperCase(); }
-  function syncPickerFromHex(hex, picker){
-    const v = hex.value.trim();
-    if (/^#([A-Fa-f0-9]{6})$/.test(v)) picker.value = v;
-  }
-  function buildPreviewPrefs(saved){
-    const light = document.getElementById('pref-light-off').classList.contains('active') ? 'off' : 'on';
-    return {
-      ...saved,
-      language: document.getElementById('pref-language').value,
-      collection: document.getElementById('pref-collection').value,
-      corpus: document.getElementById('pref-corpus').value,
-      font: document.getElementById('pref-font').value,
-      fontSizePt: parseInt(document.getElementById('pref-font-size').value, 10),
-      colorHex: document.getElementById('pref-color').value,
-      light
-    };
+
+  // ---------- prefs ----------
+  function buildPrefsFromUI(){
+    const store = window.PrefsStore;
+    const base = (store && (store.load && store.load()) ) || (store && store.DEFAULTS) || {};
+    const prefs = { ...base };
+    if (controls.language) prefs.language = controls.language.value || prefs.language;
+    if (controls.collection) prefs.collection = controls.collection.value || prefs.collection;
+    if (controls.corpus) prefs.corpus = controls.corpus.value || prefs.corpus;
+    if (controls.font) prefs.font = controls.font.value || prefs.font;
+    if (controls.fontSize) prefs.fontSizePt = parseInt(controls.fontSize.value, 10) || prefs.fontSizePt || 12;
+    if (controls.color) prefs.colorHex = controls.color.value || prefs.colorHex || '#000000';
+    if (controls.light) prefs.light = controls.light.checked ? 'on' : 'off';
+    return prefs;
   }
 
-  async function preloadFontFamily(family){
-    try {
-      const urls = FontMap.get(family);
-      if (urls && urls.length) ensureFontFaceInjected(family, urls);
-      if (document.fonts && document.fonts.load) {
-        const timeout = new Promise(res => setTimeout(res, 1200));
-        await Promise.race([
-          (async () => {
-            await document.fonts.load(`400 1em "${family}"`);
-            await document.fonts.load(`700 1em "${family}"`);
-          })(),
-          timeout
-        ]);
-      }
-    } catch {}
-  }
+  function fillFromPrefs(prefs){
+    const lang = getLang(prefs);
 
-  async function mount(savedSnapshot){
-    createModal();
-    try { if (window.I18n) { (function(){
-      const t = (k)=> (window.I18n.__TR[(window.PrefsStore?.load()?.language)||'es']?.prefs||{});
-    })(); }
-    } catch {}
-
-
-    const selLang = document.getElementById('pref-language');
-    const selCollection = document.getElementById('pref-collection');
-    const selCorpus = document.getElementById('pref-corpus');
-    const selFont = document.getElementById('pref-font');
-    const rngSize = document.getElementById('pref-font-size');
-    const lblSize = document.getElementById('pref-font-size-val');
-    const inpColor = document.getElementById('pref-color');
-    const inpHex = document.getElementById('pref-color-hex');
-    const lightOn = document.getElementById('pref-light-on');
-    const lightOff = document.getElementById('pref-light-off');
-
-    const prefs = window.PrefsStore.load() || { ...window.PrefsStore.DEFAULTS };
-
-    window.LanguagePrefs.mountLanguageSelect(selLang, prefs.language);
-
-    const selCol = fillCollections(selCollection, prefs.collection);
-    fillCorpus(selCorpus, selCol, prefs.corpus);
-    selCollection.addEventListener('change', ()=> fillCorpus(selCorpus, selCollection.value, null));
-
-    const fontFamilies = await discoverFonts();
-    fillFonts(selFont, fontFamilies, prefs.font);
-
-    rngSize.value = String(prefs.fontSizePt || 12);
-    lblSize.textContent = `${rngSize.value}pt`;
-
-    inpColor.value = (prefs.colorHex || '#000000');
-    inpHex.value = (prefs.colorHex || '#000000').toUpperCase();
-
-    setLight(lightOn, lightOff, prefs.light || 'on');
-
-    async function previewFontThenApply(){
-      const fam = selFont.value;
-      const temp = buildPreviewPrefs(prefs);
-      window.PrefsStore.apply(temp);
-      await preloadFontFamily(fam);
-      window.PrefsStore.apply(buildPreviewPrefs(prefs));
+    // Idioma con banderitas
+    if (controls.language && window.LanguagePrefs && window.LanguagePrefs.mountLanguageSelect){
+      window.LanguagePrefs.mountLanguageSelect(controls.language, lang);
+    } else if (controls.language){
+      controls.language.value = lang;
     }
-    selFont.addEventListener('change', previewFontThenApply);
-    rngSize.addEventListener('input', ()=>{ lblSize.textContent = `${rngSize.value}pt`; window.PrefsStore.apply(buildPreviewPrefs(prefs)); });
-    inpColor.addEventListener('input', ()=>{ syncHexFromPicker(inpColor, inpHex); window.PrefsStore.apply(buildPreviewPrefs(prefs)); });
-    inpHex.addEventListener('input', ()=>{ syncPickerFromHex(inpHex, inpColor); window.PrefsStore.apply(buildPreviewPrefs(prefs)); });
-    lightOn.addEventListener('click', ()=>{ setLight(lightOn, lightOff, 'on'); window.PrefsStore.apply(buildPreviewPrefs(prefs)); });
-    lightOff.addEventListener('click', ()=>{ setLight(lightOn, lightOff, 'off'); window.PrefsStore.apply(buildPreviewPrefs(prefs)); });
 
-    document.getElementById('prefs-close').addEventListener('click', ()=> close(document.getElementById('hdr-preferences')));
-    document.getElementById('prefs-cancel').addEventListener('click', ()=> close(document.getElementById('hdr-preferences')));
-    document.getElementById('prefs-save').addEventListener('click', ()=>{
-      const next = buildPreviewPrefs(prefs);
-      const resolved = { ...window.PrefsStore.DEFAULTS, ...next };
-      window.PrefsStore.save(resolved);
-      window.PrefsStore.apply(resolved);
-      close(document.getElementById('hdr-preferences'));
+    const col = fillCollections(controls.collection, prefs.collection || null);
+    fillCorpus(controls.corpus, col, prefs.corpus || null);
+
+    // Fuentes desde carpeta (async)
+    discoverFonts().then(families=>{
+      fillFonts(controls.font, families, prefs.font || null);
+      const fam = controls.font.value;
+      ensureFontFaceInjected(fam);
+    }).catch(()=>{
+      fillFonts(controls.font, [], prefs.font || null);
     });
 
-    return document.getElementById('prefs-modal');
+    const size = prefs.fontSizePt || 12;
+    controls.fontSize.value = String(size);
+    controls.fontSizeVal.textContent = size + 'pt';
+
+    const color = prefs.colorHex || '#000000';
+    controls.color.value = color;
+    controls.colorHex.value = color.toUpperCase();
+
+    const isLightOn = (prefs.light || 'on') !== 'off';
+    controls.light.checked = isLightOn;
+
+    applyTranslations(lang);
   }
 
-  function bindOpenHandler(){
-    const btnOpen = document.getElementById('hdr-preferences');
-    if (!btnOpen) return;
-    btnOpen.addEventListener('click', async ()=>{
-      const savedSnapshot = window.PrefsStore.load() || { ...window.PrefsStore.DEFAULTS };
-      const modal = await mount(savedSnapshot);
+  function showModal(){
+    if (!modal) return;
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden','false');
+    modal.removeAttribute('inert');
+    if (controls.dialog) controls.dialog.focus();
+  }
+
+  function hideModal(){
+    if (!modal) return;
+
+    // Si el foco está dentro del modal, muévelo fuera antes de ocultarlo
+    const active = document.activeElement;
+    if (active && modal.contains(active)) {
+      const trigger = document.getElementById('hdr-preferences');
+      if (trigger) {
+        trigger.focus();
+      } else {
+        active.blur();
+      }
+    }
+
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden','true');
+    modal.setAttribute('inert','');
+  }
+
+  function attachEventHandlers(){
+    if (!controls.dialog) return;
+
+    controls.btnClose && controls.btnClose.addEventListener('click', ()=>{
+      if (lastSavedPrefs && window.PrefsStore && window.PrefsStore.apply){
+        window.PrefsStore.apply(lastSavedPrefs);
+      }
+      hideModal();
+    });
+
+    controls.btnCancel && controls.btnCancel.addEventListener('click', ()=>{
+      if (lastSavedPrefs && window.PrefsStore && window.PrefsStore.apply){
+        window.PrefsStore.apply(lastSavedPrefs);
+      }
+      hideModal();
+    });
+
+    controls.btnSave && controls.btnSave.addEventListener('click', ()=>{
+      const store = window.PrefsStore;
+      if (!store) { hideModal(); return; }
+      const prefs = buildPrefsFromUI();
+      ensureFontFaceInjected(prefs.font);
+      const resolved = { ...(store.DEFAULTS || {}), ...prefs };
+      store.save && store.save(resolved);
+      store.apply && store.apply(resolved);
+      lastSavedPrefs = resolved;
+      hideModal();
+    });
+
+    controls.language && controls.language.addEventListener('change', ()=>{
+      const prefs = buildPrefsFromUI();
+      const store = window.PrefsStore;
+      store && store.apply && store.apply(prefs);
+      applyTranslations(prefs.language);
+    });
+
+    controls.collection && controls.collection.addEventListener('change', ()=>{
+      const prefs = buildPrefsFromUI();
+      fillCorpus(controls.corpus, controls.collection.value, prefs.corpus || null);
+      const store = window.PrefsStore;
+      store && store.apply && store.apply(buildPrefsFromUI());
+    });
+
+    controls.corpus && controls.corpus.addEventListener('change', ()=>{
+      const store = window.PrefsStore;
+      store && store.apply && store.apply(buildPrefsFromUI());
+    });
+
+    controls.font && controls.font.addEventListener('change', ()=>{
+      const prefs = buildPrefsFromUI();
+      ensureFontFaceInjected(prefs.font);
+      const store = window.PrefsStore;
+      store && store.apply && store.apply(prefs);
+    });
+
+    controls.fontSize && controls.fontSize.addEventListener('input', ()=>{
+      const v = parseInt(controls.fontSize.value, 10) || 12;
+      controls.fontSizeVal.textContent = v + 'pt';
+      const store = window.PrefsStore;
+      store && store.apply && store.apply(buildPrefsFromUI());
+    });
+
+    if (controls.color && controls.colorHex){
+      controls.color.addEventListener('input', ()=>{
+        controls.colorHex.value = controls.color.value.toUpperCase();
+        const store = window.PrefsStore;
+        store && store.apply && store.apply(buildPrefsFromUI());
+      });
+      controls.colorHex.addEventListener('input', ()=>{
+        const v = controls.colorHex.value.trim();
+        if (/^#([A-Fa-f0-9]{6})$/.test(v)) controls.color.value = v;
+        const store = window.PrefsStore;
+        store && store.apply && store.apply(buildPrefsFromUI());
+      });
+    }
+
+    controls.light && controls.light.addEventListener('change', ()=>{
+      const prefs = buildPrefsFromUI();
+      const store = window.PrefsStore;
+      store && store.apply && store.apply(prefs);
+      updateLightText(prefs.language, controls.light.checked);
+    });
+  }
+
+  function open(){
+    ensureModal();
+    const store = window.PrefsStore;
+    const current = (store && store.load && store.load()) || (store && store.DEFAULTS) || {};
+    lastSavedPrefs = { ...(store && store.DEFAULTS || {}), ...current };
+    fillFromPrefs(lastSavedPrefs);
+    showModal();
+  }
+
+  // ---------- botón de preferencias (delegado) ----------
+  function bindPreferencesButton() {
+    document.addEventListener('click', function(e){
+      const btn = e.target && e.target.closest && e.target.closest('#hdr-preferences');
+      if (!btn) return;
+      e.preventDefault();
       open();
     });
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindOpenHandler);
-  else bindOpenHandler();
 
-  document.addEventListener('click', async (e)=>{
-  const btn = e.target && e.target.closest && e.target.closest('#hdr-preferences');
-  if (btn) {
-    const savedSnapshot = window.PrefsStore.load() || { ...window.PrefsStore.DEFAULTS };
-    await mount(savedSnapshot);
-    try { const lang = (window.PrefsStore?.load()?.language)||'es';
-      const T = (window.I18n && window.I18n.__TR && window.I18n.__TR[lang]);
-      if (T && T.prefs){
-        const M = T.prefs;
-        const map = [
-          ['#prefs-title', M.title],
-          ['label[for="pref-language"]', M.labels.language],
-          ['label[for="pref-collection"]', M.labels.collection],
-          ['label[for="pref-corpus"]', M.labels.corpus],
-          ['label[for="pref-font"]', M.labels.fontType],
-          ['label[for="pref-size"]', M.labels.fontSize]
-        ];
-        map.forEach(([sel, txt])=>{ const el=document.querySelector(sel); if(el&&txt) el.textContent=txt; });
-        const lightLbl = document.querySelector('.prefs-field > label:nth-last-of-type(2)');
-        if (lightLbl && M.labels.light) lightLbl.textContent = M.labels.light;
-        const onBtn = document.getElementById('pref-light-on');
-        const offBtn = document.getElementById('pref-light-off');
-        if (onBtn && M.light.on) onBtn.textContent = M.light.on;
-        if (offBtn && M.light.off) offBtn.textContent = M.light.off;
-        const cancel = document.getElementById('prefs-cancel');
-        const save = document.getElementById('prefs-save');
-        if (cancel && M.actions.cancel) cancel.textContent = M.actions.cancel;
-        if (save && M.actions.save) save.textContent = M.actions.save;
-      }
-    } catch {}
-    open();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindPreferencesButton);
+  } else {
+    bindPreferencesButton();
   }
-});
-window.PrefsUI = { open: async ()=>{
-    const savedSnapshot = window.PrefsStore.load() || { ...window.PrefsStore.DEFAULTS };
-    await mount(savedSnapshot);
-    try { const lang = (window.PrefsStore?.load()?.language)||'es';
-      const T = (window.I18n && window.I18n.__TR && window.I18n.__TR[lang]);
-      if (T && T.prefs){
-        const M = T.prefs;
-        const map = [
-          ['#prefs-title', M.title],
-          ['label[for="pref-language"]', M.labels.language],
-          ['label[for="pref-collection"]', M.labels.collection],
-          ['label[for="pref-corpus"]', M.labels.corpus],
-          ['label[for="pref-font"]', M.labels.fontType],
-          ['label[for="pref-size"]', M.labels.fontSize]
-        ];
-        map.forEach(([sel, txt])=>{ const el=document.querySelector(sel); if(el&&txt) el.textContent=txt; });
-        const lightLbl = document.querySelector('.prefs-field > label:nth-last-of-type(2)');
-        if (lightLbl && M.labels.light) lightLbl.textContent = M.labels.light;
-        const onBtn = document.getElementById('pref-light-on');
-        const offBtn = document.getElementById('pref-light-off');
-        if (onBtn && M.light.on) onBtn.textContent = M.light.on;
-        if (offBtn && M.light.off) offBtn.textContent = M.light.off;
-        const cancel = document.getElementById('prefs-cancel');
-        const save = document.getElementById('prefs-save');
-        if (cancel && M.actions.cancel) cancel.textContent = M.actions.cancel;
-        if (save && M.actions.save) save.textContent = M.actions.save;
-      }
-    } catch {}
-    open();
-  } };
+
+  // API pública
+  window.Prefs = { open };
+
 })();
