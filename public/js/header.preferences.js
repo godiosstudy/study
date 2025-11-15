@@ -5,106 +5,70 @@
     'Talmud': ['Mishná','Guemará']
   };
 
-  // ---------- Fuentes desde carpeta public/fonts ----------
-  const FONT_EXTS = ['.woff2','.woff','.ttf','.otf','.ttc'];
-  const FontMap = new Map();
+  // ---------- Fuentes desde @font-face en CSS ----------
   let cachedFontFamilies = null;
 
-  function basename(path){
-    const i = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
-    return i >= 0 ? path.slice(i+1) : path;
-  }
-  function stripExt(name){
-    const lower = name.toLowerCase();
-    for (const ext of FONT_EXTS){
-      if (lower.endsWith(ext)) return name.slice(0, -ext.length);
-    }
-    return name;
-  }
-  function guessFamilyFromFilename(path){
-    const base = stripExt(basename(path));
-    return base
-      .replace(/[-_]*regular$/i,'')
-      .replace(/[-_]*italic$/i,'')
-      .replace(/[-_]*bold$/i,'')
-      || base;
+  function cleanFontName(name) {
+    if (!name) return '';
+    return name
+      .trim()
+      .replace(/^['"]+|['"]+$/g, ''); // quita comillas
   }
 
-  async function discoverFonts(){
+  function getFontFamiliesFromCSS(){
     if (cachedFontFamilies) return cachedFontFamilies;
 
-    const prefix = 'public/fonts/';
-    try {
-      const res = await fetch(prefix, { cache: 'no-store' });
-      if (!res.ok) throw new Error(String(res.status));
-      const text = await res.text();
-      const doc = new DOMParser().parseFromString(text, 'text/html');
-      const anchors = Array.from(doc.querySelectorAll('a[href]'));
+    const famSet = new Set();
 
-      const urls = [];
-      anchors.forEach(a=>{
-        const h = (a.getAttribute('href') || '').trim();
-        if (!h) return;
-        const lower = h.toLowerCase();
-        if (!FONT_EXTS.some(ext => lower.endsWith(ext))) return;
+    const sheets = Array.from(document.styleSheets || []);
+    sheets.forEach(sheet => {
+      let rules;
+      try {
+        rules = sheet.cssRules || sheet.rules;
+      } catch (e) {
+        // algunas hojas pueden ser cross-origin, las ignoramos
+        return;
+      }
+      if (!rules) return;
 
-        let url;
-        if (/^https?:\/\//i.test(h)) url = h;
-        else if (h.startsWith('/')) url = h;
-        else url = prefix + h.replace(/^\.\//,'');
-        urls.push(url);
+      Array.from(rules).forEach(rule => {
+        // CSSFontFaceRule en la mayoría de navegadores
+        const isFontFace =
+          (window.CSSRule && rule.type === CSSRule.FONT_FACE_RULE) ||
+          (rule.constructor && rule.constructor.name === 'CSSFontFaceRule') ||
+          (rule.cssText && /^@font-face/i.test(rule.cssText));
+
+        if (!isFontFace) return;
+
+        const famRaw =
+          (rule.style && (rule.style.getPropertyValue('font-family') || rule.style.fontFamily)) ||
+          '';
+
+        if (!famRaw) return;
+
+        famRaw.split(',').forEach(part => {
+          const clean = cleanFontName(part);
+          if (clean) famSet.add(clean);
+        });
       });
-
-      const famSet = new Set();
-      urls.forEach(u=>{
-        const fam = guessFamilyFromFilename(u);
-        if (!fam) return;
-        famSet.add(fam);
-        if (!FontMap.has(fam)) FontMap.set(fam, []);
-        FontMap.get(fam).push(u);
-      });
-
-      let families = Array.from(famSet).sort();
-      if (!families.length) families = ['System'];
-      else if (!families.includes('System')) families.unshift('System');
-
-      cachedFontFamilies = families;
-      return families;
-    } catch(e){
-      console.warn('[prefs] No se pudieron descubrir fuentes en public/fonts/', e);
-      cachedFontFamilies = ['System'];
-      return cachedFontFamilies;
-    }
-  }
-
-  function ensureFontFaceInjected(family){
-    if (!family || family === 'System') return;
-    const id = 'dyn-font-' + family.replace(/[^a-z0-9_-]/gi, '_');
-    if (document.getElementById(id)) return;
-
-    const urls = FontMap.get(family);
-    if (!urls || !urls.length) return;
-
-    const sources = urls.map(u=>{
-      const lower = u.toLowerCase();
-      let fmt = 'truetype';
-      if (lower.endsWith('.woff2')) fmt = 'woff2';
-      else if (lower.endsWith('.woff')) fmt = 'woff';
-      else if (lower.endsWith('.otf')) fmt = 'opentype';
-      return "url('"+u+"') format('"+fmt+"')";
     });
 
-    const style = document.createElement('style');
-    style.id = id;
-    style.textContent =
-      "@font-face{" +
-      "font-family:'"+family+"';" +
-      "src:"+sources.join(',')+";" +
-      "font-weight:100 900;" +
-      "font-style:normal;" +
-      "font-display:swap;" +
-      "}";
-    document.head.appendChild(style);
+    let list = Array.from(famSet);
+    if (!list.length) {
+      list = ['System'];
+    } else {
+      list.sort();
+      if (!list.includes('System')) list.unshift('System');
+    }
+
+    cachedFontFamilies = list;
+    return cachedFontFamilies;
+  }
+
+  // Si en algún momento quisieras forzar otra cosa, esta función existe,
+  // pero ahora no inyectamos nada dinámico: todo viene de fontfaces.css
+  function ensureFontFaceInjected(/*family*/){
+    // no-op: las fuentes ya están definidas en CSS (fontfaces.css)
   }
 
   // ---------- Estado del modal ----------
@@ -318,14 +282,10 @@
     const col = fillCollections(controls.collection, prefs.collection || null);
     fillCorpus(controls.corpus, col, prefs.corpus || null);
 
-    // Fuentes desde carpeta (async)
-    discoverFonts().then(families=>{
-      fillFonts(controls.font, families, prefs.font || null);
-      const fam = controls.font.value;
-      ensureFontFaceInjected(fam);
-    }).catch(()=>{
-      fillFonts(controls.font, [], prefs.font || null);
-    });
+    // Fuentes desde CSS (@font-face)
+    const families = getFontFamiliesFromCSS();
+    fillFonts(controls.font, families, prefs.font || null);
+    ensureFontFaceInjected(controls.font.value);
 
     const size = prefs.fontSizePt || 12;
     controls.fontSize.value = String(size);
@@ -352,7 +312,7 @@
   function hideModal(){
     if (!modal) return;
 
-    // Si el foco está dentro del modal, muévelo fuera antes de ocultarlo
+    // Mover el foco fuera del modal para evitar el warning de aria-hidden
     const active = document.activeElement;
     if (active && modal.contains(active)) {
       const trigger = document.getElementById('hdr-preferences');
