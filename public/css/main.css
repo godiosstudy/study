@@ -1,31 +1,104 @@
-/* Main */
-.main-wrap { padding: 16px 0 24px; background: var(--main-bg); font: var(--base-pt)/1.5 var(--app-font); }
-.grid { display: grid; grid-template-columns: 260px 1fr 420px; gap: 16px; }
-.verse { padding: 8px 10px; border-radius: 8px; }
-.verse:hover { background: var(--hover); }
-/* === Mobile Stack Fix (Navigation → Results → Focus) === */
-@media (max-width: 768px){
-  /* stack single column */
-  .app-grid{ 
-    display: block !important;
-  }
-  /* panels full-width */
-  .panel, .panel--nav, .panel--results, .panel--focus, 
-  .navigation, .results, .focus, #focus, [id*="focus"]{
-    width: 100% !important;
-    max-width: 100% !important;
-    float: none !important;
-    position: static !important;
-    box-sizing: border-box;
-  }
-  /* avoid side scroll */
-  html, body { overflow-x: hidden; }
-  /* spacing between sections */
-  .panel + .panel{ margin-top: 1rem; }
-  .navigation + .results, .results + .focus{ margin-top: 1rem; }
-  /* media inside focus */
-  #focus img, #focus video, .focus img, .focus video{
-    max-width: 100%; height: auto; display: block;
+/* El main se desplaza debajo del header (60px) + toolbar (~44px) + solapa */
+#app-main {
+  margin-top: 140px;           /* header (60) + toolbar (~44) + espacio para la solapa */
+  padding-bottom: 40px;
+}
+
+/* Contenedor interno del main */
+.main-wrap {
+  padding-block: 16px;
+}
+
+/* Layout de estudio (3 columnas) */
+.main-layout-study .grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr) minmax(0, 1.1fr);
+  gap: 16px;
+}
+
+/* "Panel" es solo estructura, SIN tarjetas */
+.panel {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  padding: 0;
+  min-height: 0;
+}
+
+/* Subtítulos internos (Navegación / Resultados / Focus) */
+.panel h2,
+.panel h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Panel "single" (welcome, prefs, changelog, login, etc.) */
+.panel-single {
+  max-width: 720px;
+  margin: 0 auto;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  padding: 12px 0;
+}
+
+/* === SOLAPA CENTRAL: título de la vista actual === */
+#view-title.view-title-pill {
+  position: fixed;
+  top: 104px;                /* justo debajo de la toolbar */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 850;
+
+  /* Forma de la solapa */
+  height: 32px;
+  padding: 0 20px;           /* solo padding horizontal */
+  background: var(--accent, #4b6fff);      /* color de sistema */
+  border-radius: 10px 10px 18px 18px;
+
+  /* Texto centrado y usando el MISMO color que el domain e iconos */
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--header-fg, #ffffff);        /* 👈 igual que logo + iconos */
+  line-height: 32px;                       /* centro vertical perfecto */
+  text-align: center;
+  white-space: nowrap;
+
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
+
+  display: none;                           /* se muestra desde JS */
+}
+
+/* Subtítulo opcional dentro de la vista (ej: bienvenida) */
+.main-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Vista de bienvenida centrada vertical/horizontal (aprox) */
+.main-welcome {
+  min-height: calc(100vh - 140px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.main-welcome-inner {
+  text-align: center;
+}
+
+/* Lista básica */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Responsivo: columnas se apilan en móvil */
+@media (max-width: 960px) {
+  .main-layout-study .grid {
+    grid-template-columns: 1fr;
   }
 }
-/* === /Mobile Stack Fix === */

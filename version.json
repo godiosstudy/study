@@ -1,9 +1,19 @@
-{
-  "version": "0.2.0",
-  "date": "2025-11-14",
-  "notes": [
-    "Preferencias compactas.",
-    "Header fijo arriba.",
-    "Fuentes desde CSS (@font-face)."
-  ]
-}
+[
+  {
+    "version": "0.2.0",
+    "date": "2025-11-14",
+    "notes": [
+      "Ventana de Preferencias compacta y usable en mobile.",
+      "Selector de fuentes leyendo @font-face desde CSS.",
+      "Header fijo y responsive; iconos siempre visibles en el celular.",
+      "Limpieza de loader y errores de consola (fonts, changelog, etc.)."
+    ]
+  },
+  {
+    "version": "0.1.0",
+    "date": "2025-11-13",
+    "notes": [
+      "Versión inicial de Study.GODiOS.org con header, toolbar, panels y preferencias básicas."
+    ]
+  }
+]

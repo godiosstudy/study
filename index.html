@@ -14,16 +14,12 @@
   <link rel="stylesheet" href="/public/css/header.users.css">
   <link rel="stylesheet" href="/public/css/toolbar.css">
   <link rel="stylesheet" href="/public/css/main.css">
-  <link rel="stylesheet" href="/public/css/loader.css">
+  
+  <!-- CSS <link rel="stylesheet" href="/public/css/loader.css">-->
+
   <link rel="stylesheet" href="/public/css/footer.css">
   <link rel="stylesheet" href="/public/css/header.preferences.css">
-  <link rel="stylesheet" href="/public/css/fonts.css">
-
-  <!-- (Opcional, no molesta que quede) -->
-  <script type="application/json" id="fonts-manifest">
-    ["Inter","Merriweather","Space Grotesk"]
-  </script>
-
+  
   <!-- Supabase SDK -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
@@ -68,28 +64,19 @@
     </div>
   </div>
 
-  <!-- Main -->
-  <main id="app-main" class="container main-wrap">
-    <div class="grid">
-      <section class="panel" id="nav-panel">
-        <h3>Navegación</h3>
-        <ul id="nav-list" class="list"></ul>
-      </section>
-      <section class="panel" id="results-panel">
-        <h3>Resultados</h3>
-        <div id="results-list"></div>
-      </section>
-      <section class="panel" id="focus-panel">
-        <h3>Focus</h3>
-        <article id="focus-view"></article>
-      </section>
-    </div>
-  </main>
+  <!-- Título de la vista actual (solapa fija en el centro) -->
+  <div id="view-title" class="view-title-pill"></div>
 
-  <!-- Loader -->
-  <div id="app-loader" class="loader-backdrop" aria-hidden="true">
-    <div class="loader"></div>
+  <!-- Main (contenido dinámico, scrollable) -->
+  <main id="app-main"></main>
+
+  <!-- Loader (desactivado por ahora)
+  <div id="app-loader" class="loader-root">
+    <div class="loader-wrap">
+      <div class="loader"></div>
+    </div>
   </div>
+  -->
 
   <!-- Footer -->
   <footer id="app-footer" class="ftr-wrap">
@@ -106,7 +93,8 @@
   <script src="/public/js/header.preferences.language.js"></script>
   <script src="/public/js/header.preferences.js"></script>
 
-  <script src="/public/js/loader.js"></script>
+  <!-- <script src="/public/js/loader.js"></script> -->
+
   <script src="/public/js/header.users.login.js"></script>
   <script src="/public/js/header.users.register.js"></script>
   <script src="/public/js/header.users.forget.js"></script>

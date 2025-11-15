@@ -1,11 +1,13 @@
-;(function(){
+// public/js/header.preferences.js
+;(function () {
+  // ---------- Datos fijos de colección / corpus ----------
   const CONTENT = {
-    'Biblia': ['AT','NT'],
-    'Corán': ['Libro'],
-    'Talmud': ['Mishná','Guemará']
+    Biblia: ['AT', 'NT'],
+    Corán: ['Libro'],
+    Talmud: ['Mishná', 'Guemará'],
   };
 
-  // ---------- Fuentes leídas desde @font-face en CSS ----------
+  // ---------- Descubrir fuentes desde @font-face en CSS ----------
   let cachedFontFamilies = null;
 
   function cleanFontName(name) {
@@ -19,17 +21,17 @@
     const famSet = new Set();
     const sheets = Array.from(document.styleSheets || []);
 
-    sheets.forEach(sheet => {
+    sheets.forEach((sheet) => {
       let rules;
       try {
         rules = sheet.cssRules || sheet.rules;
       } catch (e) {
-        // Algunas hojas (CDN, etc.) pueden dar error por CORS, las ignoramos
+        // CSS externo o bloqueado por CORS → lo saltamos
         return;
       }
       if (!rules) return;
 
-      Array.from(rules).forEach(rule => {
+      Array.from(rules).forEach((rule) => {
         const isFontFace =
           (window.CSSRule && rule.type === CSSRule.FONT_FACE_RULE) ||
           (rule.constructor && rule.constructor.name === 'CSSFontFaceRule') ||
@@ -38,12 +40,13 @@
         if (!isFontFace) return;
 
         const famRaw =
-          (rule.style && (rule.style.getPropertyValue('font-family') || rule.style.fontFamily)) ||
+          (rule.style &&
+            (rule.style.getPropertyValue('font-family') || rule.style.fontFamily)) ||
           '';
 
         if (!famRaw) return;
 
-        famRaw.split(',').forEach(part => {
+        famRaw.split(',').forEach((part) => {
           const clean = cleanFontName(part);
           if (clean) famSet.add(clean);
         });
@@ -63,31 +66,177 @@
     return cachedFontFamilies;
   }
 
-  function ensureFontFaceInjected(/*family*/) {
-    // No hace falta inyectar nada: todas las fuentes están en fontfaces.css
+  // ---------- i18n helpers ----------
+  function getPrefsLang(prefs) {
+    if (prefs && prefs.language) return prefs.language;
+    const store = window.PrefsStore;
+    return (store && store.DEFAULTS && store.DEFAULTS.language) || 'es';
   }
 
-  // ---------- Estado del modal ----------
-  let modal = null;
-  let controls = {};
-  let lastSavedPrefs = null;
-  let initialized = false;
+  function getTR(lang) {
+    const base = window.I18n && window.I18n.__TR;
+    return base ? base[lang] : null;
+  }
 
-  function ensureModal(){
-    if (initialized) return;
-    modal = document.getElementById('prefs-modal');
-    if (!modal){
-      modal = document.createElement('div');
-      modal.id = 'prefs-modal';
-      modal.className = 'prefs-modal';
-      modal.setAttribute('aria-hidden','true');
-      modal.setAttribute('inert','');
-      modal.innerHTML = `
-        <div class="prefs-dialog" role="dialog" aria-modal="true" aria-labelledby="prefs-title" tabindex="-1">
-          <header class="prefs-head">
-            <h2 id="prefs-title">Preferencias</h2>
-            <button class="prefs-close" id="prefs-close" aria-label="Cerrar">×</button>
-          </header>
+  function getPrefsSection(lang) {
+    const tr = getTR(lang);
+    return tr && tr.prefs ? tr.prefs : null;
+  }
+
+  function updateLightText(controls, lang, isOn) {
+    if (!controls.lightText) return;
+    const P = getPrefsSection(lang);
+    let txt = isOn ? 'On' : 'Off';
+    if (P && P.light) {
+      txt = isOn ? P.light.on || txt : P.light.off || txt;
+    }
+    controls.lightText.textContent = txt;
+  }
+
+  function applyTranslations(controls, lang) {
+    const P = getPrefsSection(lang);
+    if (!P || !controls.root) {
+      updateLightText(controls, lang, controls.light && controls.light.checked);
+      return;
+    }
+    const labels = P.labels || {};
+
+    const map = [
+      ['label[for="pref-language"]', labels.language],
+      ['label[for="pref-color"]', labels.colorAccent],
+      ['label[for="pref-light"]', labels.light],
+      ['label[for="pref-collection"]', labels.collection],
+      ['label[for="pref-corpus"]', labels.corpus],
+      ['label[for="pref-font"]', labels.fontType],
+      ['label[for="pref-font-size"]', labels.fontSize],
+    ];
+    map.forEach(([sel, txt]) => {
+      const el = controls.root.querySelector(sel);
+      if (el && txt) el.textContent = txt;
+    });
+
+    const actions = P.actions || {};
+    if (controls.btnCancel && actions.cancel) controls.btnCancel.textContent = actions.cancel;
+    if (controls.btnSave && actions.save) controls.btnSave.textContent = actions.save;
+
+    updateLightText(controls, lang, controls.light && controls.light.checked);
+  }
+
+  // ---------- helpers de UI ----------
+  function fillCollections(selectEl, current) {
+    selectEl.innerHTML = '';
+    const keys = Object.keys(CONTENT);
+    keys.forEach((k, idx) => {
+      const opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = k;
+      if ((current && current === k) || (!current && idx === 0)) opt.selected = true;
+      selectEl.appendChild(opt);
+    });
+    return selectEl.value;
+  }
+
+  function fillCorpus(selectEl, collection, current) {
+    selectEl.innerHTML = '';
+    const list = CONTENT[collection] || [];
+    list.forEach((c, idx) => {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      if ((current && current === c) || (!current && idx === 0)) opt.selected = true;
+      selectEl.appendChild(opt);
+    });
+    return selectEl.value;
+  }
+
+  function fillFonts(selectEl, fontsList, current) {
+    selectEl.innerHTML = '';
+    const list = fontsList.length ? fontsList : ['System'];
+    list.forEach((f, idx) => {
+      const opt = document.createElement('option');
+      opt.value = f;
+      opt.textContent = f;
+      if ((current && current === f) || (!current && idx === 0)) opt.selected = true;
+      selectEl.appendChild(opt);
+    });
+    return selectEl.value;
+  }
+
+  function buildPrefsFromUI(controls) {
+    const store = window.PrefsStore;
+    const base =
+      (store && store.load && store.load()) || (store && store.DEFAULTS) || {};
+    const prefs = { ...base };
+    if (controls.language) prefs.language = controls.language.value || prefs.language;
+    if (controls.collection) prefs.collection = controls.collection.value || prefs.collection;
+    if (controls.corpus) prefs.corpus = controls.corpus.value || prefs.corpus;
+    if (controls.font) prefs.font = controls.font.value || prefs.font;
+    if (controls.fontSize)
+      prefs.fontSizePt =
+        parseInt(controls.fontSize.value, 10) || prefs.fontSizePt || 12;
+    if (controls.color)
+      prefs.colorHex = controls.color.value || prefs.colorHex || '#000000';
+    if (controls.light) prefs.light = controls.light.checked ? 'on' : 'off';
+    return prefs;
+  }
+
+  function fillFromPrefs(controls, prefs) {
+    const lang = getPrefsLang(prefs);
+
+    // Idioma con banderitas
+    if (
+      controls.language &&
+      window.LanguagePrefs &&
+      window.LanguagePrefs.mountLanguageSelect
+    ) {
+      window.LanguagePrefs.mountLanguageSelect(controls.language, lang);
+    } else if (controls.language) {
+      controls.language.value = lang;
+    }
+
+    const col = fillCollections(controls.collection, prefs.collection || null);
+    fillCorpus(controls.corpus, col, prefs.corpus || null);
+
+    const fonts = getFontFamiliesFromCSS();
+    fillFonts(controls.font, fonts, prefs.font || null);
+
+    const size = prefs.fontSizePt || 12;
+    controls.fontSize.value = String(size);
+    controls.fontSizeVal.textContent = size + 'pt';
+
+    const color = prefs.colorHex || '#000000';
+    controls.color.value = color;
+    controls.colorHex.value = color.toUpperCase();
+
+    const isLightOn = (prefs.light || 'on') !== 'off';
+    controls.light.checked = isLightOn;
+
+    applyTranslations(controls, lang);
+  }
+
+  // ---------- Render de la pantalla de preferencias ----------
+  function renderPreferencesScreen() {
+    const store = window.PrefsStore;
+    if (!window.AppMain || typeof window.AppMain.renderScreen !== 'function') {
+      console.warn('[Prefs] AppMain.renderScreen no está disponible');
+      return;
+    }
+
+    const current =
+      (store && store.load && store.load()) || (store && store.DEFAULTS) || {};
+
+    // Solapa de título fija (Preferencias / Preferences)
+    const lang = getPrefsLang(current);
+    const P = getPrefsSection(lang);
+    const viewLabel =
+      (P && P.title) || (lang === 'es' ? 'Preferencias' : 'Preferences');
+    if (window.AppMain && typeof window.AppMain.setViewTitle === 'function') {
+      window.AppMain.setViewTitle(viewLabel);
+    }
+
+    window.AppMain.renderScreen(function (root) {
+      root.innerHTML = `
+        <section class="panel panel-single prefs-panel">
           <div class="prefs-body">
             <div class="prefs-row prefs-row-top">
               <div class="prefs-field">
@@ -135,297 +284,128 @@
             <button id="prefs-cancel" class="btn ghost">Cancelar</button>
             <button id="prefs-save" class="btn primary">Guardar</button>
           </footer>
-        </div>`;
-      document.body.appendChild(modal);
-    }
+        </section>
+      `;
 
-    const dlg = modal.querySelector('.prefs-dialog');
-    controls = {
-      dialog: dlg,
-      language: modal.querySelector('#pref-language'),
-      collection: modal.querySelector('#pref-collection'),
-      corpus: modal.querySelector('#pref-corpus'),
-      font: modal.querySelector('#pref-font'),
-      fontSize: modal.querySelector('#pref-font-size'),
-      fontSizeVal: modal.querySelector('#pref-font-size-val'),
-      color: modal.querySelector('#pref-color'),
-      colorHex: modal.querySelector('#pref-color-hex'),
-      light: modal.querySelector('#pref-light'),
-      lightText: modal.querySelector('#pref-light-text'),
-      btnClose: modal.querySelector('#prefs-close'),
-      btnCancel: modal.querySelector('#prefs-cancel'),
-      btnSave: modal.querySelector('#prefs-save'),
-    };
+      const controls = {
+        root,
+        language: root.querySelector('#pref-language'),
+        collection: root.querySelector('#pref-collection'),
+        corpus: root.querySelector('#pref-corpus'),
+        font: root.querySelector('#pref-font'),
+        fontSize: root.querySelector('#pref-font-size'),
+        fontSizeVal: root.querySelector('#pref-font-size-val'),
+        color: root.querySelector('#pref-color'),
+        colorHex: root.querySelector('#pref-color-hex'),
+        light: root.querySelector('#pref-light'),
+        lightText: root.querySelector('#pref-light-text'),
+        btnCancel: root.querySelector('#prefs-cancel'),
+        btnSave: root.querySelector('#prefs-save'),
+      };
 
-    attachEventHandlers();
-    initialized = true;
-  }
+      // 👉 AQUÍ se cargan todas las opciones desde las prefs actuales
+      fillFromPrefs(controls, current);
 
-  // ---------- i18n ----------
-  function getLang(prefs){
-    if (prefs && prefs.language) return prefs.language;
-    const store = window.PrefsStore;
-    return (store && store.DEFAULTS && store.DEFAULTS.language) || 'es';
-  }
-  function getTR(lang){
-    const base = window.I18n && window.I18n.__TR;
-    return base ? base[lang] : null;
-  }
-  function getPrefsSection(lang){
-    const tr = getTR(lang);
-    return tr && tr.prefs ? tr.prefs : null;
-  }
-  function updateLightText(lang, isOn){
-    if (!controls.lightText) return;
-    const P = getPrefsSection(lang);
-    let txt = isOn ? 'On' : 'Off';
-    if (P && P.light){
-      txt = isOn ? (P.light.on || txt) : (P.light.off || txt);
-    }
-    controls.lightText.textContent = txt;
-  }
-  function applyTranslations(lang){
-    const P = getPrefsSection(lang);
-    if (!P || !controls.dialog) {
-      updateLightText(lang, controls.light && controls.light.checked);
-      return;
-    }
-    const labels = P.labels || {};
-    const titleEl = controls.dialog.querySelector('#prefs-title');
-    if (titleEl && P.title) titleEl.textContent = P.title;
+      // --- Eventos ---
+      const applyStore = (prefs) => {
+        store && store.apply && store.apply(prefs);
+      };
 
-    const map = [
-      ['label[for="pref-language"]', labels.language],
-      ['label[for="pref-color"]', labels.colorAccent],
-      ['label[for="pref-light"]', labels.light],
-      ['label[for="pref-collection"]', labels.collection],
-      ['label[for="pref-corpus"]', labels.corpus],
-      ['label[for="pref-font"]', labels.fontType],
-      ['label[for="pref-font-size"]', labels.fontSize],
-    ];
-    map.forEach(([sel, txt])=>{
-      const el = controls.dialog.querySelector(sel);
-      if (el && txt) el.textContent = txt;
-    });
+      controls.btnCancel &&
+        controls.btnCancel.addEventListener('click', function (e) {
+          e.preventDefault();
+          // Volvemos a las prefs guardadas y regresamos a la bienvenida
+          const prev =
+            (store && store.load && store.load()) || (store && store.DEFAULTS) || {};
+          applyStore(prev);
+          if (window.AppMain && window.AppMain.showWelcomeView) {
+            window.AppMain.showWelcomeView();
+          }
+        });
 
-    const actions = P.actions || {};
-    if (controls.btnCancel && actions.cancel) controls.btnCancel.textContent = actions.cancel;
-    if (controls.btnSave && actions.save) controls.btnSave.textContent = actions.save;
+      controls.btnSave &&
+        controls.btnSave.addEventListener('click', function (e) {
+          e.preventDefault();
+          const prefs = buildPrefsFromUI(controls);
+          const resolved = { ...(store && store.DEFAULTS), ...prefs };
+          store && store.save && store.save(resolved);
+          applyStore(resolved);
+          if (window.AppMain && window.AppMain.showWelcomeView) {
+            window.AppMain.showWelcomeView();
+          }
+        });
 
-    updateLightText(lang, controls.light && controls.light.checked);
-  }
+      controls.language &&
+        controls.language.addEventListener('change', function () {
+          const prefs = buildPrefsFromUI(controls);
+          applyStore(prefs);
+          applyTranslations(controls, prefs.language);
+        });
 
-  // ---------- helpers UI ----------
-  function fillCollections(selectEl, current){
-    selectEl.innerHTML='';
-    const keys = Object.keys(CONTENT);
-    keys.forEach((k,idx)=>{
-      const opt = document.createElement('option');
-      opt.value = k; opt.textContent = k;
-      if ((current && current===k) || (!current && idx===0)) opt.selected = true;
-      selectEl.appendChild(opt);
-    });
-    return selectEl.value;
-  }
-  function fillCorpus(selectEl, collection, current){
-    selectEl.innerHTML='';
-    const list = CONTENT[collection] || [];
-    list.forEach((c,idx)=>{
-      const opt = document.createElement('option');
-      opt.value = c; opt.textContent = c;
-      if ((current && current===c) || (!current && idx===0)) opt.selected = true;
-      selectEl.appendChild(opt);
-    });
-    return selectEl.value;
-  }
-  function fillFonts(selectEl, fontsList, current){
-    selectEl.innerHTML='';
-    const list = fontsList.length ? fontsList : ['System'];
-    list.forEach((f,idx)=>{
-      const opt = document.createElement('option');
-      opt.value = f; opt.textContent = f;
-      if ((current && current===f) || (!current && idx===0)) opt.selected = true;
-      selectEl.appendChild(opt);
-    });
-    return selectEl.value;
-  }
+      controls.collection &&
+        controls.collection.addEventListener('change', function () {
+          const prefs = buildPrefsFromUI(controls);
+          fillCorpus(
+            controls.corpus,
+            controls.collection.value,
+            prefs.corpus || null
+          );
+          applyStore(buildPrefsFromUI(controls));
+        });
 
-  // ---------- prefs ----------
-  function buildPrefsFromUI(){
-    const store = window.PrefsStore;
-    const base = (store && (store.load && store.load()) ) || (store && store.DEFAULTS) || {};
-    const prefs = { ...base };
-    if (controls.language) prefs.language = controls.language.value || prefs.language;
-    if (controls.collection) prefs.collection = controls.collection.value || prefs.collection;
-    if (controls.corpus) prefs.corpus = controls.corpus.value || prefs.corpus;
-    if (controls.font) prefs.font = controls.font.value || prefs.font;
-    if (controls.fontSize) prefs.fontSizePt = parseInt(controls.fontSize.value, 10) || prefs.fontSizePt || 12;
-    if (controls.color) prefs.colorHex = controls.color.value || prefs.colorHex || '#000000';
-    if (controls.light) prefs.light = controls.light.checked ? 'on' : 'off';
-    return prefs;
-  }
+      controls.corpus &&
+        controls.corpus.addEventListener('change', function () {
+          applyStore(buildPrefsFromUI(controls));
+        });
 
-  function fillFromPrefs(prefs){
-    const lang = getLang(prefs);
+      controls.font &&
+        controls.font.addEventListener('change', function () {
+          applyStore(buildPrefsFromUI(controls));
+        });
 
-    if (controls.language && window.LanguagePrefs && window.LanguagePrefs.mountLanguageSelect){
-      window.LanguagePrefs.mountLanguageSelect(controls.language, lang);
-    } else if (controls.language){
-      controls.language.value = lang;
-    }
+      controls.fontSize &&
+        controls.fontSize.addEventListener('input', function () {
+          const v = parseInt(controls.fontSize.value, 10) || 12;
+          controls.fontSizeVal.textContent = v + 'pt';
+          applyStore(buildPrefsFromUI(controls));
+        });
 
-    const col = fillCollections(controls.collection, prefs.collection || null);
-    fillCorpus(controls.corpus, col, prefs.corpus || null);
-
-    const families = getFontFamiliesFromCSS();
-    fillFonts(controls.font, families, prefs.font || null);
-    ensureFontFaceInjected(controls.font.value);
-
-    const size = prefs.fontSizePt || 12;
-    controls.fontSize.value = String(size);
-    controls.fontSizeVal.textContent = size + 'pt';
-
-    const color = prefs.colorHex || '#000000';
-    controls.color.value = color;
-    controls.colorHex.value = color.toUpperCase();
-
-    const isLightOn = (prefs.light || 'on') !== 'off';
-    controls.light.checked = isLightOn;
-
-    applyTranslations(lang);
-  }
-
-  function showModal(){
-    if (!modal) return;
-    modal.classList.add('open');
-    modal.setAttribute('aria-hidden','false');
-    modal.removeAttribute('inert');
-    if (controls.dialog) controls.dialog.focus();
-  }
-
-  function hideModal(){
-    if (!modal) return;
-
-    const active = document.activeElement;
-    if (active && modal.contains(active)) {
-      const trigger = document.getElementById('hdr-preferences');
-      if (trigger) trigger.focus();
-      else active.blur();
-    }
-
-    modal.classList.remove('open');
-    modal.setAttribute('aria-hidden','true');
-    modal.setAttribute('inert','');
-  }
-
-  function attachEventHandlers(){
-    if (!controls.dialog) return;
-
-    controls.btnClose && controls.btnClose.addEventListener('click', ()=>{
-      if (lastSavedPrefs && window.PrefsStore && window.PrefsStore.apply){
-        window.PrefsStore.apply(lastSavedPrefs);
+      if (controls.color && controls.colorHex) {
+        controls.color.addEventListener('input', function () {
+          controls.colorHex.value = controls.color.value.toUpperCase();
+          applyStore(buildPrefsFromUI(controls));
+        });
+        controls.colorHex.addEventListener('input', function () {
+          const v = controls.colorHex.value.trim();
+          if (/^#([A-Fa-f0-9]{6})$/.test(v)) {
+            controls.color.value = v;
+          }
+          applyStore(buildPrefsFromUI(controls));
+        });
       }
-      hideModal();
-    });
 
-    controls.btnCancel && controls.btnCancel.addEventListener('click', ()=>{
-      if (lastSavedPrefs && window.PrefsStore && window.PrefsStore.apply){
-        window.PrefsStore.apply(lastSavedPrefs);
-      }
-      hideModal();
-    });
-
-    controls.btnSave && controls.btnSave.addEventListener('click', ()=>{
-      const store = window.PrefsStore;
-      if (!store) { hideModal(); return; }
-      const prefs = buildPrefsFromUI();
-      ensureFontFaceInjected(prefs.font);
-      const resolved = { ...(store.DEFAULTS || {}), ...prefs };
-      store.save && store.save(resolved);
-      store.apply && store.apply(resolved);
-      lastSavedPrefs = resolved;
-      hideModal();
-    });
-
-    controls.language && controls.language.addEventListener('change', ()=>{
-      const prefs = buildPrefsFromUI();
-      const store = window.PrefsStore;
-      store && store.apply && store.apply(prefs);
-      applyTranslations(prefs.language);
-    });
-
-    controls.collection && controls.collection.addEventListener('change', ()=>{
-      const prefs = buildPrefsFromUI();
-      fillCorpus(controls.corpus, controls.collection.value, prefs.corpus || null);
-      const store = window.PrefsStore;
-      store && store.apply && store.apply(buildPrefsFromUI());
-    });
-
-    controls.corpus && controls.corpus.addEventListener('change', ()=>{
-      const store = window.PrefsStore;
-      store && store.apply && store.apply(buildPrefsFromUI());
-    });
-
-    controls.font && controls.font.addEventListener('change', ()=>{
-      const prefs = buildPrefsFromUI();
-      ensureFontFaceInjected(prefs.font);
-      const store = window.PrefsStore;
-      store && store.apply && store.apply(prefs);
-    });
-
-    controls.fontSize && controls.fontSize.addEventListener('input', ()=>{
-      const v = parseInt(controls.fontSize.value, 10) || 12;
-      controls.fontSizeVal.textContent = v + 'pt';
-      const store = window.PrefsStore;
-      store && store.apply && store.apply(buildPrefsFromUI());
-    });
-
-    if (controls.color && controls.colorHex){
-      controls.color.addEventListener('input', ()=>{
-        controls.colorHex.value = controls.color.value.toUpperCase();
-        const store = window.PrefsStore;
-        store && store.apply && store.apply(buildPrefsFromUI());
-      });
-      controls.colorHex.addEventListener('input', ()=>{
-        const v = controls.colorHex.value.trim();
-        if (/^#([A-Fa-f0-9]{6})$/.test(v)) controls.color.value = v;
-        const store = window.PrefsStore;
-        store && store.apply && store.apply(buildPrefsFromUI());
-      });
-    }
-
-    controls.light && controls.light.addEventListener('change', ()=>{
-      const prefs = buildPrefsFromUI();
-      const store = window.PrefsStore;
-      store && store.apply && store.apply(prefs);
-      updateLightText(prefs.language, controls.light.checked);
+      controls.light &&
+        controls.light.addEventListener('change', function () {
+          const prefs = buildPrefsFromUI(controls);
+          applyStore(prefs);
+          updateLightText(controls, prefs.language, controls.light.checked);
+        });
     });
   }
 
-  function open(){
-    ensureModal();
-    const store = window.PrefsStore;
-    const current = (store && store.load && store.load()) || (store && store.DEFAULTS) || {};
-    lastSavedPrefs = { ...(store && store.DEFAULTS || {}), ...current };
-    fillFromPrefs(lastSavedPrefs);
-    showModal();
-  }
-
-  function bindPreferencesButton() {
-    document.addEventListener('click', function(e){
-      const btn = e.target && e.target.closest && e.target.closest('#hdr-preferences');
+  // ---------- Delegación global para el botón del header ----------
+  function bindPreferencesDelegation() {
+    document.addEventListener('click', function (e) {
+      const btn = e.target.closest && e.target.closest('#hdr-preferences');
       if (!btn) return;
       e.preventDefault();
-      open();
+      renderPreferencesScreen();
     });
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bindPreferencesButton);
+    document.addEventListener('DOMContentLoaded', bindPreferencesDelegation);
   } else {
-    bindPreferencesButton();
+    bindPreferencesDelegation();
   }
-
-  window.Prefs = { open };
-
 })();

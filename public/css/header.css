@@ -1,6 +1,6 @@
 /* Header bar */
 .hdr-wrap {
-  position: fixed;           /* fijo siempre arriba */
+  position: fixed;   /* pegado arriba al hacer scroll */
   top: 0;
   left: 0;
   right: 0;
@@ -9,16 +9,34 @@
   color: var(--header-fg);
   border-bottom: 1px solid var(--border);
 }
+
+/* Contenedor interno del header */
 .hdr {
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: 60px;
 }
+
+/* Lado izquierdo: dominio/logo */
+.hdr-left {
+  flex: 1 1 auto;   /* puede crecer y encogerse */
+  min-width: 0;     /* permite que funcione el ellipsis */
+}
+
+/* Logo / dominio */
 .hdr .logo {
   color: var(--header-fg);
   text-decoration: none;
   font-weight: 700;
+
+  /* Para que no empuje a los iconos fuera de la pantalla */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  /* Tamaño limitado, independiente del slider de fuente */
+  font-size: clamp(12px, 3vw, 18px);
 }
 
 /* Right side: buttons group */
@@ -26,6 +44,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
+
+  flex: 0 0 auto;   /* NO se encoge, siempre visible */
 }
 
 /* Shared chip style */
@@ -39,7 +59,10 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: border-color 120ms ease, background-color 120ms ease, transform 120ms ease;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    transform 120ms ease;
 }
 .chip:hover {
   border-color: var(--accent);
@@ -116,7 +139,7 @@
 .hdr-right .chip:focus-visible {
   background: transparent;   /* sigue sin rectángulo */
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.80);  /* sombra por debajo */
-  transform: translateY(-1px);                  /* leve “elevación” */
+  transform: translateY(-1px);                 /* leve “elevación” */
 }
 
 /* Cambiar solo el color del icono al pasar encima */
@@ -125,7 +148,9 @@
   color: var(--accent, #4b6fff);
 }
 
-/* Compensar el header fijo para que la toolbar no quede tapada */
-.toolbar-wrap {
-  margin-top: 60px; /* misma altura que .hdr */
+/* Ajustes extra para pantallas pequeñas */
+@media (max-width: 600px) {
+  .hdr {
+    padding-inline: 8px;
+  }
 }
