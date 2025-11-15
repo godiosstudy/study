@@ -1,7 +1,9 @@
 /* Header bar */
 .hdr-wrap {
-  position: sticky;
+  position: fixed;           /* fijo siempre arriba */
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 1000;
   background: var(--header-bg);
   color: var(--header-fg);
@@ -82,6 +84,7 @@
   overflow: hidden; clip: rect(0, 0, 0, 0);
   white-space: nowrap; border: 0;
 }
+
 /* === Iconos del header sin rectángulo, con sombra al pasar el mouse === */
 
 /* Contenedor de los botones del header (login, register, prefs) */
@@ -120,4 +123,9 @@
 .hdr-right .chip:hover i[data-lucide],
 .hdr-right .chip:focus-visible i[data-lucide] {
   color: var(--accent, #4b6fff);
+}
+
+/* Compensar el header fijo para que la toolbar no quede tapada */
+.toolbar-wrap {
+  margin-top: 60px; /* misma altura que .hdr */
 }
