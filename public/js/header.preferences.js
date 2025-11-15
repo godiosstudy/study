@@ -52,7 +52,6 @@
 
     let list = Array.from(famSet);
 
-    // Si no encontró nada, fallback
     if (!list.length) {
       list = ['System'];
     } else {
@@ -64,9 +63,9 @@
     return cachedFontFamilies;
   }
 
-  // No necesitamos inyectar nada dinámicamente porque ya definimos
-  // todas las fuentes en public/css/fontfaces.css
-  function ensureFontFaceInjected(/*family*/) {}
+  function ensureFontFaceInjected(/*family*/) {
+    // No hace falta inyectar nada: todas las fuentes están en fontfaces.css
+  }
 
   // ---------- Estado del modal ----------
   let modal = null;
@@ -269,7 +268,6 @@
   function fillFromPrefs(prefs){
     const lang = getLang(prefs);
 
-    // Idioma con banderitas
     if (controls.language && window.LanguagePrefs && window.LanguagePrefs.mountLanguageSelect){
       window.LanguagePrefs.mountLanguageSelect(controls.language, lang);
     } else if (controls.language){
@@ -279,7 +277,6 @@
     const col = fillCollections(controls.collection, prefs.collection || null);
     fillCorpus(controls.corpus, col, prefs.corpus || null);
 
-    // Fuentes desde CSS
     const families = getFontFamiliesFromCSS();
     fillFonts(controls.font, families, prefs.font || null);
     ensureFontFaceInjected(controls.font.value);
@@ -309,15 +306,11 @@
   function hideModal(){
     if (!modal) return;
 
-    // evitar warning de aria-hidden con foco dentro del modal
     const active = document.activeElement;
     if (active && modal.contains(active)) {
       const trigger = document.getElementById('hdr-preferences');
-      if (trigger) {
-        trigger.focus();
-      } else {
-        active.blur();
-      }
+      if (trigger) trigger.focus();
+      else active.blur();
     }
 
     modal.classList.remove('open');
@@ -418,7 +411,6 @@
     showModal();
   }
 
-  // ---------- botón de preferencias (delegado) ----------
   function bindPreferencesButton() {
     document.addEventListener('click', function(e){
       const btn = e.target && e.target.closest && e.target.closest('#hdr-preferences');
@@ -434,7 +426,6 @@
     bindPreferencesButton();
   }
 
-  // API pública
   window.Prefs = { open };
 
 })();
