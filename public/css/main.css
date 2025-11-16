@@ -1,7 +1,20 @@
-/* El main se desplaza debajo del header (60px) + toolbar (~44px) + solapa */
+
+/* El main se muestra ENTRE toolbar y footer */
 #app-main {
-  margin-top: 140px;           /* header (60) + toolbar (~44) + espacio para la solapa */
-  padding-bottom: 40px;
+  /* Header (60px) + Toolbar (44px) */
+  margin-top: calc(60px + 44px);
+
+  /* espacio para que el contenido NO se meta debajo de la solapa */
+  padding-top: 40px;
+
+  /* que nada quede detrás del footer fijo */
+  padding-bottom: var(--footer-h);
+
+  /* Fondo propio del main */
+  background: var(--main-bg);
+
+  /* Altura mínima: ventana - header - toolbar - footer */
+  min-height: calc(100vh - (60px + 44px) - var(--footer-h));
 }
 
 /* Contenedor interno del main */
@@ -16,7 +29,7 @@
   gap: 16px;
 }
 
-/* "Panel" es solo estructura, SIN tarjetas */
+/* "Panel" es solo estructura para el layout de estudio */
 .panel {
   border: none;
   box-shadow: none;
@@ -36,7 +49,7 @@
 /* Panel "single" (welcome, prefs, changelog, login, etc.) */
 .panel-single {
   max-width: 720px;
-  margin: 0 auto;
+  margin: 24px auto 0;
   border: none;
   box-shadow: none;
   background: transparent;
@@ -46,28 +59,27 @@
 /* === SOLAPA CENTRAL: título de la vista actual === */
 #view-title.view-title-pill {
   position: fixed;
-  top: 104px;                /* justo debajo de la toolbar */
+  /* JUSTO donde termina el toolbar: header (60) + toolbar (44) */
+  top: calc(60px + 44px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 850;
 
-  /* Forma de la solapa */
   height: 32px;
-  padding: 0 20px;           /* solo padding horizontal */
-  background: var(--accent, #4b6fff);      /* color de sistema */
+  padding: 0 20px;
+  background: var(--accent, #4b6fff);
   border-radius: 10px 10px 18px 18px;
 
-  /* Texto centrado y usando el MISMO color que el domain e iconos */
   font-size: 13px;
   font-weight: 600;
-  color: var(--header-fg, #ffffff);        /* 👈 igual que logo + iconos */
-  line-height: 32px;                       /* centro vertical perfecto */
+  line-height: 32px;
+  color: var(--header-fg, #ffffff);
   text-align: center;
   white-space: nowrap;
 
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
 
-  display: none;                           /* se muestra desde JS */
+  display: none;
 }
 
 /* Subtítulo opcional dentro de la vista (ej: bienvenida) */
@@ -87,6 +99,24 @@
 
 .main-welcome-inner {
   text-align: center;
+  max-width: 520px;
+}
+
+.main-welcome-inner h1 {
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+
+.main-welcome-inner p {
+  margin: 0 0 12px;
+  color: #6b7280;
+}
+
+.main-welcome-inner .btn-row {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
 }
 
 /* Lista básica */
@@ -101,4 +131,378 @@
   .main-layout-study .grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ============================
+   PREFERENCIAS – LAYOUT GENERAL
+   ============================ */
+
+.prefs-panel {
+  max-width: 960px;
+  margin: 24px auto 0;
+  padding: 0 4px;
+}
+
+.prefs-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;           /* aire vertical entre bloques */
+}
+
+/* Filas superiores (Colección/Corpus, Font type/size, Luz/Idioma/Color) */
+.prefs-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.prefs-row-top,
+.prefs-row-font {
+  align-items: flex-end;
+}
+
+/* Cada campo dentro de una fila */
+.prefs-field {
+  flex: 1 1 0;
+  min-width: 220px;
+}
+
+/* Etiquetas de campo */
+.prefs-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg);
+  opacity: 0.9;
+}
+
+/* ============================
+   CAMPOS TIPO “PILL”
+   ============================ */
+
+.prefs-panel .prefs-field select,
+.prefs-panel .prefs-field input[type="text"] {
+  width: 100%;
+  box-sizing: border-box;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 0 12px;
+  font-size: 14px;
+  outline: none;
+  background: var(--card);
+  color: var(--fg);
+}
+
+/* Hover / focus coherente con el buscador */
+.prefs-panel .prefs-field select:focus-visible,
+.prefs-panel .prefs-field input[type="text"]:focus-visible {
+  border-color: var(--accent, #4b6fff);
+  box-shadow: 0 0 0 1px var(--accent, #4b6fff);
+}
+
+/* ============================
+   COLOR (picker + hex)
+   ============================ */
+
+.prefs-color {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Solo el cuadrado, sin halo ni pill */
+.prefs-color input[type="color"] {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Hex */
+#pref-color-hex {
+  width: 100px;
+}
+
+/* ============================
+   SWITCH LUZ
+   ============================ */
+
+.prefs-field-light {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.prefs-switch {
+  display: inline-flex !important;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  margin: 0; /* que no herede márgenes de label */
+}
+
+.prefs-switch input[type="checkbox"] {
+  display: none;
+}
+
+.prefs-switch-track {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--border);
+  transition: background-color 120ms ease;
+}
+
+.prefs-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: transform 120ms ease;
+}
+
+/* Estado ON */
+.prefs-switch input[type="checkbox"]:checked + .prefs-switch-track {
+  background: var(--accent, #4b6fff);
+}
+
+.prefs-switch input[type="checkbox"]:checked + .prefs-switch-track .prefs-switch-thumb {
+  transform: translateX(18px);
+}
+
+.prefs-switch-text {
+  display: inline-block;
+  font-size: 14px;
+  color: var(--fg);
+  opacity: 0.8;
+}
+
+/* ============================
+   SLIDER TAMAÑO DE FUENTE
+   ============================ */
+
+.prefs-field-font-size {
+  min-width: 220px;
+}
+
+.prefs-font-size-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#pref-font-size {
+  flex: 1 1 auto;
+}
+
+/* Slider coherente con el sistema */
+#pref-font-size::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border);
+}
+#pref-font-size::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent, #4b6fff);
+  margin-top: -6px;
+}
+#pref-font-size::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border);
+}
+#pref-font-size::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent, #4b6fff);
+}
+
+#pref-font-size-val {
+  width: 42px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================
+   FOOTER (botones de prefs)
+   ============================ */
+
+.prefs-foot {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .prefs-panel {
+    margin-top: 16px;
+  }
+
+  .prefs-row,
+  .prefs-row-top,
+  .prefs-row-font {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .prefs-field-font-size {
+    min-width: 0;
+  }
+}
+
+/* ============================
+   FORMULARIOS / MODALES DE USUARIO
+   (login, register, forget, account, signout)
+   ============================ */
+
+.form-vert .form-group {
+  margin: 10px 0 14px;
+}
+
+.form-vert label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.form-vert input[type="text"],
+.form-vert input[type="email"],
+.form-vert input[type="password"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--fg);
+}
+
+.form-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.field-hint {
+  font-size: 0.85em;
+  margin-top: 6px;
+  min-height: 1.2em;
+}
+
+.field-hint.error {
+  color: #b91c1c;
+}
+
+.field-hint.ok {
+  color: #15803d;
+}
+/* Botones tipo chip dentro de main (prefs, login, register, etc.) */
+.panel-single .chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 14px;
+}
+
+.panel-single .chip:hover {
+  border-color: var(--accent, #4b6fff);
+}
+
+/* === LUZ Off: tema oscuro SOLO para main === */
+
+#app-main[data-light="off"] {
+  background: #020617;   /* fondo oscuro */
+  color: #e5e7eb;        /* texto claro */
+}
+
+/* Etiquetas de campo más claras para que se vean */
+#app-main[data-light="off"] .prefs-field label,
+#app-main[data-light="off"] .form-vert label {
+  color: #e5e7eb;
+  opacity: 0.9;
+}
+
+/* Inputs y selects en oscuro con borde visible */
+#app-main[data-light="off"] .prefs-panel .prefs-field select,
+#app-main[data-light="off"] .prefs-panel .prefs-field input[type="text"],
+#app-main[data-light="off"] .prefs-panel .prefs-field input[type="email"],
+#app-main[data-light="off"] .prefs-panel .prefs-field input[type="password"],
+#app-main[data-light="off"] .form-vert input[type="text"],
+#app-main[data-light="off"] .form-vert input[type="email"],
+#app-main[data-light="off"] .form-vert input[type="password"] {
+  background: #020617;
+  color: #e5e7eb;
+  border: 1px solid #4b5563;  /* delimitador fuerte */
+}
+
+/* Hover / focus en oscuro */
+#app-main[data-light="off"] .prefs-panel .prefs-field select:focus-visible,
+#app-main[data-light="off"] .prefs-panel .prefs-field input[type="text"]:focus-visible,
+#app-main[data-light="off"] .prefs-panel .prefs-field input[type="email"]:focus-visible,
+#app-main[data-light="off"] .prefs-panel .prefs-field input[type="password"]:focus-visible,
+#app-main[data-light="off"] .form-vert input[type="text"]:focus-visible,
+#app-main[data-light="off"] .form-vert input[type="email"]:focus-visible,
+#app-main[data-light="off"] .form-vert input[type="password"]:focus-visible {
+  border-color: var(--accent, #4b6fff);
+  box-shadow: 0 0 0 1px var(--accent, #4b6fff);
+}
+
+/* Botones tipo chip en oscuro */
+#app-main[data-light="off"] .panel-single .chip {
+  background: #020617;
+  color: #e5e7eb;
+  border-color: #4b5563;
+}
+
+/* Slider de tamaño de fuente en oscuro */
+#app-main[data-light="off"] #pref-font-size::-webkit-slider-runnable-track {
+  background: #4b5563;
+}
+#app-main[data-light="off"] #pref-font-size::-moz-range-track {
+  background: #4b5563;
+}
+
+.prefs-preview-wrap {
+  margin-top: 12px;
+}
+
+.prefs-preview {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px dashed var(--border);
+  background: transparent;
+  font-size: 14px;
+}
+
+/* En luz Off, que siga siendo legible */
+#app-main[data-light="off"] .prefs-preview {
+  border-color: #4b5563;
+  color: #e5e7eb;
 }

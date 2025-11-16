@@ -6,6 +6,8 @@
   --accent: #2563eb;
   --card: #ffffff;
   --border: #e5e7eb;
+  --accent-soft: color-mix(in srgb, var(--accent) 20%, var(--bg));
+  --toolbar-bg: var(--accent-soft);
   --toolbar: #f8fafc;
   --hover: #f3f4f6;
   --badge-bg: #eef2ff;
@@ -23,22 +25,6 @@
   --footer-bg: var(--card);
   --header-fg: var(--fg);
   --footer-fg: var(--fg);
-  --main-bg: color-mix(in srgb, var(--accent) 3%, var(--bg));
-}
-html[data-light="off"] {
-  --bg: #0b0b0e;
-  --fg: #e6e6e9;
-  --muted: #a4a4ad;
-  --accent: #7aa2ff;
-  --card: #141418;
-  --border: #26262c;
-  --toolbar: #0f0f14;
-  --hover: #191922;
-  --badge-bg: #1d2330;
-  --badge-border: #2b3550;
-  --badge-fg: #a9c1ff;
-  --header-bg: var(--card);
-  --footer-bg: var(--card);
   --main-bg: color-mix(in srgb, var(--accent) 3%, var(--bg));
 }
 

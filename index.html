@@ -11,16 +11,13 @@
   <!-- CSS -->
   <link rel="stylesheet" href="/public/css/globals.css">
   <link rel="stylesheet" href="/public/css/header.css">
-  <link rel="stylesheet" href="/public/css/header.users.css">
-  <link rel="stylesheet" href="/public/css/header.users.register.css">
   <link rel="stylesheet" href="/public/css/toolbar.css">
   <link rel="stylesheet" href="/public/css/main.css">
-  
-  <!-- CSS <link rel="stylesheet" href="/public/css/loader.css">-->
-
+  <link rel="stylesheet" href="/public/css/loader.css">
   <link rel="stylesheet" href="/public/css/footer.css">
-  <link rel="stylesheet" href="/public/css/header.preferences.css">
-  
+  <link rel="stylesheet" href="/public/css/fontfaces.css">
+  <link rel="stylesheet" href="/public/css/fonts.css">
+
   <!-- Supabase SDK -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
@@ -28,8 +25,6 @@
     window.VITE_SUPABASE_ANON_KEY = window.VITE_SUPABASE_ANON_KEY || 'YOUR-ANON-KEY';
     window.APP_BASE_URL = window.APP_BASE_URL || 'https://study.godios.org';
   </script>
-  <script src="/public/js/backend.supabase.adapter.js"></script>
-  <link rel="stylesheet" href="/public/css/fontfaces.css">
 </head>
 <body>
 
@@ -37,20 +32,10 @@
   <header id="app-header" class="hdr-wrap">
     <div class="container hdr">
       <div class="hdr-left">
-        <div id="hdr-domain" class="logo">Study.GODiOS</div>
+        <div id="hdr-domain" class="logo" data-i18n="header.domain">Study.GODiOS.org</div>
       </div>
       <div class="hdr-right">
-        <!-- Users -->
-        <button class="chip icon-only" id="hdr-users" aria-label="Users" title="Users">
-          <i data-lucide="user"></i>
-          <span class="sr-only">Users</span>
-        </button>
-
-        <!-- Preferences -->
-        <button class="chip icon-only" id="hdr-preferences" aria-label="Preferences" title="Preferences">
-          <i data-lucide="settings"></i>
-          <span class="sr-only">Preferences</span>
-        </button>
+        <!-- HeaderButtons inyecta aquí los chips de usuario y preferencias -->
       </div>
     </div>
   </header>
@@ -71,7 +56,8 @@
   <!-- Main (contenido dinámico, scrollable) -->
   <main id="app-main"></main>
 
-  <!-- Loader (desactivado por ahora)
+  <!-- Loader (entre main y footer; SystemLoader lo muestra/oculta) -->
+  <!--
   <div id="app-loader" class="loader-root">
     <div class="loader-wrap">
       <div class="loader"></div>
@@ -80,31 +66,57 @@
   -->
 
   <!-- Footer -->
-  <footer id="app-footer" class="ftr-wrap">
-    <div class="container ftr">
-      <div id="ftr-changelog">v0.1 • Changelog</div>
+<footer id="app-footer" class="ftr-wrap">
+  <div class="container ftr">
+    <div class="ftr-left">
+      <!-- reservado para futuro -->
+    </div>
+
+    <div class="ftr-right">
+      <span id="footer-version">v0.2.4</span>
       <img id="ftr-logo" src="/public/img/logo.png" alt="Logo">
     </div>
-  </footer>
+  </div>
+</footer>
 
-  <!-- Scripts (prefs primero) -->
+
+  <!-- Scripts -->
+
+  <!-- Iconos -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="/public/js/prefs.store.js"></script>
-  <script src="/public/js/header.preferences.language.translations.js"></script>
-  <script src="/public/js/header.preferences.language.js"></script>
-  <script src="/public/js/header.preferences.js"></script>
 
-  <!-- <script src="/public/js/loader.js"></script> -->
+  <!-- Sistema / preferencias / idioma -->
+  <script src="/public/js/system.languaje.js"></script>
+  <script src="/public/js/system.languaje.translations.js"></script>
+  <script src="/public/js/system.i18n.bootstrap.js"></script>
+  <script src="/public/js/system.loader.js"></script>
+  <script src="/public/js/system.backend.supabase.adapter.js"></script>
+  <script src="/public/js/system.backend.vercel.adapter.js"></script>
+  <script src="/public/js/system.prefs.store.js"></script>
 
-  <script src="/public/js/header.users.login.js"></script>
-  <script src="/public/js/header.users.register.js"></script>
-  <script src="/public/js/header.users.forget.js"></script>
-  <script src="/public/js/header.users.account.js"></script>
-  <script src="/public/js/header.users.signout.js"></script>
-  <script src="/public/js/header.users.js"></script>
+  <!-- Header -->
+  <script src="/public/js/header.domain.js"></script>
+  <script src="/public/js/header.buttons.js"></script>
   <script src="/public/js/header.js"></script>
+
+  <!-- Toolbar -->
   <script src="/public/js/toolbar.js"></script>
+
+  <!-- Vistas de main -->
+  <script src="/public/js/main.navigator.js"></script>
+  <script src="/public/js/main.results.js"></script>
+  <script src="/public/js/main.focus.js"></script>
+  <script src="/public/js/main.changelog.js"></script>
+  <script src="/public/js/main.preferences.js"></script>
+  <script src="/public/js/main.login.js"></script>
+  <script src="/public/js/main.register.js"></script>
+  <script src="/public/js/main.forget.js"></script>
+  <script src="/public/js/main.signout.js"></script>
+  <script src="/public/js/main.account.js"></script>
   <script src="/public/js/main.js"></script>
+
+  <!-- Footer -->
+  <script src="/public/js/footer.logo.js"></script>
   <script src="/public/js/footer.js"></script>
 </body>
 </html>

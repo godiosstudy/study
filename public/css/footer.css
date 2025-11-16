@@ -1,14 +1,57 @@
 /* Footer fijo abajo */
 .ftr-wrap {
   position: fixed;
-  left: 0; right: 0; bottom: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 950;
   border-top: 1px solid var(--border);
   background: var(--footer-bg);
   color: var(--footer-fg);
 }
-.ftr { display: flex; align-items: center; justify-content: space-between; height: var(--footer-h); }
-.ftr a { color: var(--footer-fg); text-decoration: none; }
-#ftr-logo { height: 28px; width: auto; display: block; }
-/* Make footer chip look like header chips but with footer color */
-.ftr .chip { color: var(--footer-fg); border-color: currentColor; }
+
+/* Contenedor interno */
+.ftr {
+  display: flex;
+  align-items: center;          /* centra verticalmente */
+  justify-content: space-between;
+  height: var(--footer-h);
+}
+
+/* Zona izquierda reservada para futuro */
+.ftr-left {
+  flex: 1 1 auto;
+}
+
+/* Zona derecha: versión | logo en fila */
+.ftr-right {
+  display: flex;
+  align-items: center;          /* centra verticalmente versión y logo */
+  gap: 8px;                     /* espacio horizontal entre ellos */
+}
+
+/* Versión clickeable */
+#footer-version {
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;               /* para que no empuje la altura */
+}
+
+/* Logo */
+#ftr-logo {
+  height: 28px;
+  width: auto;
+  display: block;
+}
+
+/* Chips en el footer, si algún día los usamos */
+.ftr .chip {
+  color: var(--footer-fg);
+  border-color: currentColor;
+}
+
+/* Links por si acaso */
+.ftr a {
+  color: var(--footer-fg);
+  text-decoration: none;
+}

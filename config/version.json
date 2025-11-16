@@ -1,0 +1,47 @@
+[
+  {
+    "version": "0.2.4",
+    "date": "2025-11-15",
+    "notes": [
+      "Fondo de toolbar con un 20% del color de sistema.",
+      "Solapa del título en main cuelga visualmente del toolbar.",
+      "Preferencias: texto ON/OFF del switch de Luz a la derecha.",
+      "Preferencias: selector de Color sin halo alrededor del cuadrado."
+    ]
+  },
+  {
+    "version": "0.2.3",
+    "date": "2025-11-14",
+    "notes": [
+      "Toolbar siempre en una sola línea en mobile.",
+      "Buscador flexible según el espacio disponible.",
+      "Breadcrumb con texto truncado con puntos suspensivos."
+    ]
+  },
+  {
+    "version": "0.2.2",
+    "date": "2025-11-14",
+    "notes": [
+      "Ventana de Preferencias compacta y usable en mobile.",
+      "Selector de fuentes leyendo @font-face desde CSS.",
+      "Header fijo y responsivo; iconos siempre visibles."
+    ]
+  },
+  {
+    "version": "0.2.0",
+    "date": "2025-11-14",
+    "notes": [
+      "Ventana de Preferencias compacta y usable en mobile.",
+      "Selector de fuentes leyendo @font-face desde CSS.",
+      "Header fijo y responsive; iconos siempre visibles en el celular.",
+      "Limpieza de loader y errores de consola (fonts, changelog, etc.)."
+    ]
+  },
+  {
+    "version": "0.1.0",
+    "date": "2025-11-13",
+    "notes": [
+      "Versión inicial de Study.GODiOS.org con header, toolbar, panels y preferencias básicas."
+    ]
+  }
+]

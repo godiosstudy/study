@@ -1,15 +1,11 @@
 /* Barra de herramientas debajo del header */
 .toolbar-wrap {
-  position: sticky;
-  top: 60px; /* justo debajo del header fijo */
-  z-index: 900;
-
-  /* fallback claro por si el navegador no soporta color-mix */
-  background: #f5f5f5;
-
-  /* 20% del color del sitio mezclado con blanco */
-  background: color-mix(in srgb, var(--accent, #3EA36F) 20%, #ffffff 80%);
-
+  position: fixed;
+  top: 60px; /* debajo del header fijo */
+  left: 0;
+  right: 0;
+  z-index: 800;
+  background: var(--toolbar-bg, #f9fafb);
   border-bottom: 1px solid var(--border);
 }
 

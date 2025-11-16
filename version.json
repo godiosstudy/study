@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.2.4",
+    "date": "2025-11-15",
+    "notes": [
+      "Fondo de toolbar con un 20% del color de sistema.",
+      "Solapa del título en main cuelga visualmente del toolbar.",
+      "Preferencias: texto ON/OFF del switch de Luz a la derecha.",
+      "Preferencias: selector de Color sin halo alrededor del cuadrado."
+    ]
+  },
+  {
     "version": "0.2.3",
     "date": "2025-11-14",
     "notes": [
