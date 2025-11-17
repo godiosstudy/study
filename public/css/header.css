@@ -110,7 +110,7 @@
 
 /* === Iconos del header sin rectángulo, con sombra al pasar el mouse === */
 
-/* Contenedor de los botones del header (login, register, prefs) */
+/* Contenedor de los botones del header (login, register, prefs, etc.) */
 .hdr-right .chip {
   background: transparent;     /* sin fondo blanco */
   border: none;                /* sin borde */
@@ -152,5 +152,67 @@
 @media (max-width: 600px) {
   .hdr {
     padding-inline: 8px;
+  }
+}
+
+/* ===== Bendecido X en header ===== */
+.hdr-actions {
+  display: flex;
+  align-items: center;   /* texto + iconos alineados verticalmente */
+  gap: 8px;
+}
+
+/* Contenedor del texto Bendecido / Blessed y el nombre */
+.hdr-blessed-label {
+  display: flex;
+  flex-direction: column;     /* una línea arriba, otra abajo */
+  align-items: center;        /* centrado horizontal de ambas líneas */
+  justify-content: center;    /* centrado vertical dentro del header */
+  text-align: center;
+  line-height: 1.1;
+  font-size: 0.85rem;
+}
+
+/* El nombre ya viene en <strong>, aseguramos negrita */
+.hdr-blessed-label strong {
+  font-weight: 600;
+}
+
+/* ===== Stats en header (Credits / Steps / Floor) ===== */
+
+/* El chip de stats se comporta como los demás, pero con badge superpuesto */
+.hdr-stat-chip {
+  position: relative;
+}
+
+/* Badge superpuesto arriba a la derecha del icono */
+.hdr-stat-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  padding: 1px 4px;
+  border-radius: 999px;
+  background: #f97373;              /* puedes cambiar a tu var de alerta */
+  color: #ffffff;
+  font-size: 10px;
+  line-height: 1.2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25); /* pequeño borde para contraste */
+}
+
+/* Ajuste en pantallas pequeñas */
+@media (max-width: 600px) {
+  .hdr-actions {
+    gap: 6px;
+  }
+  .hdr-stat-badge {
+    top: -3px;
+    right: -3px;
+    min-width: 16px;
+    font-size: 9px;
+    padding: 1px 3px;
   }
 }

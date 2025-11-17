@@ -13,52 +13,123 @@
 .tbar {
   display: flex;
   align-items: center;
-  flex-wrap: nowrap;      /* 👉 nunca se parte en 2 líneas */
+  flex-wrap: nowrap;
   gap: 12px;
   padding: 8px 16px;
 }
 
-/* Breadcrumb (Inicio / lo que venga) */
+/* Breadcrumb (lado izquierdo) */
 .crumbs {
-  flex: 0 0 auto;         /* no se estira, ocupa solo lo necesario */
-  max-width: 35%;         /* 👉 límite para que deje espacio al buscador */
-  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: var(--muted, #6b7280);
+  min-width: 0;
+  flex: 0 1 auto;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis; /* si es muy largo, pone "…" */
+  text-overflow: ellipsis;
 }
 
-/* Contenedor del buscador: ocupa todo lo que sobra */
+/* Botón fijo: Collection / Corpus */
+.crumb-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.crumb-link strong {
+  font-weight: 600; /* negrita para Collection / Corpus seleccionados */
+}
+
+.crumb-sep {
+  padding: 0 2px;
+}
+
+.crumb-link:hover {
+  color: var(--accent, #2563eb);
+  text-decoration: underline;
+}
+
+/* Selects level_3/4/5 dentro del breadcrumb */
+.crumb-select {
+  max-width: 140px;
+  font-size: 0.85rem;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border, #e5e7eb);
+  background: #ffffff;
+  color: inherit;
+}
+
+.crumb-select:disabled {
+  opacity: 0.6;
+}
+
+/* Loading estilo barra en los selects de breadcrumb */
+select.crumb-select-loading {
+  text-align: center;
+  color: #ffffff; /* el JS ajusta según porcentaje, aquí reforzamos */
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+select.crumb-select-loading option {
+  text-align: center;
+}
+
+/* Área de búsqueda (lado derecho) */
 .search {
-  flex: 1 1 auto;         /* se estira y se achica según el espacio disponible */
-  min-width: 0;           /* permite que pueda achicarse en pantallas muy chicas */
+  flex: 1 1 0;
+  display: flex;
+  justify-content: flex-end;
 }
 
-/* Input del buscador */
-.search input[type="search"] {
+#tbar-search {
   width: 100%;
-  box-sizing: border-box;
+  max-width: 520px;
+  padding: 6px 10px;
   border-radius: 999px;
   border: 1px solid var(--border);
-  padding: 6px 12px;
-  font-size: 14px;
   outline: none;
+  font-size: 0.95rem;
+  background: #ffffff;
 }
 
-/* Estilo al enfocar el input */
-.search input[type="search"]:focus-visible {
-  border-color: var(--accent, #4b6fff);
-  box-shadow: 0 0 0 1px var(--accent, #4b6fff);
+#tbar-search::placeholder {
+  color: var(--muted, #6b7280);
 }
 
-/* Ajustes en pantallas muy pequeñas */
-@media (max-width: 480px) {
+#tbar-search:focus-visible {
+  border-color: var(--accent, #2563eb);
+  box-shadow: 0 0 0 1px var(--accent, #2563eb);
+}
+
+/* Ajustes en pantallas pequeñas */
+@media (max-width: 768px) {
   .tbar {
     padding-inline: 8px;
     gap: 8px;
   }
+
   .crumbs {
-    font-size: 13px;
-    max-width: 45%;  /* un poco más de espacio si el título no es tan largo */
+    font-size: 0.8rem;
+    max-width: 55%;
+  }
+
+  .crumb-select {
+    max-width: 110px;
+  }
+}
+
+@media (max-width: 480px) {
+  .crumbs {
+    max-width: 50%;
   }
 }

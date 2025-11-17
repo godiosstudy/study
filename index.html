@@ -20,11 +20,10 @@
 
   <!-- Supabase SDK -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script>
-    window.VITE_SUPABASE_URL = window.VITE_SUPABASE_URL || 'https://YOUR-REF.supabase.co';
-    window.VITE_SUPABASE_ANON_KEY = window.VITE_SUPABASE_ANON_KEY || 'YOUR-ANON-KEY';
-    window.APP_BASE_URL = window.APP_BASE_URL || 'https://study.godios.org';
-  </script>
+  
+  <!-- Tu configuración (URL + ANON KEY) -->
+  <script src="public/js/system.env.supabase.js"></script>
+
 </head>
 <body>
 
@@ -73,7 +72,7 @@
     </div>
 
     <div class="ftr-right">
-      <span id="footer-version">v0.2.4</span>
+      <span id="footer-version">v0.2.6</span>
       <img id="ftr-logo" src="/public/img/logo.png" alt="Logo">
     </div>
   </div>

@@ -1,82 +1,231 @@
 // main.preferences.js – vista de preferencias de usuario
+// Si hay usuario logueado, al guardar también se suben a SQL (tabla profiles)
+// p_color = HEX (sin #), p_light = boolean, p_font_type texto libre, p_font_size int 8–25.
 window.MainPreferences = (function () {
   function getLang() {
     try {
       const store = window.PrefsStore;
-      if (store && typeof store.load === 'function') {
+      if (store && typeof store.load === "function") {
         const prefs = store.load();
         if (prefs && prefs.language) return prefs.language;
       }
     } catch (e) {}
-    return 'es';
+    return "es";
   }
 
   const TEXTS = {
     es: {
-      collection: 'Colección',
-      corpus: 'Corpus',
-      fontType: 'Tipo de fuente',
-      fontSize: 'Tamaño de fuente',
-      light: 'Luz',
-      language: 'Idioma',
-      color: 'Color',
-      reset: 'Reestablecer',
-      cancel: 'Cancelar',
-      save: 'Guardar',
-      preview: 'Prueba de texto para ver tipo y tamaño de fuente',
+      collection: "Colección",
+      corpus: "Corpus",
+      fontFamily: "Tipo de letra",
+      fontSize: "Tamaño",
+      language: "Idioma",
+      color: "Color",
+      light: "Luz",
+      preview: "Así se verá el texto con las preferencias seleccionadas.",
+      reset: "Restablecer",
+      cancel: "Cancelar",
+      save: "Guardar",
     },
     en: {
-      collection: 'Collection',
-      corpus: 'Corpus',
-      fontType: 'Font Type',
-      fontSize: 'Font Size',
-      light: 'Light',
-      language: 'Language',
-      color: 'Color',
-      reset: 'Reset',
-      cancel: 'Cancel',
-      save: 'Save',
-      preview: 'Sample text to preview font family and size',
+      collection: "Collection",
+      corpus: "Corpus",
+      fontFamily: "Font family",
+      fontSize: "Size",
+      language: "Language",
+      color: "Color",
+      light: "Light",
+      preview: "This is how the text will look with the selected preferences.",
+      reset: "Reset",
+      cancel: "Cancel",
+      save: "Save",
     },
   };
 
-  function applyTexts(root) {
+  // =========================================================
+  // Entries (Collections / Corpus) – helpers y caches
+  // =========================================================
+  var entriesCollectionsCache = {};     // por idioma: { es: [..], en: [..] }
+  var entriesCorpusCache = {};         // por idioma+collection: { "es::Genesis": [..] }
+
+    function updateSaveButtonState() {
+      if (!saveBtn) return;
+
+      var hasCollection =
+        collectionEl && collectionEl.value && collectionEl.value.trim() !== "";
+      var hasCorpus =
+        corpusEl && corpusEl.value && corpusEl.value.trim() !== "";
+
+      // true solo cuando los dos tienen valor
+      saveBtn.disabled = !(hasCollection && hasCorpus);
+    }
+
+  function getSupabaseClient() {
+    try {
+      if (
+        window.BackendSupabase &&
+        typeof window.BackendSupabase.client === "function" &&
+        typeof window.BackendSupabase.isConfigured === "function" &&
+        window.BackendSupabase.isConfigured()
+      ) {
+        return window.BackendSupabase.client();
+      }
+    } catch (e) {
+      console.warn("[Prefs] error obteniendo cliente Supabase", e);
+    }
+    return null;
+  }
+
+  function t(key) {
     const lang = getLang();
-    const t = TEXTS[lang] || TEXTS.es;
+    const dict = TEXTS[lang] || TEXTS.es;
+    return dict[key] || key;
+  }
+
+  // Helpers para mapear prefs -> SQL
+  function sqlLanguage(lang) {
+    if (!lang) return "es";
+    return String(lang);
+  }
+
+  // p_color en SQL = HEX sin # (ej "FF0000")
+  function sqlColorFromPrefs(prefs) {
+    if (!prefs || !prefs.colorHex) return null;
+    let v = String(prefs.colorHex).trim();
+    if (!v) return null;
+    if (v[0] === "#") v = v.slice(1);
+    v = v.toUpperCase();
+    // Aceptamos 6 dígitos hex
+    if (!/^[0-9A-F]{6}$/.test(v)) return null;
+    return v;
+  }
+
+  function sqlFontType(font) {
+    if (!font) return null;
+    return String(font);
+  }
+
+  function sqlFontSize(fontSizePt) {
+    var n = parseInt(fontSizePt, 10);
+    if (isNaN(n)) n = 12;
+    if (n < 8) n = 8;
+    if (n > 25) n = 25;
+    return n;
+  }
+
+  function render(container) {
+    if (!container) return;
+    container.innerHTML = "";
+
+    const panel = document.createElement("div");
+    panel.className = "panel-single prefs-panel";
+
+    panel.innerHTML = [
+      '<h1 data-i18n="prefs.title">Preferencias</h1>',
+      "",
+      '<div class="prefs-grid">',
+      '  <div class="prefs-fields">',
+      '    <div class="prefs-field">',
+      '      <label for="pref-collection">Colección</label>',
+      '      <select id="pref-collection">',
+      '        <option value="">(auto)</option>',
+      "      </select>",
+      "    </div>",
+      '    <div class="prefs-field">',
+      '      <label for="pref-corpus">Corpus</label>',
+      '      <select id="pref-corpus">',
+      '        <option value="">(auto)</option>',
+      "      </select>",
+      "    </div>",
+      '    <div class="prefs-field">',
+      '      <label for="pref-font-family">Tipo de letra</label>',
+      '      <select id="pref-font-family"></select>',
+      "    </div>",
+      '    <div class="prefs-field">',
+      '      <label for="pref-font-size">Tamaño</label>',
+      '      <div class="prefs-font-size">',
+      '        <input type="range" id="pref-font-size" min="8" max="25" />',
+      '        <span id="pref-font-size-val"></span>',
+      "      </div>",
+      "    </div>",
+      '    <div class="prefs-field">',
+      '      <label for="pref-lang">Idioma</label>',
+      '      <select id="pref-lang">',
+      '        <option value="es">Español</option>',
+      '        <option value="en">English</option>',
+      "      </select>",
+      "    </div>",
+      '    <div class="prefs-field">',
+      '      <label for="pref-color">Color</label>',
+      '      <div class="prefs-color">',
+      '        <input type="color" id="pref-color" />',
+      '        <input type="text" id="pref-color-hex" maxlength="7" />',
+      "      </div>",
+      "    </div>",
+      "  </div>",
+      "",
+      '  <div class="prefs-preview-wrap">',
+      '    <div class="prefs-preview" id="prefs-preview-text">',
+      "      Vista previa del texto…",
+      "    </div>",
+      '    <div class="prefs-light">',
+      '      <label for="pref-light">Luz</label>',
+      '      <input type="checkbox" id="pref-light" />',
+      '      <span id="pref-light-text"></span>',
+      "    </div>",
+      "  </div>",
+      "</div>",
+      "",
+      '<div class="prefs-actions">',
+      '  <button type="button" class="chip" id="pref-reset">Restablecer</button>',
+      '  <button type="button" class="chip ghost" id="pref-cancel">Cancelar</button>',
+      '  <button type="button" class="chip primary" id="pref-save">Guardar</button>',
+      "</div>",
+    ].join("\n");
+
+    container.appendChild(panel);
+
+    wireLogic(panel);
+    applyTexts(panel);
+  }
+
+  function applyTexts(root) {
+    const titleEl = root.querySelector("h1");
+    if (titleEl) titleEl.textContent = "Preferencias";
 
     const lblCollection = root.querySelector('label[for="pref-collection"]');
     const lblCorpus = root.querySelector('label[for="pref-corpus"]');
-    const lblFontType = root.querySelector('label[for="pref-font-family"]');
-    const lblFontSize = root.querySelector('label[for="pref-font-size"]');
-    const lblLight = root.querySelector('label[for="pref-light"]');
+    const lblFont = root.querySelector('label[for="pref-font-family"]');
+    const lblSize = root.querySelector('label[for="pref-font-size"]');
     const lblLang = root.querySelector('label[for="pref-lang"]');
     const lblColor = root.querySelector('label[for="pref-color"]');
+    const lblLight = root.querySelector('label[for="pref-light"]');
 
-    if (lblCollection) lblCollection.textContent = t.collection;
-    if (lblCorpus) lblCorpus.textContent = t.corpus;
-    if (lblFontType) lblFontType.textContent = t.fontType;
-    if (lblFontSize) lblFontSize.textContent = t.fontSize;
-    if (lblLight) lblLight.textContent = t.light;
-    if (lblLang) lblLang.textContent = t.language;
-    if (lblColor) lblColor.textContent = t.color;
+    if (lblCollection) lblCollection.textContent = t("collection");
+    if (lblCorpus) lblCorpus.textContent = t("corpus");
+    if (lblFont) lblFont.textContent = t("fontFamily");
+    if (lblSize) lblSize.textContent = t("fontSize");
+    if (lblLang) lblLang.textContent = t("language");
+    if (lblColor) lblColor.textContent = t("color");
+    if (lblLight) lblLight.textContent = t("light");
 
-    const btnReset = root.querySelector('#pref-reset');
-    const btnCancel = root.querySelector('#pref-cancel');
-    const btnSave = root.querySelector('#pref-save');
-    if (btnReset) btnReset.textContent = t.reset;
-    if (btnCancel) btnCancel.textContent = t.cancel;
-    if (btnSave) btnSave.textContent = t.save;
+    const btnReset = root.querySelector("#pref-reset");
+    const btnCancel = root.querySelector("#pref-cancel");
+    const btnSave = root.querySelector("#pref-save");
+    if (btnReset) btnReset.textContent = t("reset");
+    if (btnCancel) btnCancel.textContent = t("cancel");
+    if (btnSave) btnSave.textContent = t("save");
 
-    const prev = root.querySelector('#prefs-preview-text');
-    if (prev) prev.textContent = t.preview;
+    const prev = root.querySelector("#prefs-preview-text");
+    if (prev) prev.textContent = t("preview");
   }
 
   // ======== Descubrir fuentes desde @font-face en CSS ========
   let cachedFontFamilies = null;
 
   function cleanFontName(name) {
-    if (!name) return '';
-    return name.trim().replace(/^['"]+|['"]+$/g, '');
+    if (!name) return "";
+    return name.trim().replace(/^['"]+|['"]+$/g, "");
   }
 
   function getFontFamiliesFromCSS() {
@@ -90,7 +239,6 @@ window.MainPreferences = (function () {
       try {
         rules = sheet.cssRules || sheet.rules;
       } catch (e) {
-        // CSS externo o bloqueado por CORS → lo saltamos
         return;
       }
       if (!rules) return;
@@ -98,15 +246,17 @@ window.MainPreferences = (function () {
       Array.from(rules).forEach((rule) => {
         const isFontFace =
           (window.CSSRule && rule.type === CSSRule.FONT_FACE_RULE) ||
-          (rule.constructor && rule.constructor.name === 'CSSFontFaceRule') ||
+          (rule.constructor && rule.constructor.name === "CSSFontFaceRule") ||
           (rule.cssText && /^@font-face/i.test(rule.cssText));
 
         if (!isFontFace) return;
 
         const famRaw =
           (rule.style &&
-            (rule.style.getPropertyValue('font-family') || rule.style.fontFamily)) ||
-          '';
+            (rule.style.getPropertyValue("font-family") ||
+              rule.style.fontFamily)) ||
+          "";
+
         const fam = cleanFontName(famRaw);
         if (fam) famSet.add(fam);
       });
@@ -115,10 +265,10 @@ window.MainPreferences = (function () {
     let list = Array.from(famSet);
 
     if (!list.length) {
-      list = ['System'];
+      list = ["System"];
     } else {
       list.sort();
-      if (!list.includes('System')) list.unshift('System');
+      if (!list.includes("System")) list.unshift("System");
     }
 
     cachedFontFamilies = list;
@@ -127,110 +277,17 @@ window.MainPreferences = (function () {
 
   function fillFonts(selectEl, fontsList, current) {
     if (!selectEl) return;
-    selectEl.innerHTML = '';
 
-    const list = fontsList && fontsList.length ? fontsList.slice() : ['System'];
-    if (!list.includes('System')) list.unshift('System');
+    selectEl.innerHTML = "";
 
-    list.forEach((f) => {
-      const opt = document.createElement('option');
-      opt.value = f;
-      opt.textContent = f;
-      if (current && current === f) opt.selected = true;
+    fontsList.forEach((fam) => {
+      const opt = document.createElement("option");
+      opt.value = fam;
+      opt.textContent = fam;
+      if (!current && fam === "System") opt.selected = true;
+      if (current && fam === current) opt.selected = true;
       selectEl.appendChild(opt);
     });
-
-    if (!selectEl.value && list.length) {
-      selectEl.value = list[0];
-    }
-  }
-
-  // ======== Render ========
-
-  function render(container) {
-    if (!container) return;
-
-    container.innerHTML = '';
-
-    var panel = document.createElement('div');
-    panel.className = 'prefs-panel panel-single';
-
-    panel.innerHTML = [
-      '<div class="prefs-body">',
-      '  <div class="prefs-row">',
-      '    <div class="prefs-field">',
-      '      <label for="pref-collection">Colección</label>',
-      '      <select id="pref-collection">',
-      '        <option value="">(default)</option>',
-      '      </select>',
-      '    </div>',
-      '    <div class="prefs-field">',
-      '      <label for="pref-corpus">Corpus</label>',
-      '      <select id="pref-corpus">',
-      '        <option value="">(default)</option>',
-      '      </select>',
-      '    </div>',
-      '  </div>',
-      '',
-      '  <div class="prefs-row prefs-row-font">',
-      '    <div class="prefs-field">',
-      '      <label for="pref-font-family">Tipo de fuente</label>',
-      '      <select id="pref-font-family"></select>',
-      '    </div>',
-      '    <div class="prefs-field prefs-field-font-size">',
-      '      <label for="pref-font-size">Tamaño de fuente</label>',
-      '      <div class="prefs-font-size-row">',
-      '        <input type="range" id="pref-font-size" min="10" max="20" step="1" />',
-      '        <span id="pref-font-size-val">12</span>',
-      '      </div>',
-      '    </div>',
-      '  </div>',
-      '',
-      '  <div class="prefs-row prefs-row-top">',
-      '    <div class="prefs-field prefs-field-light">',
-      '      <label for="pref-light">Luz</label>',
-      '      <label class="prefs-switch">',
-      '        <input type="checkbox" id="pref-light" />',
-      '        <span class="prefs-switch-track">',
-      '          <span class="prefs-switch-thumb"></span>',
-      '        </span>',
-      '        <span class="prefs-switch-text" id="pref-light-text">On</span>',
-      '      </label>',
-      '    </div>',
-      '    <div class="prefs-field">',
-      '      <label for="pref-lang">Idioma</label>',
-      '      <select id="pref-lang">',
-      '        <option value="es">Español</option>',
-      '        <option value="en">English</option>',
-      '      </select>',
-      '    </div>',
-      '    <div class="prefs-field">',
-      '      <label for="pref-color">Color</label>',
-      '      <div class="prefs-color">',
-      '        <input type="color" id="pref-color" />',
-      '        <input type="text" id="pref-color-hex" maxlength="7" />',
-      '      </div>',
-      '    </div>',
-      '  </div>',
-      '',
-      '  <div class="prefs-preview-wrap">',
-      '    <div class="prefs-preview" id="prefs-preview-text">',
-      '      Prueba de texto para ver tipo y tamaño de fuente',
-      '    </div>',
-      '  </div>',
-      '',
-      '  <div class="prefs-foot">',
-      '    <button type="button" class="chip" id="pref-reset">Reset</button>',
-      '    <button type="button" class="chip" id="pref-cancel">Cancelar</button>',
-      '    <button type="button" class="chip" id="pref-save">Guardar</button>',
-      '  </div>',
-      '</div>',
-    ].join('\n');
-
-    container.appendChild(panel);
-
-    wireLogic(panel);
-    applyTexts(panel);
   }
 
   function wireLogic(root) {
@@ -241,175 +298,599 @@ window.MainPreferences = (function () {
       (PrefsStore && PrefsStore.DEFAULTS) ||
       {};
 
-    var collectionEl = root.querySelector('#pref-collection');
-    var corpusEl = root.querySelector('#pref-corpus');
-    var fontFamilyEl = root.querySelector('#pref-font-family');
-    var fontSizeEl = root.querySelector('#pref-font-size');
-    var fontSizeValEl = root.querySelector('#pref-font-size-val');
-    var lightEl = root.querySelector('#pref-light');
-    var lightTextEl = root.querySelector('#pref-light-text');
-    var langEl = root.querySelector('#pref-lang');
-    var colorEl = root.querySelector('#pref-color');
-    var colorHexEl = root.querySelector('#pref-color-hex');
-    var resetBtn = root.querySelector('#pref-reset');
-    var cancelBtn = root.querySelector('#pref-cancel');
-    var saveBtn = root.querySelector('#pref-save');
-    var previewEl = root.querySelector('#prefs-preview-text');
+    var collectionEl = root.querySelector("#pref-collection");
+    var corpusEl = root.querySelector("#pref-corpus");
+    var fontFamilyEl = root.querySelector("#pref-font-family");
+    var fontSizeEl = root.querySelector("#pref-font-size");
+    var fontSizeValEl = root.querySelector("#pref-font-size-val");
+    var lightEl = root.querySelector("#pref-light");
+    var lightTextEl = root.querySelector("#pref-light-text");
+    var langEl = root.querySelector("#pref-lang");
+    var colorEl = root.querySelector("#pref-color");
+    var colorHexEl = root.querySelector("#pref-color-hex");
+    var resetBtn = root.querySelector("#pref-reset");
+    var cancelBtn = root.querySelector("#pref-cancel");
+    var saveBtn = root.querySelector("#pref-save");
+    var previewEl = root.querySelector("#prefs-preview-text");
 
     var fontsList = getFontFamiliesFromCSS();
+    var client = getSupabaseClient();
+    var entriesLang = prefs.language || getLang();
 
     function applyLightToMain(checked) {
-      var main = document.getElementById('app-main');
+      var main = document.getElementById("app-main");
       if (!main) return;
       if (checked) {
-        main.removeAttribute('data-light');
+        main.removeAttribute("data-light");
       } else {
-        main.setAttribute('data-light', 'off');
+        main.setAttribute("data-light", "off");
       }
     }
 
     function updateLightText() {
       if (!lightEl || !lightTextEl) return;
-      lightTextEl.textContent = lightEl.checked ? 'On' : 'Off';
+      lightTextEl.textContent = lightEl.checked ? "On" : "Off";
       applyLightToMain(lightEl.checked);
     }
 
     function updatePreviewStyle() {
       if (!previewEl) return;
 
-      var fontVal = fontFamilyEl ? fontFamilyEl.value : 'System';
-      var sizeVal = fontSizeEl ? Number(fontSizeEl.value) || 12 : 12;
-      var colorVal = colorEl ? colorEl.value || '#000000' : '#000000';
+      var fontVal = fontFamilyEl ? fontFamilyEl.value : "System";
+      if (fontVal && fontVal !== "System") {
+        previewEl.style.fontFamily =
+          "'" + fontVal + "', var(--app-font-fallback)";
+      } else {
+        previewEl.style.fontFamily = "var(--app-font-fallback)";
+      }
 
-      var famValue =
-        fontVal && fontVal !== 'System'
-          ? "'" + fontVal + "', var(--app-font-fallback)"
-          : 'var(--app-font-fallback)';
+      var sizeVal =
+        fontSizeEl && fontSizeEl.value
+          ? Number(fontSizeEl.value)
+          : prefs.fontSizePt;
+      previewEl.style.fontSize = (sizeVal || 12) + "pt";
 
-      previewEl.style.fontFamily = famValue;
-      previewEl.style.fontSize = sizeVal + 'pt';
+      var colorVal =
+        (colorEl && colorEl.value) ||
+        (colorHexEl && colorHexEl.value) ||
+        prefs.colorHex ||
+        "#000000";
       previewEl.style.color = colorVal;
     }
 
     function applyFromPrefs() {
-      if (!prefs) return;
+      // Collections / Corpus se gestionan con entries (initEntriesCombos)
 
-      if (collectionEl) collectionEl.value = prefs.collection || '';
-      if (corpusEl) corpusEl.value = prefs.corpus || '';
-
-      var currentFont = prefs.font || 'System';
+      var currentFont = prefs.font || "System";
       fillFonts(fontFamilyEl, fontsList, currentFont);
 
-      if (fontSizeEl) fontSizeEl.value = prefs.fontSizePt || 12;
-      if (fontSizeEl && fontSizeValEl) fontSizeValEl.textContent = fontSizeEl.value;
+      if (fontSizeEl) {
+        var fs = prefs.fontSizePt || 12;
+        if (fs < 8) fs = 8;
+        if (fs > 25) fs = 25;
+        fontSizeEl.value = fs;
+      }
+      if (fontSizeValEl) {
+        var txtSize = prefs.fontSizePt || 12;
+        fontSizeValEl.textContent = txtSize + " pt";
+      }
 
-      if (langEl) langEl.value = prefs.language || 'es';
-      if (lightEl) lightEl.checked = prefs.light !== 'off';
-      if (colorEl) colorEl.value = prefs.colorHex || '#000000';
-      if (colorHexEl) colorHexEl.value = prefs.colorHex || '#000000';
+      if (langEl) langEl.value = prefs.language || "es";
 
+      var color = prefs.colorHex || "#000000";
+      if (colorEl) colorEl.value = color;
+      if (colorHexEl) colorHexEl.value = color;
+
+      if (lightEl) {
+        lightEl.checked = prefs.light !== "off";
+      }
       updateLightText();
-      applyTexts(root);
       updatePreviewStyle();
     }
 
+    // === cambio de idioma dentro de Preferencias ===
+    if (langEl) {
+      langEl.addEventListener("change", function () {
+        var newLang = langEl.value || "es";
+        prefs.language = newLang;
+
+        // vaciar caches para ese nuevo idioma
+        entriesCollectionsCache = {};
+        entriesCorpusCache = {};
+        entriesLang = newLang;
+
+        if (client && typeof initEntriesCombos === "function") {
+          initEntriesCombos();
+        }
+      });
+    }
+
+    // ====== Entradas (entries) para Collections / Corpus ======
+
+    // loading en selects de prefs (Colección / Corpus)
+    function setLoadingUI(kind, active, percent) {
+      var selectEl =
+        kind === "collection"
+          ? collectionEl
+          : kind === "corpus"
+          ? corpusEl
+          : null;
+      if (!selectEl) return;
+
+      if (!active) {
+        selectEl.disabled = false;
+        selectEl.classList.remove("prefs-select-loading");
+        selectEl.style.backgroundImage = "";
+        selectEl.style.color = "";
+        return;
+      }
+
+      selectEl.disabled = true;
+      selectEl.classList.add("prefs-select-loading");
+
+      var p =
+        typeof percent === "number" && percent >= 0
+          ? Math.min(100, Math.round(percent))
+          : 0;
+
+      var lang = getLang();
+      var baseEs =
+        kind === "collection"
+          ? "Cargando Collections"
+          : "Cargando Corpus";
+      var baseEn =
+        kind === "collection"
+          ? "Loading Collections"
+          : "Loading Corpus";
+
+      var label =
+        lang === "en"
+          ? baseEn + " " + p + "%"
+          : baseEs + " al " + p + "%";
+
+      selectEl.innerHTML = "";
+      var opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = label;
+      selectEl.appendChild(opt);
+
+      selectEl.style.backgroundImage =
+        "linear-gradient(to right, var(--accent, #154a8e) " +
+        p +
+        "%, rgba(0,0,0,0.06) " +
+        p +
+        "%)";
+
+      if (p < 50) {
+        selectEl.style.color = "#154a8e";
+      } else {
+        selectEl.style.color = "#ffffff";
+      }
+    }
+
+    // Carga todas las level_1 distintas para un idioma, usando cache
+    async function loadCollections(langCode) {
+      var cacheKey = langCode || "default";
+      if (entriesCollectionsCache[cacheKey]) {
+        return entriesCollectionsCache[cacheKey];
+      }
+      if (!client) return [];
+
+      setLoadingUI("collection", true, 0);
+
+      var set = new Set();
+      var chunkSize = 1000;
+      var from = 0;
+      var done = false;
+      var totalCount = null;
+      var loadedRows = 0;
+
+      try {
+        var headResp = await client
+          .from("entries")
+          .select("id", { count: "estimated", head: true })
+          .eq("language_code", langCode)
+          .not("level_1", "is", null);
+        if (!headResp.error) {
+          totalCount = headResp.count || null;
+        }
+      } catch (eCount) {
+        console.warn("[Prefs] entries level_1 count error", eCount);
+      }
+
+      while (!done) {
+        var to = from + chunkSize - 1;
+        try {
+          var resp = await client
+            .from("entries")
+            .select("level_1")
+            .eq("language_code", langCode)
+            .not("level_1", "is", null)
+            .range(from, to);
+
+          if (resp.error) {
+            console.warn("[Prefs] entries level_1 error", resp.error);
+            break;
+          }
+
+          var rows = resp.data || [];
+          rows.forEach(function (row) {
+            if (row.level_1) set.add(row.level_1);
+          });
+
+          loadedRows += rows.length;
+
+          if (totalCount && totalCount > 0) {
+            var perc = (loadedRows / totalCount) * 100;
+            setLoadingUI("collection", true, perc);
+          }
+
+          if (rows.length < chunkSize) {
+            done = true;
+          } else {
+            from += chunkSize;
+          }
+        } catch (e) {
+          console.warn("[Prefs] entries level_1 exception", e);
+          break;
+        }
+      }
+
+      setLoadingUI("collection", false, 100);
+
+      var values = Array.from(set);
+      values.sort();
+      entriesCollectionsCache[cacheKey] = values;
+      return values;
+    }
+
+    function fillCollectionsSelect(collections, selected) {
+      if (!collectionEl) return;
+      collectionEl.innerHTML = "";
+
+      collections.forEach(function (val) {
+        var opt = document.createElement("option");
+        opt.value = val;
+        opt.textContent = val;
+        if (selected && selected === val) opt.selected = true;
+        collectionEl.appendChild(opt);
+      });
+    }
+
+    // Carga los level_2 para un level_1 concreto, usando cache
+    async function loadCorpusForCollection(
+      langCode,
+      collectionValue,
+      selectedCorpus
+    ) {
+      if (!corpusEl || !client || !collectionValue) {
+        if (corpusEl) corpusEl.innerHTML = "";
+        return;
+      }
+
+      var cacheKey = langCode + "::" + collectionValue;
+      var cached = entriesCorpusCache[cacheKey];
+
+      if (!cached) {
+        setLoadingUI("corpus", true, 0);
+
+        var set2 = new Set();
+        var chunkSize = 1000;
+        var from2 = 0;
+        var done2 = false;
+        var totalCount2 = null;
+        var loadedRows2 = 0;
+
+        try {
+          var head2 = await client
+            .from("entries")
+            .select("id", { count: "estimated", head: true })
+            .eq("language_code", langCode)
+            .eq("level_1", collectionValue)
+            .not("level_2", "is", null);
+          if (!head2.error) totalCount2 = head2.count || null;
+        } catch (eHead2) {
+          console.warn("[Prefs] entries level_2 count error", eHead2);
+        }
+
+        while (!done2) {
+          var to2 = from2 + chunkSize - 1;
+          try {
+            var resp2 = await client
+              .from("entries")
+              .select("level_2")
+              .eq("language_code", langCode)
+              .eq("level_1", collectionValue)
+              .not("level_2", "is", null)
+              .range(from2, to2);
+
+            if (resp2.error) {
+              console.warn("[Prefs] entries level_2 error", resp2.error);
+              corpusEl.innerHTML = "";
+              setLoadingUI("corpus", false, 100);
+              return;
+            }
+
+            var rows2 = resp2.data || [];
+            rows2.forEach(function (row) {
+              if (row.level_2) set2.add(row.level_2);
+            });
+
+            loadedRows2 += rows2.length;
+            if (totalCount2 && totalCount2 > 0) {
+              var perc2 = (loadedRows2 / totalCount2) * 100;
+              setLoadingUI("corpus", true, perc2);
+            }
+
+            if (rows2.length < chunkSize) {
+              done2 = true;
+            } else {
+              from2 += chunkSize;
+            }
+          } catch (e) {
+            console.warn("[Prefs] entries level_2 exception", e);
+            corpusEl.innerHTML = "";
+            setLoadingUI("corpus", false, 100);
+            return;
+          }
+        }
+
+        setLoadingUI("corpus", false, 100);
+
+        cached = Array.from(set2);
+        cached.sort();
+        entriesCorpusCache[cacheKey] = cached;
+      }
+
+      corpusEl.innerHTML = "";
+      cached.forEach(function (val) {
+        var opt = document.createElement("option");
+        opt.value = val;
+        opt.textContent = val;
+        if (selectedCorpus && selectedCorpus === val) opt.selected = true;
+        corpusEl.appendChild(opt);
+      });
+
+      var effectiveCorpus =
+        selectedCorpus && cached.indexOf(selectedCorpus) >= 0
+          ? selectedCorpus
+          : cached[0] || "";
+
+      if (effectiveCorpus && (!prefs.corpus || prefs.corpus !== effectiveCorpus)) {
+        prefs.corpus = effectiveCorpus;
+        try {
+          PrefsStore.save(prefs);
+        } catch (e) {
+          console.warn("[Prefs] save prefs.corpus error", e);
+        }
+      }
+
+      if (effectiveCorpus && corpusEl.value !== effectiveCorpus) {
+        corpusEl.value = effectiveCorpus;
+      }
+    }
+
+    async function initEntriesCombos() {
+      if (!client || !collectionEl) return;
+
+      var langCode = entriesLang;
+
+      var collections = await loadCollections(langCode);
+      if (!collections.length && langCode !== "en") {
+        langCode = "en";
+        collections = await loadCollections(langCode);
+      }
+      if (!collections.length) {
+        collectionEl.innerHTML = "";
+        if (corpusEl) corpusEl.innerHTML = "";
+        return;
+      }
+
+      var selectedCollection =
+        prefs.collection && collections.indexOf(prefs.collection) >= 0
+          ? prefs.collection
+          : collections[0];
+
+      fillCollectionsSelect(collections, selectedCollection);
+
+      if (!prefs.collection || prefs.collection !== selectedCollection) {
+        prefs.collection = selectedCollection;
+        try {
+          PrefsStore.save(prefs);
+        } catch (e) {
+          console.warn("[Prefs] save prefs.collection error", e);
+        }
+      }
+
+      await loadCorpusForCollection(langCode, selectedCollection, prefs.corpus);
+      entriesLang = langCode;
+    }
+
+    if (collectionEl && client) {
+      collectionEl.addEventListener("change", function () {
+        var newCollection = collectionEl.value || "";
+        prefs.collection = newCollection || null;
+        if (!newCollection) {
+          if (corpusEl) corpusEl.innerHTML = "";
+          return;
+        }
+        loadCorpusForCollection(entriesLang, newCollection, null);
+      });
+    }
+
+    // ====== Listeners de fuentes / color / luz ======
     if (fontSizeEl && fontSizeValEl) {
-      fontSizeEl.addEventListener('input', function () {
-        fontSizeValEl.textContent = fontSizeEl.value;
+      fontSizeEl.addEventListener("input", function () {
+        fontSizeValEl.textContent = fontSizeEl.value + " pt";
         updatePreviewStyle();
       });
     }
 
     if (fontFamilyEl) {
-      fontFamilyEl.addEventListener('change', function () {
+      fontFamilyEl.addEventListener("change", function () {
         updatePreviewStyle();
       });
     }
 
     if (colorEl) {
-      colorEl.addEventListener('input', function () {
+      colorEl.addEventListener("input", function () {
         if (colorHexEl) colorHexEl.value = colorEl.value;
         updatePreviewStyle();
       });
     }
 
     if (colorHexEl) {
-      colorHexEl.addEventListener('change', function () {
+      colorHexEl.addEventListener("change", function () {
         var v = colorHexEl.value.trim();
         if (!v) return;
-        if (!v.startsWith('#')) v = '#' + v;
-        if (v.length === 7) {
-          colorHexEl.value = v;
-          if (colorEl) colorEl.value = v;
-          updatePreviewStyle();
-        }
+        if (v[0] !== "#") v = "#" + v;
+        colorHexEl.value = v;
+        if (colorEl) colorEl.value = v;
+        updatePreviewStyle();
       });
     }
 
     if (lightEl) {
-      lightEl.addEventListener('change', function () {
+      lightEl.addEventListener("change", function () {
         updateLightText();
       });
     }
 
-    if (resetBtn && PrefsStore) {
-      resetBtn.addEventListener('click', function () {
+    if (resetBtn && PrefsStore && PrefsStore.DEFAULTS) {
+      resetBtn.addEventListener("click", function () {
         prefs = Object.assign({}, PrefsStore.DEFAULTS);
         try {
           PrefsStore.save(prefs);
           PrefsStore.apply(prefs);
         } catch (e) {
-          console.warn('Prefs reset error', e);
+          console.warn("Prefs reset error", e);
         }
         applyFromPrefs();
+        if (client) {
+          initEntriesCombos();
+        }
       });
     }
 
     if (cancelBtn && PrefsStore) {
-      cancelBtn.addEventListener('click', function () {
+      cancelBtn.addEventListener("click", function () {
         prefs = PrefsStore.load();
         PrefsStore.apply(prefs);
-        if (window.Main && typeof window.Main.showView === 'function') {
-          window.Main.showView('navigator');
+        if (window.Main && typeof window.Main.showView === "function") {
+          window.Main.showView("navigator");
         }
       });
     }
 
+    // ===== Guardar (y sincronizar con perfil si hay usuario en sesión) =====
     if (saveBtn && PrefsStore) {
-      saveBtn.addEventListener('click', function () {
+      saveBtn.addEventListener("click", async function () {
         var current =
           (PrefsStore && PrefsStore.load && PrefsStore.load()) ||
           PrefsStore.DEFAULTS ||
           {};
-        var selectedFont = fontFamilyEl ? fontFamilyEl.value || 'System' : 'System';
+        var selectedFont = fontFamilyEl
+          ? fontFamilyEl.value || "System"
+          : "System";
 
         var next = Object.assign({}, current, {
-          collection: collectionEl ? collectionEl.value || null : current.collection,
+          collection: collectionEl
+            ? collectionEl.value || null
+            : current.collection,
           corpus: corpusEl ? corpusEl.value || null : current.corpus,
-          font: selectedFont === 'System' ? null : selectedFont,
+          font: selectedFont === "System" ? null : selectedFont,
           fontSizePt: fontSizeEl
             ? Number(fontSizeEl.value) || current.fontSizePt
             : current.fontSizePt,
           language: langEl ? langEl.value || current.language : current.language,
-          light: lightEl ? (lightEl.checked ? 'on' : 'off') : current.light,
+          light: lightEl ? (lightEl.checked ? "on" : "off") : current.light,
           colorHex: colorEl ? colorEl.value || current.colorHex : current.colorHex,
         });
 
+        // 1) Guardar localmente y aplicar al sitio
         try {
           var saved = PrefsStore.save(next);
           PrefsStore.apply(saved);
           prefs = saved;
         } catch (e) {
-          console.warn('Prefs save error', e);
+          console.warn("Prefs save error", e);
         }
 
-        if (window.Main && typeof window.Main.showView === 'function') {
-          window.Main.showView('navigator');
+        // 2) Si hay usuario logueado, guardar TAMBIÉN en profiles (SQL)
+        try {
+          if (
+            window.AuthSession &&
+            typeof window.AuthSession.isLoggedIn === "function" &&
+            window.AuthSession.isLoggedIn() &&
+            window.BackendSupabase &&
+            typeof window.BackendSupabase.client === "function" &&
+            typeof window.BackendSupabase.isConfigured === "function" &&
+            window.BackendSupabase.isConfigured()
+          ) {
+            var user = window.AuthSession.getUser
+              ? window.AuthSession.getUser()
+              : null;
+            var client2 = window.BackendSupabase.client();
+
+            if (user && user.id && client2) {
+              var lang = sqlLanguage(next.language);
+              var pColor = sqlColorFromPrefs(next);
+              var pFontType = sqlFontType(next.font);
+              var pFontSize = sqlFontSize(next.fontSizePt);
+
+              var payload = {
+                id: user.id,
+                email: user.email || null,
+                first_name:
+                  (user.user_metadata && user.user_metadata.first_name) || null,
+                last_name:
+                  (user.user_metadata && user.user_metadata.last_name) || null,
+
+                p_language: lang,
+                p_color: pColor,
+                p_font_type: pFontType,
+                p_font_size: pFontSize,
+                p_light: next.light === "on",
+                p_level_1: next.collection || null,
+                p_level_2: next.corpus || null,
+              };
+
+              var up = await client2.from("profiles").upsert(payload);
+              if (up && up.error) {
+                console.warn("[Prefs] profiles upsert error", up.error);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("[Prefs] sync user preferences error", e);
+        }
+
+        // 3) ACTUALIZAR BREADCRUMB con los nuevos Collection / Corpus
+        try {
+          if (
+            window.Toolbar &&
+            typeof window.Toolbar.refreshBreadcrumb === "function"
+          ) {
+            window.Toolbar.refreshBreadcrumb();
+          }
+        } catch (e) {
+          console.warn("[Prefs] error al refrescar breadcrumb", e);
+        }
+
+        // 4) Volver a la vista principal
+        if (window.Main && typeof window.Main.showView === "function") {
+          window.Main.showView("navigator");
         }
       });
     }
 
+    // Aplicar prefs actuales (fuentes, color, luz, etc.)
     applyFromPrefs();
+
+    // Inicializar combos de Collections / Corpus desde entries (solo primera vez por idioma)
+    if (client) {
+      initEntriesCombos();
+    }
   }
 
   return { render: render };

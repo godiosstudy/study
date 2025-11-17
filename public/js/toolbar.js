@@ -1,4 +1,4 @@
-// toolbar.js – búsqueda principal y acciones del toolbar
+// toolbar.js – búsqueda principal, breadcrumb y acciones del toolbar
 window.Toolbar = (function () {
   function documentReady(fn) {
     if (document.readyState === "loading") {
@@ -8,24 +8,598 @@ window.Toolbar = (function () {
     }
   }
 
+  function getPrefs() {
+    try {
+      if (window.PrefsStore && typeof window.PrefsStore.load === "function") {
+        return window.PrefsStore.load() || {};
+      }
+    } catch (e) {}
+    return {};
+  }
+
+  function getLang() {
+    var prefs = getPrefs();
+    return prefs.language || "es";
+  }
+
+  function getSupabaseClient() {
+    try {
+      if (
+        window.BackendSupabase &&
+        typeof window.BackendSupabase.client === "function" &&
+        typeof window.BackendSupabase.isConfigured === "function" &&
+        window.BackendSupabase.isConfigured()
+      ) {
+        return window.BackendSupabase.client();
+      }
+    } catch (e) {
+      console.warn("[Toolbar] error obteniendo cliente Supabase", e);
+    }
+    return null;
+  }
+
+  // =========================
+  // Search con placeholder i18n + búsqueda en tiempo real
+  // =========================
   function initSearch() {
     var input = document.getElementById("tbar-search");
     if (!input) return;
 
+    var lang = getLang();
+    input.placeholder = lang === "en" ? "Search" : "Buscar";
+
+    var debounceTimer = null;
+
+    function triggerSearch() {
+      var query = input.value.trim();
+
+      // Vacío → volvemos a Navigator
+      if (!query) {
+        if (window.Main && typeof window.Main.showView === "function") {
+          window.Main.showView("navigator");
+        }
+        return;
+      }
+
+      if (window.Main && typeof window.Main.showView === "function") {
+        window.Main.showView("results", { query: query });
+      }
+    }
+
+    // Tiempo real con debounce
+    input.addEventListener("input", function () {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(triggerSearch, 300);
+    });
+
+    // Enter = buscar inmediato
     input.addEventListener("keydown", function (ev) {
       if (ev.key !== "Enter") return;
-      ev.preventDefault();
-      var query = input.value.trim();
-      if (!window.Main || typeof window.Main.showView !== "function") return;
-      window.Main.showView("results", { query: query });
+      if (debounceTimer) clearTimeout(debounceTimer);
+      triggerSearch();
+    });
+  }
+
+  // =========================
+  // Siempre que el breadcrumb cambia → vamos a Navigator
+  // =========================
+  function maybeRefreshNavigator() {
+    try {
+      if (window.Main && typeof window.Main.showView === "function") {
+        window.Main.showView("navigator");
+      }
+    } catch (e) {
+      console.warn("[Toolbar] error al mostrar navigator", e);
+    }
+  }
+
+  // =========================
+  // Breadcrumb: Collection > Corpus > level_3 > level_4 > level_5
+  // =========================
+
+  // loading visual en selects l3/l4/l5
+  function makeSelectLoadingHelper(selL3, selL4, selL5) {
+    return function setSelectLoadingUI(kind, active, percent) {
+      var selectEl =
+        kind === "l3" ? selL3 : kind === "l4" ? selL4 : kind === "l5" ? selL5 : null;
+      if (!selectEl) return;
+
+      if (!active) {
+        selectEl.disabled = false;
+        selectEl.classList.remove("crumb-select-loading");
+        selectEl.style.backgroundImage = "";
+        selectEl.style.color = "";
+        return;
+      }
+
+      selectEl.disabled = true;
+      selectEl.classList.add("crumb-select-loading");
+
+      var p =
+        typeof percent === "number" && percent >= 0
+          ? Math.min(100, Math.round(percent))
+          : 0;
+
+      // SOLO porcentaje visible
+      selectEl.innerHTML = "";
+      var opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = p + "%";
+      selectEl.appendChild(opt);
+
+      // barra de color del sistema
+      selectEl.style.backgroundImage =
+        "linear-gradient(to right, var(--accent, #154a8e) " +
+        p +
+        "%, rgba(0,0,0,0.06) " +
+        p +
+        "%)";
+
+      // texto invertido según avance
+      if (p < 50) {
+        selectEl.style.color = "#154a8e";
+      } else {
+        selectEl.style.color = "#ffffff";
+      }
+    };
+  }
+
+  // Utilidad: cargar valores distintos para un nivel dado, en tandas de 1000,
+  // ordenados por entry_order asc (y luego por texto / numérico)
+  async function loadDistinctLevel(levelField, filters, loadingKind, setSelectLoadingUI) {
+    var client = getSupabaseClient();
+    if (!client) return [];
+
+    if (setSelectLoadingUI) setSelectLoadingUI(loadingKind, true, 0);
+
+    var map = new Map(); // valor -> menor entry_order
+    var chunkSize = 1000;
+    var from = 0;
+    var done = false;
+    var totalCount = null;
+    var loadedRows = 0;
+
+    // conteo estimado para porcentaje
+    try {
+      var headQ = client
+        .from("entries")
+        .select("id", { count: "estimated", head: true })
+        .eq("language_code", filters.language_code)
+        .eq("level_1", filters.level_1)
+        .eq("level_2", filters.level_2)
+        .not(levelField, "is", null);
+
+      if (filters.level_3 && levelField !== "level_3") {
+        headQ = headQ.eq("level_3", filters.level_3);
+      }
+      if (filters.level_4 && levelField === "level_5") {
+        headQ = headQ.eq("level_4", filters.level_4);
+      }
+
+      var headResp = await headQ;
+      if (!headResp.error) {
+        totalCount = headResp.count || null;
+      }
+    } catch (eCount) {
+      console.warn("[Toolbar] " + levelField + " count error", eCount);
+    }
+
+    while (!done) {
+      var to = from + chunkSize - 1;
+      var q = client
+        .from("entries")
+        .select(levelField + ", entry_order")
+        .eq("language_code", filters.language_code)
+        .eq("level_1", filters.level_1)
+        .eq("level_2", filters.level_2)
+        .not(levelField, "is", null)
+        .range(from, to);
+
+      if (filters.level_3 && levelField !== "level_3") {
+        q = q.eq("level_3", filters.level_3);
+      }
+      if (filters.level_4 && levelField === "level_5") {
+        q = q.eq("level_4", filters.level_4);
+      }
+
+      var resp;
+      try {
+        resp = await q;
+      } catch (e) {
+        console.warn("[Toolbar] error entries " + levelField, e);
+        break;
+      }
+
+      if (resp.error) {
+        console.warn("[Toolbar] entries " + levelField + " error", resp.error);
+        break;
+      }
+
+      var rows = resp.data || [];
+      rows.forEach(function (row) {
+        var v = row[levelField];
+        if (!v) return;
+        var order =
+          typeof row.entry_order === "number"
+            ? row.entry_order
+            : Number.MAX_SAFE_INTEGER;
+        if (!map.has(v) || order < map.get(v)) {
+          map.set(v, order);
+        }
+      });
+
+      loadedRows += rows.length;
+
+      if (totalCount && totalCount > 0 && setSelectLoadingUI) {
+        var perc = (loadedRows / totalCount) * 100;
+        setSelectLoadingUI(loadingKind, true, perc);
+      }
+
+      if (rows.length < chunkSize) {
+        done = true;
+      } else {
+        from += chunkSize;
+      }
+    }
+
+    if (setSelectLoadingUI) setSelectLoadingUI(loadingKind, false, 100);
+
+    var arr = Array.from(map.entries()).sort(function (a, b) {
+      var orderDiff = a[1] - b[1];
+      if (orderDiff !== 0) return orderDiff;
+
+      // Para level_5: ordenar numéricamente 1,2,3,4,5,6...
+      if (levelField === "level_5") {
+        var nA = parseInt(a[0], 10);
+        var nB = parseInt(b[0], 10);
+        if (!isNaN(nA) && !isNaN(nB) && nA !== nB) {
+          return nA - nB;
+        }
+      }
+
+      // fallback: orden alfabético
+      return String(a[0]).localeCompare(String(b[0]));
+    });
+
+    return arr.map(function (entry) {
+      return entry[0];
+    });
+  }
+
+  function fillSelect(selectEl, values, selectedValue) {
+    if (!selectEl) return;
+    selectEl.innerHTML = "";
+
+    values.forEach(function (val) {
+      var opt = document.createElement("option");
+      opt.value = val;
+      opt.textContent = val;
+      if (selectedValue && selectedValue === val) {
+        opt.selected = true;
+      }
+      selectEl.appendChild(opt);
+    });
+
+    if (!selectedValue && values.length > 0) {
+      selectEl.value = values[0];
+    }
+  }
+
+  async function initBreadcrumb() {
+    var container = document.getElementById("tbar-breadcrumb");
+    if (!container) return;
+
+    var prefs = getPrefs();
+    var lang = getLang();
+    var client = getSupabaseClient();
+
+    var collection = prefs.collection || null;
+    var corpus = prefs.corpus || null;
+
+    container.innerHTML = "";
+    container.classList.add("crumbs");
+
+    // Botón: Collection > Corpus >  (en negrita) → abre Preferencias
+    var prefsBtn = document.createElement("button");
+    prefsBtn.type = "button";
+    prefsBtn.className = "crumb-link";
+
+    var colLabel = collection || (lang === "en" ? "Collection" : "Collection");
+    var corpusLabel = corpus || "Corpus";
+
+    var strongCol = document.createElement("strong");
+    strongCol.textContent = colLabel;
+
+    var sep1 = document.createElement("span");
+    sep1.className = "crumb-sep";
+    sep1.textContent = " > ";
+
+    var strongCorpus = document.createElement("strong");
+    strongCorpus.textContent = corpusLabel;
+
+    var sep2 = document.createElement("span");
+    sep2.className = "crumb-sep";
+    sep2.textContent = " > ";
+
+    prefsBtn.appendChild(strongCol);
+    prefsBtn.appendChild(sep1);
+    prefsBtn.appendChild(strongCorpus);
+    prefsBtn.appendChild(sep2);
+
+    container.appendChild(prefsBtn);
+
+    // Selects para level_3, level_4, level_5
+    var selL3 = document.createElement("select");
+    selL3.id = "crumb-l3";
+    selL3.className = "crumb-select";
+
+    var selL4 = document.createElement("select");
+    selL4.id = "crumb-l4";
+    selL4.className = "crumb-select";
+
+    var selL5 = document.createElement("select");
+    selL5.id = "crumb-l5";
+    selL5.className = "crumb-select";
+
+    container.appendChild(selL3);
+    container.appendChild(selL4);
+    container.appendChild(selL5);
+
+    var setSelectLoadingUI = makeSelectLoadingHelper(selL3, selL4, selL5);
+
+    // Click → Preferencias
+    prefsBtn.addEventListener("click", function () {
+      if (window.Main && typeof window.Main.showView === "function") {
+        window.Main.showView("preferences");
+      }
+    });
+
+    if (!client || !collection || !corpus) {
+      selL3.disabled = true;
+      selL4.disabled = true;
+      selL5.disabled = true;
+      fillSelect(selL3, [], null);
+      fillSelect(selL4, [], null);
+      fillSelect(selL5, [], null);
+      return;
+    }
+
+    window.ToolbarState = window.ToolbarState || {};
+    var prevL3 = window.ToolbarState.level_3 || "";
+    var prevL4 = window.ToolbarState.level_4 || "";
+    var prevL5 = window.ToolbarState.level_5 || "";
+
+    var baseFilters = {
+      language_code: prefs.language || "es",
+      level_1: collection,
+      level_2: corpus,
+    };
+
+    // ---- CARGA INICIAL (auto primer valor) ----
+    var selectedL3 = "";
+    var selectedL4 = "";
+    var selectedL5 = "";
+
+    // level_3
+    var level3Values = await loadDistinctLevel(
+      "level_3",
+      baseFilters,
+      "l3",
+      setSelectLoadingUI
+    );
+
+    if (!level3Values.length) {
+      fillSelect(selL3, [], null);
+      fillSelect(selL4, [], null);
+      fillSelect(selL5, [], null);
+      selL3.disabled = true;
+      selL4.disabled = true;
+      selL5.disabled = true;
+      maybeRefreshNavigator();
+      return;
+    }
+
+    if (prevL3 && level3Values.indexOf(prevL3) !== -1) {
+      selectedL3 = prevL3;
+    } else {
+      selectedL3 = level3Values[0];
+    }
+    fillSelect(selL3, level3Values, selectedL3);
+    selL3.disabled = false;
+
+    // level_4
+    var filtersL4 = Object.assign({}, baseFilters, { level_3: selectedL3 });
+    var level4Values = await loadDistinctLevel(
+      "level_4",
+      filtersL4,
+      "l4",
+      setSelectLoadingUI
+    );
+
+    if (!level4Values.length) {
+      fillSelect(selL4, [], null);
+      fillSelect(selL5, [], null);
+      selL4.disabled = true;
+      selL5.disabled = true;
+      window.ToolbarState.level_3 = selectedL3;
+      window.ToolbarState.level_4 = "";
+      window.ToolbarState.level_5 = "";
+      maybeRefreshNavigator();
+      return;
+    }
+
+    if (prevL4 && level4Values.indexOf(prevL4) !== -1) {
+      selectedL4 = prevL4;
+    } else {
+      selectedL4 = level4Values[0];
+    }
+    fillSelect(selL4, level4Values, selectedL4);
+    selL4.disabled = false;
+
+    // level_5
+    var filtersL5 = Object.assign({}, baseFilters, {
+      level_3: selectedL3,
+      level_4: selectedL4,
+    });
+    var level5Values = await loadDistinctLevel(
+      "level_5",
+      filtersL5,
+      "l5",
+      setSelectLoadingUI
+    );
+
+    if (!level5Values.length) {
+      fillSelect(selL5, [], null);
+      selL5.disabled = true;
+      window.ToolbarState.level_3 = selectedL3;
+      window.ToolbarState.level_4 = selectedL4;
+      window.ToolbarState.level_5 = "";
+      maybeRefreshNavigator();
+    } else {
+      if (prevL5 && level5Values.indexOf(prevL5) !== -1) {
+        selectedL5 = prevL5;
+      } else {
+        selectedL5 = level5Values[0];
+      }
+      fillSelect(selL5, level5Values, selectedL5);
+      selL5.disabled = false;
+
+      window.ToolbarState.level_3 = selectedL3;
+      window.ToolbarState.level_4 = selectedL4;
+      window.ToolbarState.level_5 = selectedL5;
+      maybeRefreshNavigator(); // breadcrumb completo ⇒ mostramos Navigator
+    }
+
+    // ---- Cambios manuales ----
+    selL3.addEventListener("change", async function () {
+      var chosenL3 = selL3.value || "";
+      window.ToolbarState.level_3 = chosenL3;
+      window.ToolbarState.level_4 = "";
+      window.ToolbarState.level_5 = "";
+
+      if (!chosenL3) {
+        fillSelect(selL4, [], null);
+        fillSelect(selL5, [], null);
+        selL4.disabled = true;
+        selL5.disabled = true;
+        maybeRefreshNavigator();
+        return;
+      }
+
+      var filtersL4c = Object.assign({}, baseFilters, { level_3: chosenL3 });
+      var level4Vals = await loadDistinctLevel(
+        "level_4",
+        filtersL4c,
+        "l4",
+        setSelectLoadingUI
+      );
+
+      if (!level4Vals.length) {
+        fillSelect(selL4, [], null);
+        fillSelect(selL5, [], null);
+        selL4.disabled = true;
+        selL5.disabled = true;
+        maybeRefreshNavigator();
+        return;
+      }
+
+      var autoL4 = level4Vals[0];
+      fillSelect(selL4, level4Vals, autoL4);
+      selL4.disabled = false;
+
+      var filtersL5c = Object.assign({}, baseFilters, {
+        level_3: chosenL3,
+        level_4: autoL4,
+      });
+      var level5Vals = await loadDistinctLevel(
+        "level_5",
+        filtersL5c,
+        "l5",
+        setSelectLoadingUI
+      );
+
+      if (!level5Vals.length) {
+        fillSelect(selL5, [], null);
+        selL5.disabled = true;
+        window.ToolbarState.level_3 = chosenL3;
+        window.ToolbarState.level_4 = autoL4;
+        window.ToolbarState.level_5 = "";
+        maybeRefreshNavigator();
+        return;
+      }
+
+      var autoL5 = level5Vals[0];
+      fillSelect(selL5, level5Vals, autoL5);
+      selL5.disabled = false;
+
+      window.ToolbarState.level_3 = chosenL3;
+      window.ToolbarState.level_4 = autoL4;
+      window.ToolbarState.level_5 = autoL5;
+      maybeRefreshNavigator();
+    });
+
+    selL4.addEventListener("change", async function () {
+      var chosenL3 = selL3.value || "";
+      var chosenL4 = selL4.value || "";
+      window.ToolbarState.level_3 = chosenL3;
+      window.ToolbarState.level_4 = chosenL4;
+      window.ToolbarState.level_5 = "";
+
+      if (!chosenL4) {
+        fillSelect(selL5, [], null);
+        selL5.disabled = true;
+        maybeRefreshNavigator();
+        return;
+      }
+
+      var filtersL5c2 = Object.assign({}, baseFilters, {
+        level_3: chosenL3,
+        level_4: chosenL4,
+      });
+      var level5Vals2 = await loadDistinctLevel(
+        "level_5",
+        filtersL5c2,
+        "l5",
+        setSelectLoadingUI
+      );
+
+      if (!level5Vals2.length) {
+        fillSelect(selL5, [], null);
+        selL5.disabled = true;
+        window.ToolbarState.level_5 = "";
+        maybeRefreshNavigator();
+        return;
+      }
+
+      var autoL5b = level5Vals2[0];
+      fillSelect(selL5, level5Vals2, autoL5b);
+      selL5.disabled = false;
+
+      window.ToolbarState.level_5 = autoL5b;
+      maybeRefreshNavigator();
+    });
+
+    selL5.addEventListener("change", function () {
+      window.ToolbarState.level_3 = selL3.value || "";
+      window.ToolbarState.level_4 = selL4.value || "";
+      window.ToolbarState.level_5 = selL5.value || "";
+      maybeRefreshNavigator();
     });
   }
 
   function init() {
     initSearch();
+    initBreadcrumb();
+  }
+
+  async function refreshBreadcrumb() {
+    await initBreadcrumb();
   }
 
   documentReady(init);
 
-  return { init: init };
+  return {
+    init: init,
+    refreshBreadcrumb: refreshBreadcrumb,
+  };
 })();

@@ -136,3 +136,49 @@ Tables
                                 └── level_7: Texto del versículo,  → "En el principio Dios creó los cielos y la tierra.", etc.
             
             
+Members
+
+Roles
+    1. Participante → Participant (rol básico, alguien que toma parte en actividades)
+    2. Estudiante → Student (usuario en proceso de aprendizaje)
+    3. Instructor → Teacher (o Instructor si quieres un término más amplio) (quien enseña o guía en el aprendizaje)
+    4. Líder → Leader (persona que guía a un grupo, puede ser mentor o referente)
+    5. Coordinador → Coordinator (asegura que las actividades y personas estén alineadas)
+    6. Organizador → Organizer (o Planner si quieres enfatizar la logística) (quien diseña y estructura las actividades o eventos)
+    7. Admin → Administrator (o Admin en sistemas digitales) (rol con permisos de gestión y control del sistema)
+Creditos
+    Es dinero para usar en la app.
+    Opciones de uso:
+    1. Comprar acceso a información por x tiempo.
+    2. Comprar acceso a clases
+    3. Comprar acceso a grupos
+    4. Regalar a otros Personas
+Pisos
+    1. Se arranca en la tierra Piso 0
+    2. Piso 1 = 10000 escalones
+    3. Piso 2 = 100000 escalones
+    4. Piso 3 = 1000000 escalones
+    5. Piso 4 = 10000000 escalones
+    asi sigue . . . 
+Escalones
+    1. Por cada 1000 escalones se puede canjear por 1 Credito
+    2. Ver un Versiculo = 1 Escalon
+    3. Like un Versiculo = 1 Escalon
+    4. Comentar un Versiculo = 1 Escalon
+    5. Vinculo logrado a Versiculo = 1 Escalon
+    6. Vinculo logrado a Capitulo = 1 Escalon
+    7. Dar un Like a un Comentario = 1 Escalon
+    8. Recibir un like de un Comentario = 0.1 Escalon
+    9. Por cada invitado registrado = 2 Escalones
+    Grupos
+    10. Por cada Clases
+
+Menu izquierdo vertical
+(Se oculta y se abre con una flecha en la izquierda en el centro del main)
+Personas
+Grupos
+Creditos
+Permisos    
+Roles
+Escalones
+Pisos

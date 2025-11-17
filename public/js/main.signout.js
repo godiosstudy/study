@@ -1,36 +1,89 @@
-// main.signout.js – cierre de sesión
+// main.signout.js – cerrar sesión y mensaje en main
 window.MainSignout = (function () {
+  function getLang() {
+    try {
+      if (window.PrefsStore && typeof window.PrefsStore.load === 'function') {
+        var prefs = window.PrefsStore.load();
+        if (prefs && prefs.language) return prefs.language;
+      }
+    } catch (e) {}
+    return 'es';
+  }
+
+  var TEXTS = {
+    es: {
+      title: 'Cerrar sesión',
+      message:
+        'Tu sesión se ha cerrado con éxito. Vuelve en tu próximo uso para seguir disfrutando de los beneficios de Study.GODiOS.org.',
+    },
+    en: {
+      title: 'Sign out',
+      message:
+        'Your session has been closed successfully. Come back on your next visit to keep enjoying the benefits of Study.GODiOS.org.',
+    },
+  };
+
+  function t(key) {
+    var lang = getLang();
+    var dict = TEXTS[lang] || TEXTS.es;
+    return dict[key] || key;
+  }
+
+  // Ejecuta el signout real contra Supabase y re-aplica preferencias locales
+  async function doSignOut() {
+    try {
+      if (window.AuthSession && typeof window.AuthSession.clear === 'function') {
+        await window.AuthSession.clear();
+      } else if (
+        window.BackendSupabase &&
+        typeof window.BackendSupabase.signOut === 'function'
+      ) {
+        await window.BackendSupabase.signOut();
+      }
+    } catch (e) {
+      console.warn('[Signout] error while signing out', e);
+    }
+
+    // Reaplicamos preferencias locales para forzar refresco de header/buttons
+    try {
+      if (
+        window.PrefsStore &&
+        typeof window.PrefsStore.apply === 'function'
+      ) {
+        var prefs =
+          (window.PrefsStore.load && window.PrefsStore.load()) ||
+          window.PrefsStore.DEFAULTS ||
+          {};
+        window.PrefsStore.apply(prefs);
+      }
+    } catch (e) {
+      console.warn('[Signout] prefs apply error', e);
+    }
+  }
+
   function render(container) {
     if (!container) return;
-    container.innerHTML = "";
+    container.innerHTML = '';
 
-    var wrap = document.createElement("div");
-    wrap.className = "panel-single";
+    // Lanza el proceso de signout en segundo plano
+    doSignOut();
+
+    var wrap = document.createElement('div');
+    wrap.className = 'panel-single';
 
     wrap.innerHTML = [
-      "<h1>Cerrar sesión</h1>",
-      '<p class="main-subtitle">Confirma que deseas salir de Study.GODiOS.org</p>',
-      '<div class="form-actions">',
-      '  <button type="button" class="chip" id="signout-confirm">Cerrar sesión</button>',
-      "</div>",
-      '<p class="field-hint" id="signout-hint"></p>',
-    ].join("\n");
+      '<h1 id="signout-title"></h1>',
+      '<p class="signout-message" id="signout-msg"></p>',
+    ].join('\n');
 
     container.appendChild(wrap);
 
-    var btn = wrap.querySelector("#signout-confirm");
-    var hint = wrap.querySelector("#signout-hint");
+    wrap.querySelector('#signout-title').textContent = t('title');
+    wrap.querySelector('#signout-msg').textContent = t('message');
 
-    btn.addEventListener("click", function () {
-      if (window.AuthSession && typeof window.AuthSession.clear === "function") {
-        window.AuthSession.clear();
-      } else {
-        localStorage.removeItem("auth.user");
-      }
-      if (hint) hint.textContent = "Sesión cerrada (stub).";
-      if (window.HeaderButtons && typeof window.HeaderButtons.init === "function") {
-        window.HeaderButtons.init();
-      }
+    window.addEventListener('i18n:changed', function () {
+      wrap.querySelector('#signout-title').textContent = t('title');
+      wrap.querySelector('#signout-msg').textContent = t('message');
     });
   }
 

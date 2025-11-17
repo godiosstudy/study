@@ -1,159 +1,173 @@
-// main.js – enrutador principal de vistas dentro de <main>
+// main.js – controlador de vistas principales (navigator / results / focus / etc.)
 window.Main = (function () {
   var currentView = null;
+  var currentOptions = null;
 
-  // Títulos por vista y por idioma
-  var VIEW_TITLES = {
-    navigator: { es: 'Navegación', en: 'Navigation' },
-    results: { es: 'Resultados de búsqueda', en: 'Search Results' },
-    focus: { es: 'Enfoque', en: 'Focus' },
-    preferences: { es: 'Preferencias', en: 'Preferences' },
-    changelog: { es: 'Historial de cambios', en: 'Changelog' },
-    login: { es: 'Iniciar sesión', en: 'Sign in' },
-    register: { es: 'Registrarse', en: 'Sign up' },
-    forget: { es: 'Recuperar contraseña', en: 'Forgot password' },
-    signout: { es: 'Cerrar sesión', en: 'Sign out' },
-    account: { es: 'Mi cuenta', en: 'My account' },
-  };
+  function getMainEl() {
+    return document.getElementById("app-main");
+  }
 
-  function documentReady(fn) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', fn);
-    } else {
-      fn();
-    }
+  function clearMain() {
+    var el = getMainEl();
+    if (el) el.innerHTML = "";
   }
 
   function getLang() {
     try {
-      if (window.PrefsStore && typeof window.PrefsStore.load === 'function') {
-        var prefs = window.PrefsStore.load();
-        if (prefs && prefs.language) return prefs.language;
+      if (window.PrefsStore && typeof window.PrefsStore.load === "function") {
+        var prefs = window.PrefsStore.load() || {};
+        return prefs.language || "es";
       }
     } catch (e) {}
-    try {
-      var attr = document.documentElement.getAttribute('lang');
-      if (attr) return attr;
-    } catch (e2) {}
-    return 'es';
+    return "es";
   }
 
-  function getTitleForView(name) {
-    var map = VIEW_TITLES[name];
-    if (!map) return '';
-    var lang = getLang();
-    return map[lang] || map.es || map.en || '';
-  }
-
-  function getMainContainer() {
-    return document.getElementById('app-main') || document.querySelector('main');
-  }
-
-  function setViewTitle(name) {
-    var pill = document.getElementById('view-title');
+  function setViewTitleFor(name) {
+    var pill = document.getElementById("view-title");
     if (!pill) return;
 
-    var title = getTitleForView(name);
-    if (!title) {
-      pill.style.display = 'none';
-      return;
-    }
-    pill.textContent = title;
-    pill.classList.add('view-title-pill');
-    pill.style.display = 'inline-block';
-  }
+    var lang = getLang();
+    var text = "";
 
-  function clearMain(container) {
-    if (!container) return;
-    container.innerHTML = '';
-  }
-
-  function ensureStudyLayout(container) {
-    if (!container) return null;
-    if (!window.MainNavigator || typeof window.MainNavigator.ensureLayout !== 'function') {
-      return { root: container, nav: container, results: container, focus: container };
+    if (name === "results") {
+      text = lang === "en" ? "Search results" : "Resultados de búsqueda";
+    } else if (name === "navigator") {
+      text = lang === "en" ? "Navigation" : "Navegación";
+    } else if (name === "focus") {
+      text = lang === "en" ? "Focus" : "Focus";
+    } else if (name === "preferences") {
+      text = lang === "en" ? "Preferences" : "Preferencias";
+    } else if (name === "account") {
+      text = lang === "en" ? "Account" : "Cuenta";
+    } else if (name === "login") {
+      text = lang === "en" ? "Sign in" : "Iniciar sesión";
+    } else if (name === "register") {
+      text = lang === "en" ? "Sign up" : "Registro";
+    } else if (name === "changelog") {
+      text = "Changelog";
     }
-    return window.MainNavigator.ensureLayout(container);
+
+    pill.textContent = text;
+    pill.style.display = text ? "inline-block" : "none";
   }
 
   function showView(name, options) {
-    options = options || {};
-    var container = getMainContainer();
-    if (!container) return;
+    var el = getMainEl();
+    if (!el) {
+      console.warn("[Main] #app-main no encontrado");
+      return;
+    }
 
     currentView = name;
-    setViewTitle(name);
+    currentOptions = options || {};
 
-    var layoutPanels;
+    // Título base según vista (las vistas pueden sobreescribirlo)
+    setViewTitleFor(name);
 
-    if (name === 'navigator' || name === 'results' || name === 'focus') {
-      layoutPanels = ensureStudyLayout(container);
-      if (!layoutPanels) return;
+    clearMain();
 
-      if (name === 'navigator') {
-        if (window.MainNavigator && typeof window.MainNavigator.renderNav === 'function') {
-          window.MainNavigator.renderNav(layoutPanels.nav, options);
-        }
-        if (window.MainResults && typeof window.MainResults.render === 'function') {
-          window.MainResults.render(layoutPanels.results, options);
-        }
-        if (window.MainFocus && typeof window.MainFocus.render === 'function') {
-          window.MainFocus.render(layoutPanels.focus, options);
-        }
-      } else if (name === 'results') {
-        if (window.MainResults && typeof window.MainResults.render === 'function') {
-          window.MainResults.render(layoutPanels.results, options);
-        }
-      } else if (name === 'focus') {
-        if (window.MainFocus && typeof window.MainFocus.render === 'function') {
-          window.MainFocus.render(layoutPanels.focus, options);
-        }
+    if (name === "navigator") {
+      if (
+        window.MainNavigator &&
+        typeof window.MainNavigator.renderNav === "function"
+      ) {
+        window.MainNavigator.renderNav(el);
       }
       return;
     }
 
-    // Vistas de panel único
-    clearMain(container);
-
-    var viewMap = {
-      changelog: window.MainChangelog,
-      preferences: window.MainPreferences,
-      register: window.MainRegister,
-      login: window.MainLogin,
-      forget: window.MainForget,
-      signout: window.MainSignout,
-      account: window.MainAccount,
-    };
-
-    var mod = viewMap[name];
-    if (mod && typeof mod.render === 'function') {
-      mod.render(container, options);
-    } else {
-      var div = document.createElement('div');
-      div.className = 'panel-single';
-      div.innerHTML =
-        '<h1>Not implemented</h1><p>View "' + String(name) + '" has no renderer yet.</p>';
-      container.appendChild(div);
+    if (name === "results") {
+      if (
+        window.MainResults &&
+        typeof window.MainResults.render === "function"
+      ) {
+        window.MainResults.render(el, currentOptions);
+      }
+      return;
     }
+
+    if (name === "focus") {
+      if (
+        window.MainFocus &&
+        typeof window.MainFocus.render === "function"
+      ) {
+        window.MainFocus.render(el, currentOptions);
+      }
+      return;
+    }
+
+    if (name === "preferences") {
+      if (
+        window.MainPreferences &&
+        typeof window.MainPreferences.render === "function"
+      ) {
+        window.MainPreferences.render(el);
+      }
+      return;
+    }
+
+    if (name === "account") {
+      if (
+        window.MainAccount &&
+        typeof window.MainAccount.render === "function"
+      ) {
+        window.MainAccount.render(el);
+      }
+      return;
+    }
+
+    if (name === "login") {
+      if (window.MainLogin && typeof window.MainLogin.render === "function") {
+        window.MainLogin.render(el);
+      }
+      return;
+    }
+
+    if (name === "register") {
+      if (
+        window.MainRegister &&
+        typeof window.MainRegister.render === "function"
+      ) {
+        window.MainRegister.render(el);
+      }
+      return;
+    }
+
+    if (name === "changelog") {
+      if (
+        window.MainChangelog &&
+        typeof window.MainChangelog.render === "function"
+      ) {
+        window.MainChangelog.render(el);
+      }
+      return;
+    }
+
+    console.warn("[Main] vista desconocida:", name);
   }
 
   function getCurrentView() {
     return currentView;
   }
 
-  function init() {
-    showView('navigator');
+  function getCurrentOptions() {
+    return currentOptions;
   }
 
-  documentReady(init);
+  function init() {
+    // Vista inicial
+    showView("navigator");
+  }
 
-  // Cuando cambie el idioma, actualizamos el título de la vista actual
-  window.addEventListener('i18n:changed', function () {
-    if (currentView) setViewTitle(currentView);
-  });
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 
   return {
     showView: showView,
     getCurrentView: getCurrentView,
+    getCurrentOptions: getCurrentOptions,
   };
 })();

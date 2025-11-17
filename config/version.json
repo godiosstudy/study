@@ -1,5 +1,42 @@
 [
   {
+    "version": "0.2.8",
+    "date": "2025-11-16",
+    "notes": [
+      "Breadcrumb funcional en toolbar: Collection > Corpus > Nivel 3 > Nivel 4 > Nivel 5.",
+      "Breadcrumb enlaza a Preferencias al hacer clic en Collection > Corpus.",
+      "Campo de búsqueda ajusta su ancho y su placeholder (Buscar / Search) según el idioma."
+    ]
+  },
+  {
+    "version": "0.2.7",
+    "date": "2025-11-16",
+    "notes": [
+      "Integración de tabla entries con Preferencias (Collections / Corpus).",
+      "Carga paginada de entries en tandas de 1000 registros con deduplicación.",
+      "Selects de Colección y Corpus con barra de progreso en el propio campo mientras cargan."
+    ]
+  },
+  {
+    "version": "0.2.6",
+    "date": "2025-11-16",
+    "notes": [
+      "Pantallas de Registro e Inicio de sesión integradas con Supabase Auth.",
+      "Perfiles de usuario creados automáticamente en la tabla public.profiles.",
+      "Pantalla de Preferencias funcionando al 100% (idioma, fuente, color, etc.).",
+      "Ajustes en constraints y triggers de profiles para evitar errores de registro.",
+      "Header actualizado: Bendecido X + HUD de créditos, escalones y piso."
+    ]
+  },
+  {
+    "version": "0.2.5",
+    "date": "2025-11-15",
+    "notes": [
+      "Implementación inicial de Registrarse con Supabase auth.signUp.",
+      "Integración de AuthSession global para reflejar estado de login en el header."
+    ]
+  },
+  {
     "version": "0.2.4",
     "date": "2025-11-15",
     "notes": [
