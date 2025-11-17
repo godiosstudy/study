@@ -650,3 +650,93 @@ select.prefs-select-loading option {
   background: #fff59d;
   padding: 0 1px;
 }
+/* === Navegación por flechas en Navigator === */
+.nav-arrows-layer {
+  position: relative;
+}
+
+/* Botones con el color del sistema al ~10–20% */
+.nav-arrow {
+  position: fixed;
+  z-index: 900;
+  background: var(--accent-soft);
+  color: var(--header-bg);
+  border: none;
+  border-radius: 999px;
+  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  opacity: 0.9;
+}
+
+.nav-arrow span {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.nav-arrow-disabled {
+  opacity: 0.3;
+  cursor: default;
+  box-shadow: none;
+}
+
+/* Posiciones: usando exactamente el marco */
+.nav-arrow-top {
+  top: var(--frame-top);
+  left: 50%;
+  transform: translate(-50%, -50%);   /* centrado sobre la línea superior */
+}
+
+.nav-arrow-bottom {
+  bottom: var(--frame-bottom);
+  left: 50%;
+  transform: translate(-50%, 50%);    /* centrado sobre la línea inferior */
+}
+
+.nav-arrow-left {
+  top: 50%;
+  left: var(--frame-side);
+  transform: translate(-50%, -50%);   /* centrado sobre la línea izquierda */
+}
+
+.nav-arrow-right {
+  top: 50%;
+  right: var(--frame-side);
+  transform: translate(50%, -50%);    /* centrado sobre la línea derecha */
+}
+
+@media (max-width: 768px) {
+  .nav-arrow {
+    padding: 3px 8px;
+  }
+  .nav-arrow span {
+    font-size: 16px;
+  }
+}
+
+/* ==========================
+   Marco de navegación (4 lados)
+   ========================== */
+
+/* Ajustá estos valores si hace falta según la altura real de tu header/toolbar/footer */
+:root {
+  --frame-top: 120px;      /* línea superior: debajo del header + toolbar */
+  --frame-bottom: 60px;    /* línea inferior: un poco por encima del footer */
+  --frame-side: 16px;      /* margen lateral del marco */
+}
+
+/* Dibuja el rectángulo fijo donde vive el contenido de main */
+body::before {
+  content: "";
+  position: fixed;
+  top: var(--frame-top);
+  bottom: var(--frame-bottom);
+  left: var(--frame-side);
+  right: var(--frame-side);
+  border: 2px solid rgba(0, 0, 0, 0.08);   /* el color de las 4 líneas */
+  pointer-events: none;                    /* no tapa clics */
+  z-index: 200;                            /* encima del fondo, debajo del contenido y flechas */
+}

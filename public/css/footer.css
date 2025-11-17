@@ -55,3 +55,11 @@
   color: var(--footer-fg);
   text-decoration: none;
 }
+/* Dominio en el footer (lado izquierdo) */
+.ftr-domain {
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
