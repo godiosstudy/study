@@ -604,13 +604,13 @@ select.prefs-select-loading option {
 }
 
 .nav-item-text {
-  font-size: 0.95rem;
+  font-size: 0.95em;
 }
 
 /* === Focus: texto principal grande === */
 .focus-main-text {
   margin-top: 12px;
-  font-size: 1.3rem;
+  font-size: 1.3em;
   line-height: 1.6;
 }
 /* Lista de resultados de búsqueda */
@@ -638,13 +638,13 @@ select.prefs-select-loading option {
 /* Referencia: más chica y en bold (level_4 level_5:level_6) */
 .results-ref {
   font-weight: 700;
-  font-size: 0.85rem;      /* ~2pt menos que el texto */
+  font-size: 0.85em;      /* ~2pt menos que el texto */
   flex: 0 0 auto;
 }
 
 /* Texto del versículo: normal, un poco más grande */
 .results-text {
-  font-size: 1rem;
+  font-size: 1em;
   line-height: 1.4;
   flex: 1 1 auto;
 }

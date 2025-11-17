@@ -26,7 +26,7 @@
   font-size: 0.9rem;
   color: var(--muted, #6b7280);
   min-width: 0;
-  flex: 0 1 auto;
+  flex: 1 1 auto;     /* 👉 ocupa todo el ancho disponible */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -111,7 +111,6 @@ select.crumb-select-loading option {
   box-shadow: 0 0 0 1px var(--accent, #2563eb);
 }
 
-/* Ajustes en pantallas pequeñas */
 @media (max-width: 768px) {
   .tbar {
     padding-inline: 8px;
@@ -119,17 +118,7 @@ select.crumb-select-loading option {
   }
 
   .crumbs {
-    font-size: 0.8rem;
-    max-width: 55%;
-  }
-
-  .crumb-select {
-    max-width: 110px;
-  }
-}
-
-@media (max-width: 480px) {
-  .crumbs {
-    max-width: 50%;
+    font-size: 0.8rem;   /* solo reducimos un poco el tamaño */
+    /* sin max-width: el breadcrumb puede usar todo el ancho */
   }
 }

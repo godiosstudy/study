@@ -151,7 +151,26 @@
 /* Ajustes extra para pantallas pequeñas */
 @media (max-width: 600px) {
   .hdr {
-    padding-inline: 8px;
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    padding: 8px;
+    gap: 6px;
+  }
+
+  .hdr-right {
+    order: 1;         /* Botones de usuario y prefs ARRIBA */
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .hdr-left {
+    order: 2;         /* Buscador ABAJO */
+    width: 100%;
+  }
+
+  .hdr-search {
+    width: 100%;
   }
 }
 
@@ -283,6 +302,14 @@
 
 @media (max-width: 600px) {
   .hdr-search #tbar-search {
-    max-width: 100%;
+     width: 100%;
+     max-width: 260px;
+     padding: 6px 10px;
+     border-radius: 999px;
+     border: 1px solid var(--border);
+     outline: none;
+     font-size: 0.95rem;
+     background: #ffffff;
+     color: var(--header-fg);
   }
 }
