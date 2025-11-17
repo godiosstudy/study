@@ -91,10 +91,18 @@ select.crumb-select-loading option {
   justify-content: flex-end;
 }
 
+/* Wrapper interno para poder colocar la lupa dentro del input */
+.search-inner {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+}
+
+/* Campo de búsqueda */
 #tbar-search {
   width: 100%;
   max-width: 520px;
-  padding: 6px 10px;
+  padding: 6px 34px 6px 10px; /* espacio a la derecha para la lupa */
   border-radius: 999px;
   border: 1px solid var(--border);
   outline: none;
@@ -111,14 +119,51 @@ select.crumb-select-loading option {
   box-shadow: 0 0 0 1px var(--accent, #2563eb);
 }
 
+/* Icono de lupa al final del campo */
+.search-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* no bloquea clic dentro del input */
+  color: var(--muted, #6b7280);
+}
+
+.search-icon .icon-search {
+  width: 16px;
+  height: 16px;
+}
+
+/* Layout responsive: en mobile el buscador va debajo del breadcrumb */
 @media (max-width: 768px) {
   .tbar {
     padding-inline: 8px;
     gap: 8px;
+    flex-wrap: wrap;
+    align-items: flex-start;
   }
 
   .crumbs {
     font-size: 0.8rem;   /* solo reducimos un poco el tamaño */
     /* sin max-width: el breadcrumb puede usar todo el ancho */
+    width: 100%;
+    order: 1;
+  }
+
+  .search {
+    width: 100%;
+    order: 2;
+    justify-content: flex-start;
+  }
+
+  .search-inner {
+    max-width: none;
+  }
+
+  #tbar-search {
+    max-width: 100%;
   }
 }

@@ -86,56 +86,7 @@ UI
     Footer
         Changelog (Left)
         Logo (Right)
-
-Tables
-
-    Tabla: profiles
-        sqlid (uuid) → PK, FK → auth.users.id
-        first_name (text)
-        last_name (text)
-        email (text)
-        phone (text)
-        birth_date (date)
-        gender (text)
-        role (text)
-        updated_at (timestamp)
-        last_view (jsonb) → { collection, corpus, book, chapter, verse }
-        p_bible (text) → versión preferida?
-        p_color (text) → 'light' | 'dark'
-        p_font_type (text) → 'Inter' | 'Merriweather' | 'Space Grotesk'
-        p_font_size (text) → 'sm' | 'md' | 'lg' | 'xl'
-        p_light (bool) → modo claro
-        p_language_code (text) → 'es' | 'en' | etc.
-        p_level1 (text) → colección preferida
-        p_level2 (text) → corpus preferido
-
-
-    Tabla: entries
-        sqlid (uuid) → PK
-        language_code (text)
-        entry_order (int8)
-        level_1 (text) → Colección (ej: "Biblias", "Devocionales",)
-        level_2 (text) → Corpus (ej: "Reina Valera 1960", "Nueva Version Internacional",)
-        level_3 (text) → Testamento (ej: "Antiguo Testamento", "Nuevo Testamento")
-        level_4 (text) → Libro (ej: "Génesis", "Éxodo")
-        level_5 (text) → Capitulo (ej: "1", "2")
-        level_6 (text) → Versiculo (ej: "1", "2")
-        level_7 (text) → Texto del versículo
-        created_at (timestamptz)
-        updated_at (timestamptz)
-        created_by (uuid) → FK → auth.users.id
-        updated_by (uuid) → FK → auth.users.id
-        auth_users_id (uuid) → FK → auth.users.id (dueño del contenido)
-
-        level_1: Colección      → Biblias, Devocionales, etc.
-        └── level_2: Reina Valera 1960, Nueva Version Internacional 
-            └── level_3: Testamento → Antiguo Testamento, Nuevo Testamento
-                └── level_4: Libro → Genesis, Éxodo
-                        └── level_5: Capítulo → 1, 2 
-                            └── level_6: Versiculo → 1, 2   
-                                └── level_7: Texto del versículo,  → "En el principio Dios creó los cielos y la tierra.", etc.
-            
-            
+     
 Members
 
 Roles
@@ -182,3 +133,8 @@ Permisos
 Roles
 Escalones
 Pisos
+
+Pendientes 
+    Revisar cuando carga el sitio por primera ves y si no hay Collection ni Corpus debe leer uno y ponerlo en preferencias.
+    Despues no debe leer mas bases salvo que cambies de idioma.
+    

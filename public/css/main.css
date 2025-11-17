@@ -688,18 +688,6 @@ select.prefs-select-loading option {
 }
 
 /* Posiciones */
-.nav-arrow-top {
-  top: 60px;          /* justo debajo del header */
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.nav-arrow-bottom {
-  bottom: 40px;       /* justo encima del footer */
-  left: 50%;
-  transform: translateX(-50%);
-}
-
 .nav-arrow-left {
   top: 50%;
   left: 8px;

@@ -285,19 +285,31 @@ window.MainNavigator = (function () {
     }
   }
 
-  function navigateSection(newLevel5, ctx) {
-    if (!newLevel5) return;
-    window.ToolbarState = window.ToolbarState || {};
-    window.ToolbarState.level_3 = ctx.level_3;
-    window.ToolbarState.level_4 = ctx.level_4;
-    window.ToolbarState.level_5 = newLevel5;
+function navigateSection(newLevel5, ctx) {
+  if (!newLevel5) return;
 
-    if (window.Toolbar && typeof window.Toolbar.refreshBreadcrumb === "function") {
-      window.Toolbar.refreshBreadcrumb();
-    } else if (window.Main && typeof window.Main.showView === "function") {
-      window.Main.showView("navigator");
+  // Actualizamos el state, pero sin volver a recargar level_3 / level_4 desde la BD
+  window.ToolbarState = window.ToolbarState || {};
+  window.ToolbarState.level_3 = ctx.level_3;
+  window.ToolbarState.level_4 = ctx.level_4;
+  window.ToolbarState.level_5 = newLevel5;
+
+  // Sin llamar a refreshBreadcrumb: no queremos que vuelva a consultar level_3/4
+  // Solo sincronizamos el select de level_5 si existe
+  try {
+    var selL5 = document.getElementById("crumb-l5");
+    if (selL5) {
+      selL5.value = newLevel5;
     }
+  } catch (e) {
+    console.warn("[Navigator] no se pudo actualizar crumb-l5", e);
   }
+
+  // Volvemos a renderizar solo la vista Navigator para el nuevo level_5
+  if (window.Main && typeof window.Main.showView === "function") {
+    window.Main.showView("navigator");
+  }
+}
 
   // ======================
   // Render principal
@@ -388,22 +400,6 @@ window.MainNavigator = (function () {
       level_2: corpus,
     };
 
-    var topBtn = createArrowButton(
-      "nav-arrow-top",
-      "▲",
-      !prevChapter,
-      function () {
-        navigateChapter(prevChapter, arrowsCtx);
-      }
-    );
-    var bottomBtn = createArrowButton(
-      "nav-arrow-bottom",
-      "▼",
-      !nextChapter,
-      function () {
-        navigateChapter(nextChapter, arrowsCtx);
-      }
-    );
     var leftBtn = createArrowButton(
       "nav-arrow-left",
       "◀",
@@ -421,8 +417,6 @@ window.MainNavigator = (function () {
       }
     );
 
-    arrowsLayer.appendChild(topBtn);
-    arrowsLayer.appendChild(bottomBtn);
     arrowsLayer.appendChild(leftBtn);
     arrowsLayer.appendChild(rightBtn);
 

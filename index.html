@@ -31,16 +31,7 @@
   <header id="app-header" class="hdr-wrap">
     <div class="container hdr">
       <div class="hdr-left">
-        <div class="hdr-search">
-          <input id="tbar-search" type="search" placeholder="Buscar">
-          <span class="hdr-search-icon" aria-hidden="true">
-            <!-- Lucide search icon (versión simple) -->
-            <svg viewBox="0 0 24 24" class="icon-search">
-              <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" fill="none"></circle>
-              <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
-            </svg>
-          </span>
-        </div>
+        <!-- (opcional) logo / dominio -->
       </div>
       <div class="hdr-right">
         <!-- HeaderButtons inyecta aquí los chips de usuario y preferencias -->
@@ -52,6 +43,18 @@
   <div class="toolbar-wrap" id="app-toolbar">
     <div class="container tbar">
       <div id="tbar-breadcrumb" class="crumbs">Inicio</div>
+      <div class="search">
+        <div class="search-inner">
+          <input id="tbar-search" type="search" placeholder="Buscar">
+          <span class="search-icon" aria-hidden="true">
+            <!-- Lucide search icon (versión simple) -->
+            <svg viewBox="0 0 24 24" class="icon-search">
+              <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" fill="none"></circle>
+              <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
+            </svg>
+          </span>
+        </div>
+      </div>
     </div>
   </div>
 
