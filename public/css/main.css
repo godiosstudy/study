@@ -683,29 +683,29 @@ select.prefs-select-loading option {
   box-shadow: none;
 }
 
-/* Posiciones: usando exactamente el marco */
+/* Posiciones */
 .nav-arrow-top {
-  top: var(--frame-top);
+  top: 60px;          /* justo debajo del header */
   left: 50%;
-  transform: translate(-50%, -50%);   /* centrado sobre la línea superior */
+  transform: translateX(-50%);
 }
 
 .nav-arrow-bottom {
-  bottom: var(--frame-bottom);
+  bottom: 40px;       /* justo encima del footer */
   left: 50%;
-  transform: translate(-50%, 50%);    /* centrado sobre la línea inferior */
+  transform: translateX(-50%);
 }
 
 .nav-arrow-left {
   top: 50%;
-  left: var(--frame-side);
-  transform: translate(-50%, -50%);   /* centrado sobre la línea izquierda */
+  left: 8px;
+  transform: translateY(-50%);
 }
 
 .nav-arrow-right {
   top: 50%;
-  right: var(--frame-side);
-  transform: translate(50%, -50%);    /* centrado sobre la línea derecha */
+  right: 8px;
+  transform: translateY(-50%);
 }
 
 @media (max-width: 768px) {
@@ -715,28 +715,4 @@ select.prefs-select-loading option {
   .nav-arrow span {
     font-size: 16px;
   }
-}
-
-/* ==========================
-   Marco de navegación (4 lados)
-   ========================== */
-
-/* Ajustá estos valores si hace falta según la altura real de tu header/toolbar/footer */
-:root {
-  --frame-top: 120px;      /* línea superior: debajo del header + toolbar */
-  --frame-bottom: 60px;    /* línea inferior: un poco por encima del footer */
-  --frame-side: 16px;      /* margen lateral del marco */
-}
-
-/* Dibuja el rectángulo fijo donde vive el contenido de main */
-body::before {
-  content: "";
-  position: fixed;
-  top: var(--frame-top);
-  bottom: var(--frame-bottom);
-  left: var(--frame-side);
-  right: var(--frame-side);
-  border: 2px solid rgba(0, 0, 0, 0.08);   /* el color de las 4 líneas */
-  pointer-events: none;                    /* no tapa clics */
-  z-index: 200;                            /* encima del fondo, debajo del contenido y flechas */
 }
