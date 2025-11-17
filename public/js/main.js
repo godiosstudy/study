@@ -143,6 +143,16 @@ window.Main = (function () {
       return;
     }
 
+    if (name === "signout") {
+      if (
+        window.MainSignout &&
+        typeof window.MainSignout.render === "function"
+      ) {
+        window.MainSignout.render(el);
+      }
+      return;
+    }
+
     console.warn("[Main] vista desconocida:", name);
   }
 

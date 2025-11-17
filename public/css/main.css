@@ -15,6 +15,10 @@
 
   /* Altura mínima: ventana - header - toolbar - footer */
   min-height: calc(100vh - (60px + 44px) - var(--footer-h));
+
+    /* 👉 Nuevo: padding lateral para que nada toque los bordes de la ventana */
+  padding-left: 50px;
+  padding-right: 50px;
 }
 
 /* Contenedor interno del main */
