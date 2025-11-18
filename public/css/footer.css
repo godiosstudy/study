@@ -63,3 +63,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+
+/* Breadcrumb estático (Collection > Corpus) en el footer, lado izquierdo */
+.ftr-crumb-static {
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+

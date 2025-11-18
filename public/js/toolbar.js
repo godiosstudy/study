@@ -289,6 +289,12 @@ window.Toolbar = (function () {
     var container = document.getElementById("tbar-breadcrumb");
     if (!container) return;
 
+    var footerStatic = document.getElementById("ftr-crumb-static");
+    if (footerStatic) {
+      footerStatic.innerHTML = "";
+      footerStatic.classList.add("ftr-crumb-static");
+    }
+
     var prefs = getPrefs();
     var lang = getLang();
     var client = getSupabaseClient();
@@ -326,7 +332,9 @@ window.Toolbar = (function () {
     prefsBtn.appendChild(strongCorpus);
     prefsBtn.appendChild(sep2);
 
-    container.appendChild(prefsBtn);
+    if (footerStatic) {
+      footerStatic.appendChild(prefsBtn);
+    }
 
     // Selects para level_3, level_4, level_5
     var selL3 = document.createElement("select");

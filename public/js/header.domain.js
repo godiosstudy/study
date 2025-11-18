@@ -29,10 +29,7 @@ window.HeaderDomain = (function () {
 
   function isLoggedIn() {
     try {
-      if (
-        window.AuthSession &&
-        typeof window.AuthSession.isLoggedIn === "function"
-      ) {
+      if (window.AuthSession && typeof window.AuthSession.isLoggedIn === "function") {
         return window.AuthSession.isLoggedIn();
       }
     } catch (e) {}

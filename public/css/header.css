@@ -22,16 +22,6 @@
 
 .hdr-left,
 .hdr-right {
-/* Dominio en el header (lado izquierdo) */
-.hdr-domain {
-  font-weight: 600;
-  font-size: 0.9rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-
   display: flex;
   align-items: center;
 }
@@ -303,3 +293,14 @@
      color: var(--header-fg);
   }
 }
+
+
+/* Dominio en el header (lado izquierdo) */
+.hdr-domain {
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
