@@ -17,10 +17,53 @@ window.HeaderDomain = (function () {
     });
   }
 
+  function isMobile() {
+    if (typeof window === "undefined") return false;
+    if (window.matchMedia) {
+      try {
+        return window.matchMedia("(max-width: 600px)").matches;
+      } catch (e) {}
+    }
+    return window.innerWidth <= 600;
+  }
+
+  function isLoggedIn() {
+    try {
+      if (
+        window.AuthSession &&
+        typeof window.AuthSession.isLoggedIn === "function"
+      ) {
+        return window.AuthSession.isLoggedIn();
+      }
+    } catch (e) {}
+
+    try {
+      return !!localStorage.getItem("auth.user");
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function applyVisibility() {
+    var domainEl = document.getElementById("hdr-domain");
+    if (!domainEl) return;
+    var hide = isMobile() && isLoggedIn();
+    domainEl.style.display = hide ? "none" : "";
+  }
+
   function init() {
     var domain = document.getElementById("hdr-domain");
     var logo = document.querySelector(".logo");
     wireClickable(domain || logo);
+    applyVisibility();
+
+    try {
+      window.addEventListener("resize", applyVisibility);
+      window.addEventListener("orientationchange", applyVisibility);
+      window.addEventListener("auth:changed", function () {
+        applyVisibility();
+      });
+    } catch (e) {}
   }
 
   return { init: init };
