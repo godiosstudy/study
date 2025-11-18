@@ -134,27 +134,29 @@
 /* Ajustes extra para pantallas pequeñas */
 @media (max-width: 600px) {
   .hdr {
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-start;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
     height: auto;
-    padding: 8px;
-    gap: 6px;
-  }
-
-  .hdr-right {
-    order: 1;           /* Botones arriba */
-    width: 100%;
-    justify-content: flex-end;
-    flex-wrap: wrap;    /* si hay muchos botones, que bajen a otra línea entre ellos */
-    row-gap: 4px;
+    padding: 8px 12px;
+    gap: 8px;
+    flex-wrap: nowrap;
   }
 
   .hdr-left {
-    order: 2;           /* Buscador abajo SIEMPRE */
-    width: 100%;
+    order: 1;           /* Dominio / logo siempre a la izquierda */
+    flex: 0 1 auto;
+  }
+
+  .hdr-right {
+    order: 2;           /* Botones a la derecha */
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    flex-wrap: nowrap;  /* intentamos mantenerlos en una sola línea */
+    row-gap: 0;
   }
 }
+
 /* ===== Bendecido X en header ===== */
 .hdr-actions {
   display: flex;
