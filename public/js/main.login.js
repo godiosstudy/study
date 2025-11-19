@@ -320,20 +320,10 @@ window.MainLogin = (function () {
 
   // Limpia el MAIN y muestra el mensaje de bienvenida
   function showWelcomeInMain(syncMode) {
-    var main = document.getElementById("app-main");
-    if (!main) return;
-
-    main.innerHTML = "";
-
-    var wrap = document.createElement("div");
-    wrap.className = "panel-single login-welcome";
-
-    var p = document.createElement("p");
-    var name = getCurrentUserName();
-    p.textContent = buildWelcomeMessage(name, syncMode || "none");
-    wrap.appendChild(p);
-
-    main.appendChild(wrap);
+    // En lugar de mostrar un mensaje en main, saltamos directo a navigator
+    if (window.Main && typeof window.Main.showView === "function") {
+      window.Main.showView("navigator");
+    }
   }
 
   function wireLogic(root) {

@@ -22,13 +22,53 @@ window.Main = (function () {
     return "es";
   }
 
-  function setViewTitleFor(name) {
-    var pill = document.getElementById("view-title");
-    if (!pill) return;
-    // Ocultamos la solapa invertida: el título se maneja dentro del main.
-    pill.textContent = "";
-    pill.style.display = "none";
+  
+  function renderMainTitle(container, text) {
+    if (!container) return;
+    var existing = container.querySelector(".main-title-card");
+    if (existing && existing.parentNode === container) {
+      container.removeChild(existing);
+    }
+    var card = document.createElement("div");
+    card.className = "main-title-card";
+    var label = document.createElement("div");
+    label.className = "main-title-text";
+    label.textContent = text || "";
+    card.appendChild(label);
+    if (container.firstChild) {
+      container.insertBefore(card, container.firstChild);
+    } else {
+      container.appendChild(card);
+    }
   }
+
+  function setDefaultTitleForView(name, container) {
+    if (!container) return;
+    var lang = getLang();
+    var text = "";
+
+    // Estas vistas tienen título estático (los demás lo definen desde su propio módulo)
+    if (name === "preferences") {
+      text = lang === "en" ? "Preferences" : "Preferencias";
+    } else if (name === "account") {
+      text = lang === "en" ? "Account" : "Cuenta";
+    } else if (name === "login") {
+      text = lang === "en" ? "Sign in" : "Iniciar sesión";
+    } else if (name === "register") {
+      text = lang === "en" ? "Sign up" : "Registrarse";
+    } else if (name === "changelog") {
+      text = "Changelog";
+    } else if (name === "signout") {
+      text = lang === "en" ? "Sign out" : "Cerrar sesión";
+    } else if (name === "forget") {
+      text = lang === "en" ? "Recover password" : "Recordar contraseña";
+    }
+
+    if (text) {
+      renderMainTitle(container, text);
+    }
+  }
+
 
   function showView(name, options) {
     var el = getMainEl();
@@ -41,7 +81,7 @@ window.Main = (function () {
     currentOptions = options || {};
 
     // Título base según vista (las vistas pueden sobreescribirlo)
-    setViewTitleFor(name);
+    setDefaultTitleForView(name, el);
 
     clearMain();
 
@@ -144,8 +184,17 @@ window.Main = (function () {
   }
 
   function init() {
-    // Vista inicial
-    showView("navigator");
+    var started = false;
+
+    function start() {
+      if (started) return;
+      started = true;
+      showView("navigator");
+    }
+
+    window.addEventListener("prefs:applied", function () {
+      start();
+    });
   }
 
   if (document.readyState === "loading") {
@@ -158,5 +207,6 @@ window.Main = (function () {
     showView: showView,
     getCurrentView: getCurrentView,
     getCurrentOptions: getCurrentOptions,
+    renderTitle: renderMainTitle,
   };
 })();

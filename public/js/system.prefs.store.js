@@ -39,6 +39,10 @@
     return Object.assign({}, DEFAULTS, raw || {});
   }
 
+  function hasLocalPrefs() {
+    return !!loadRaw();
+  }
+
   function save(prefs) {
     const data = Object.assign({}, DEFAULTS, prefs || {});
     try {
@@ -221,6 +225,8 @@
     load,
     save,
     apply,
+    loadRaw,
+    hasLocalPrefs,
   };
 
   window.PrefsStore = PrefsStore;

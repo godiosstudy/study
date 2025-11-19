@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.2.9",
+    "date": "2025-11-19",
+    "notes": [
+      "Buscador enriquecido: entiende referencias tipo \"Juan 3\", \"Juan 3:16\" e \"Isaias 41:10\" y respeta idioma, colección y corpus.",
+      "Búsquedas por nombre de libro (con o sin acentos) muestran todos los versículos de ese libro.",
+      "Nivel Focus renovado: versículo principal destacado como bloque protagonista dentro del main.",
+      "Tablero de control en Focus con botón de regreso que abre el capítulo completo en Navigator.",
+      "Loader de Navigator mejorado: overlay de carga más suave sobre el área de estudio.",
+      "Resultados de búsqueda y lista de Navigator con líneas más compactas (gap/padding vertical reducido)."
+    ]
+  },
+  {
     "version": "0.2.8",
     "date": "2025-11-16",
     "notes": [

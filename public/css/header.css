@@ -152,7 +152,7 @@
     order: 2;           /* Botones a la derecha */
     flex: 1 1 auto;
     justify-content: flex-end;
-    flex-wrap: nowrap;  /* intentamos mantenerlos en una sola línea */
+    flex-wrap: nowrap;
     row-gap: 0;
   }
 }
@@ -305,4 +305,3 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-

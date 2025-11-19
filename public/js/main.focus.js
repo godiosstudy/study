@@ -14,6 +14,7 @@ window.MainFocus = (function () {
     return prefs.language || "es";
   }
 
+
   function render(container, options) {
     if (!container) return;
 
@@ -26,7 +27,7 @@ window.MainFocus = (function () {
     var l6 = opts.level_6 || "";
     var l7 = opts.level_7 || "";
 
-      // Solapa de título: "Mateo 17:5"
+    // Solapa de título: "Mateo 17:5"
     var pill = document.getElementById("view-title");
     if (pill && l4 && l5 && l6) {
       pill.textContent = l4 + " " + l5 + ": " + l6;
@@ -38,6 +39,7 @@ window.MainFocus = (function () {
 
     body.innerHTML = "";
 
+    // Versículo estrella (nivel 7)
     var content = document.createElement("div");
     content.className = "focus-main-text";
 
@@ -51,6 +53,32 @@ window.MainFocus = (function () {
     }
 
     body.appendChild(content);
+
+    // Panel de control debajo del versículo (centrado)
+    var actions = document.createElement("div");
+    actions.className = "focus-actions";
+
+    // Botón 'back' usando el mismo formato de iconos (Lucide) que el header
+    var backBtn = document.createElement("button");
+    backBtn.className = "focus-action-btn";
+    var backIcon = document.createElement("i");
+    backIcon.setAttribute("data-lucide", "arrow-left");
+    backBtn.appendChild(backIcon);
+
+    backBtn.title =
+      lang === "en" ? "Back to chapter" : "Volver al capítulo completo";
+
+    backBtn.addEventListener("click", function () {
+      if (window.Main && typeof window.Main.showView === "function") {
+        window.Main.showView("navigator", {
+          level_4: l4,
+          level_5: l5,
+        });
+      }
+    });
+
+    actions.appendChild(backBtn);
+    body.appendChild(actions);
   }
 
   return { render: render };

@@ -315,13 +315,86 @@ function navigateSection(newLevel5, ctx) {
   // Render principal
   // ======================
 
-  async function renderNav(container) {
+
+  // ======================
+  // Loader en el panel principal (Navigator)
+  // ======================
+  function showMainLoader(container) {
+    if (!container) return;
+    var cs = null;
+    try {
+      cs = window.getComputedStyle(container);
+    } catch (e) {}
+    if (!cs || !cs.position || cs.position === "static") {
+      container.style.position = "relative";
+    }
+
+    var overlay = container.querySelector(".main-loading-overlay");
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.className = "main-loading-overlay";
+      var label = document.createElement("div");
+      label.className = "main-loading-text";
+      overlay.appendChild(label);
+      container.appendChild(overlay);
+    }
+
+    overlay.dataset.progress = "0";
+    var labelEl = overlay.querySelector(".main-loading-text");
+    var lang = getLang();
+    if (labelEl) {
+      labelEl.textContent = (lang === "en" ? "Loading " : "Cargando ") + "0%";
+    }
+
+    if (overlay._timer) {
+      clearInterval(overlay._timer);
+    }
+    overlay._timer = setInterval(function () {
+      var p = parseInt(overlay.dataset.progress || "0", 10);
+      if (isNaN(p)) p = 0;
+      if (p >= 90) return;
+      p += 2;
+      overlay.dataset.progress = String(p);
+      if (labelEl) {
+        labelEl.textContent = (lang === "en" ? "Loading " : "Cargando ") + p + "%";
+      }
+    }, 80);
+  }
+
+  function hideMainLoader(container) {
+    if (!container) return;
+    var overlay = container.querySelector(".main-loading-overlay");
+    if (!overlay) return;
+
+    var labelEl = overlay.querySelector(".main-loading-text");
+    var lang = getLang();
+    overlay.dataset.progress = "100";
+    if (labelEl) {
+      labelEl.textContent = (lang === "en" ? "Loading " : "Cargando ") + "100%";
+    }
+
+    if (overlay._timer) {
+      clearInterval(overlay._timer);
+      overlay._timer = null;
+    }
+
+    setTimeout(function () {
+      if (overlay && overlay.parentNode === container) {
+        container.removeChild(overlay);
+      }
+    }, 400);
+  }
+
+function renderNav(container) {
     if (!container) return;
 
     var body = container;
     body.innerHTML = "";
 
-    var prefs = getPrefs();
+    
+    (async function () {
+
+var prefs = getPrefs();
     var lang = getLang();
     var toolbarState = window.ToolbarState || {};
 
@@ -365,7 +438,9 @@ function navigateSection(newLevel5, ctx) {
     };
 
     // Cargar en paralelo: lista de versículos + listas para navegación
+    showMainLoader(body);
     var itemsPromise = loadLevel6_7(ctxBase);
+
     var chaptersPromise = loadChaptersList(ctxBase);
     var versesPromise = loadVersesList(ctxBase);
 
@@ -472,7 +547,12 @@ function navigateSection(newLevel5, ctx) {
     });
 
     body.appendChild(list);
+    hideMainLoader(body);
+
+    })();
   }
+
+
 
   return {
     renderNav: renderNav,
