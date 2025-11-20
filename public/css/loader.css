@@ -1,56 +1,79 @@
-/* Loader entre main y footer (footer fijo) */
+/* Loader de pantalla completa al arrancar / recargar corpus */
 #app-loader {
-  display: none;                     /* SystemLoader.show/hide lo controla */
+  display: none; /* SystemLoader.show/hide lo controla */
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: var(--footer-h);
-  z-index: 940;
+  inset: 0;
+  z-index: 2000;
+  background: var(--main-bg, #ffffff);
+  display: none;
 }
 
 #app-loader .loader-wrap {
-  border-top: 1px solid var(--border);
-  background: var(--toolbar-bg, var(--toolbar));
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #app-loader .loader {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 8px 16px;
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  gap: 16px;
 }
 
+/* Logo centrado */
+#app-loader .loader-logo {
+  max-width: 40vw;
+  width: 140px;
+  height: auto;
+}
+
+/* Barra vertical que se llena de abajo hacia arriba */
 #app-loader .loader-bar {
-  width: 100%;
-  height: 3px;
+  width: 14px;
+  height: 180px;
   border-radius: 999px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.25);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* para que la barra interna crezca desde abajo */
 }
 
 #app-loader .loader-bar-inner {
-  height: 100%;
-  width: 0%;
-  border-radius: 999px;
-  background: var(--accent);
-  transition: width 0.2s ease-out;
+  width: 100%;
+  height: 0%;
+  background: var(--accent, var(--header-bg));
+  transition: height 0.2s ease-out;
 }
 
+/* Texto Cargando / Loading + porcentaje debajo del logo */
 #app-loader .loader-info {
+  margin-top: 4px;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  font-size: 12px;
-  color: var(--toolbar-fg, #ffffff);
+  font-size: 14px;
+  color: #111827;
 }
 
 #app-loader .loader-info span[data-loader-text] {
-  opacity: 0.9;
+  font-weight: 500;
+  margin-bottom: 2px;
 }
 
 #app-loader .loader-info span[data-loader-pct] {
   font-variant-numeric: tabular-nums;
+}
+
+/* Mientras la app está cargando, se ocultan las demás secciones */
+body.app-loading #app-header,
+body.app-loading #app-toolbar,
+body.app-loading #view-title,
+body.app-loading #app-main,
+body.app-loading #app-footer {
+  visibility: hidden;
 }

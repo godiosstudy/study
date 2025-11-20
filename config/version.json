@@ -1,5 +1,25 @@
 [
   {
+    "version": "0.3.1",
+    "date": "2025-11-20",
+    "notes": [
+      "Nuevo loader de pantalla completa al arrancar la app, con logo centrado y barra vertical que se llena de 0% a 100% desde abajo hacia arriba.",
+      "Mientras se cargan las bases en memoria, se oculta el resto de la interfaz y solo se muestra el logo + texto Cargando/Loading y porcentaje.",
+      "El progreso inicial que antes se mostraba en el footer ahora usa SystemLoader y se refleja en el overlay de inicio."
+    ]
+  },
+  {
+    "version": "0.3.1",
+    "date": "2025-11-20",
+    "notes": [
+      "Mensaje de bienvenida en Navigator mientras no haya niveles seleccionados, con texto 'Bienvenido a / Welcome to' y 'Estudio.GODiOS.org / Study.GODiOS.org'.",
+      "Flechas de Navigator usando iconos Lucide step-back / step-forward, con círculo del color del sitio e icono blanco, flotando sobre el texto sin ocupar ancho.",
+      "Números de versículo (level_6) más pequeños (~8pt) en negrita, y encabezados de vistas en el main centrados.",
+      "En Focus, las flechas de anterior/siguiente usan iconos Lucide step-back/step-forward flotando sobre el versículo, alineadas con el título, y tanto estas flechas como los 5 botones inferiores usan fondo circular del color del sitio con iconos en color opuesto.",
+      "En Navigator, las filas de versículos alternan un fondo neutro y uno con ~10% del color del sitio para facilitar la lectura."
+    ]
+  },
+  {
     "version": "0.3.0",
     "date": "2025-11-19",
     "notes": [

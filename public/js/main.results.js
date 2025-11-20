@@ -304,36 +304,47 @@ window.MainResults = (function () {
 
     // Resumen de conteos antes de la lista
     var summary = document.createElement("div");
-    summary.className = "results-summary";
+    summary.className = "results-summary panel-single";
 
-    var line1 = document.createElement("p");
-    line1.innerHTML =
-      '<span style="background: yellow; padding: 0 4px; border-radius: 3px;">' +
-      (lang === "en"
-        ? (exactCount + " exact results")
-        : (exactCount + " resultados exactos")) +
-      "</span>";
+    var chipsRow = document.createElement("div");
+    chipsRow.className = "results-summary-chips";
 
-    var line2 = document.createElement("p");
-    line2.innerHTML =
-      '<span style="background: #e0e0e0; padding: 0 4px; border-radius: 3px;">' +
-      (lang === "en"
-        ? (contempladoCount + " covered results (accent-insensitive)")
-        : (contempladoCount + " resultados contemplados (sin acentos)")) +
-      "</span>";
+    function addSummaryChip(iconName, count, label) {
+      var chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "chip icon-only";
+      chip.disabled = true;
 
-    var line3 = document.createElement("p");
-    line3.textContent =
-      lang === "en"
-        ? (approxCount + " additional approximate matches by Fuse.js")
-        : (approxCount + " resultados aproximados adicionales por Fuse.js");
+      var iconEl = document.createElement("i");
+      iconEl.setAttribute("data-lucide", iconName);
+      chip.appendChild(iconEl);
 
-    summary.appendChild(line1);
-    summary.appendChild(line2);
-    summary.appendChild(line3);
+      var spanText = document.createElement("span");
+      spanText.textContent = String(count) + " " + label;
+      chip.appendChild(spanText);
+
+      chipsRow.appendChild(chip);
+    }
+
+    var lblExact = lang === "en" ? "exact" : "exactos";
+    var lblCont = lang === "en" ? "covered" : "contemplados";
+    var lblApprox = lang === "en" ? "approx." : "aprox.";
+
+    addSummaryChip("target", exactCount, lblExact);
+    addSummaryChip("crosshair", contempladoCount, lblCont);
+    addSummaryChip("circle-dashed", approxCount, lblApprox);
+
+    summary.appendChild(chipsRow);
 
     // Insertar el resumen antes de la lista de resultados
     body.insertBefore(summary, list);
+
+    // Activar iconos Lucide en los chips
+    try {
+      if (window.lucide && typeof window.lucide.createIcons === "function") {
+        window.lucide.createIcons();
+      }
+    } catch (eLucide) {}
 
     if (!items.length) {
       var none = document.createElement("p");

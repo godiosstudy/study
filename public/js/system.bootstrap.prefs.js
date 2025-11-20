@@ -81,67 +81,53 @@
         if (bc) {
           bc.style.visibility = "hidden";
         }
-
-        // Mensaje de bienvenida en el centro del main
-        var main = document.getElementById("app-main");
-        if (main) {
-          var overlay = document.getElementById("startup-welcome");
-          if (!overlay) {
-            overlay = document.createElement("div");
-            overlay.id = "startup-welcome";
-            overlay.className = "startup-welcome";
-            main.appendChild(overlay);
-          } else {
-            overlay.innerHTML = "";
-          }
-
-          // Idioma para el mensaje
-          var lang = "es";
-          try {
-            var store = getStore && getStore();
-            if (store && typeof store.load === "function") {
-              var p = store.load() || {};
-              if (p.language) lang = p.language;
-            }
-          } catch (ePrefs) {}
-
-          var line1 = document.createElement("div");
-          line1.className = "startup-welcome-line1";
-          line1.textContent = lang === "en" ? "Welcome to" : "Bienvenido a";
-
-          var line2 = document.createElement("div");
-          line2.className = "startup-welcome-line2";
-          line2.textContent = lang === "en" ? "Study.GODiOS.org" : "Estudio.GODiOS.org";
-
-          overlay.appendChild(line1);
-          overlay.appendChild(line2);
-        }
       }
 
-      // El cargador principal ahora es el del footer.
-      if (window.FooterLoader && typeof window.FooterLoader.show === "function") {
-        // Lo iniciamos en 0%; el detalle real lo marcará loadBibleCache.
-        window.FooterLoader.show(0, "", null);
+      // Mientras cargamos, ocultamos visualmente el resto de la app
+      try {
+        if (document.body && document.body.classList) {
+          document.body.classList.add("app-loading");
+        }
+      } catch (eBody) {}
+
+      // Mostrar loader de pantalla completa
+      if (window.SystemLoader && typeof window.SystemLoader.show === "function") {
+        window.SystemLoader.show();
+      }
+      if (window.SystemLoader && typeof window.SystemLoader.setProgress === "function") {
+        var lang = "es";
+        try {
+          var store = getStore && getStore();
+          if (store && typeof store.load === "function") {
+            var p = store.load() || {};
+            if (p.language) lang = p.language;
+          }
+        } catch (ePrefs) {}
+        var label = lang === "en" ? "Loading" : "Cargando";
+        window.SystemLoader.setProgress(0, label);
       }
     } catch (e) {}
   }
 
   function hideLoader() {
     try {
-      if (window.FooterLoader && typeof window.FooterLoader.hide === "function") {
-        window.FooterLoader.hide();
+      // Ocultar overlay de carga de pantalla completa
+      if (window.SystemLoader && typeof window.SystemLoader.hide === "function") {
+        window.SystemLoader.hide();
       }
 
-      // Al terminar la primera carga, mostramos breadcrumb y quitamos mensaje
+      // Volver a mostrar el resto de la app
+      try {
+        if (document.body && document.body.classList) {
+          document.body.classList.remove("app-loading");
+        }
+      } catch (eBody) {}
+
+      // Al terminar la primera carga, mostramos breadcrumb
       if (window.BootstrapState && window.BootstrapState.firstLoad) {
         var bc = document.getElementById("tbar-breadcrumb");
         if (bc) {
           bc.style.visibility = "";
-        }
-
-        var overlay = document.getElementById("startup-welcome");
-        if (overlay && overlay.parentNode) {
-          overlay.parentNode.removeChild(overlay);
         }
 
         window.BootstrapState.firstLoad = false;
@@ -155,16 +141,12 @@
     try {
       var lang = (prefs && prefs.language) || "es";
 
-      // El progreso detallado se muestra solo en el footer.
-      if (window.FooterLoader && typeof window.FooterLoader.show === "function") {
-        window.FooterLoader.show(0, "", lang);
-      }
-
       if (window.EntriesMemory && typeof window.EntriesMemory.loadForPrefs === "function") {
         await window.EntriesMemory.loadForPrefs(prefs, function (pct, snippet) {
           try {
-            if (window.FooterLoader && typeof window.FooterLoader.setProgress === "function") {
-              window.FooterLoader.setProgress(pct, snippet, lang);
+            if (window.SystemLoader && typeof window.SystemLoader.setProgress === "function") {
+              // Dejamos que SystemLoader construya el texto base (Cargando / Loading + %)
+              window.SystemLoader.setProgress(pct, "");
             }
           } catch (e) {}
         });
@@ -382,6 +364,15 @@
     return prefs;
   }
 
+
+
+  function showInitialView() {
+    try {
+      if (window.Main && typeof window.Main.showView === "function") {
+        window.Main.showView("navigator");
+      }
+    } catch (e) {}
+  }
   async function bootstrap() {
     var store = getStore();
     if (!store) return;
@@ -400,6 +391,7 @@
             window.Toolbar.refreshBreadcrumb();
           }
         } catch (e) {}
+        showInitialView();
         return;
       }
 
@@ -428,6 +420,7 @@
             window.Toolbar.refreshBreadcrumb();
           }
         } catch (e) {}
+        showInitialView();
         return;
       }
 
@@ -440,6 +433,7 @@
           window.Toolbar.refreshBreadcrumb();
         }
       } catch (e) {}
+      showInitialView();
     } finally {
       hideLoader();
     }

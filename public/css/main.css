@@ -594,12 +594,23 @@ select.prefs-select-loading option {
   gap: 8px;
 }
 
+/* Alternancia de fondo 3% / 0% */
+.nav-items-list .nav-item-row:nth-child(odd) {
+  background: rgba(15, 23, 42, 0.03); /* ~3% color del sitio */
+}
+
+.nav-items-list .nav-item-row:nth-child(even) {
+  background: transparent; /* 0% */
+}
+
+/* Hover al ~20% */
 .nav-item-row:hover {
-  background: var(--accent-soft); /* ~20% del color del sitio */
+  background: rgba(15, 23, 42, 0.20);
 }
 
 .nav-item-num {
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 8px; /* ~7-8pt */
   min-width: 2ch; /* para que 1,2,10 se alineen más o menos */
 }
 
@@ -745,16 +756,16 @@ select.prefs-select-loading option {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  border: 1px solid rgba(15, 23, 42, 0.14);
-  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  background: var(--header-bg); /* círculo color del sitio */
+  color: #ffffff;               /* icono en color opuesto */
   cursor: pointer;
-  transition: background 0.12s ease, transform 0.08s ease, box-shadow 0.12s ease;
+  transition: background 0.12s ease, box-shadow 0.12s ease;
 }
 
 .focus-action-btn:hover {
-  background: rgba(255, 255, 255, 1);
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
-  transform: translateY(-1px);
+  background: var(--header-bg);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.22);
 }
 
 #app-main[data-light="off"] .focus-action-btn {
@@ -890,4 +901,72 @@ select.prefs-select-loading option {
   width: 18px;
   height: 18px;
   stroke: currentColor;
+}
+
+
+/* Encabezados de vistas principales en el main (Navigator, Focus) */
+.main-view-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 0;
+  background: var(--main-bg);
+  margin-bottom: 12px; /* deja un renglón en blanco bajo el título */
+}
+
+.main-view-title {
+  margin: 0;
+  text-align: center;
+  font-weight: 700;
+}
+
+
+/* Flechas laterales integradas en el título (Navigator + Focus) */
+.main-view-header .nav-arrow,
+.main-view-header .focus-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--header-bg);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+}
+
+.main-view-header .nav-arrow-left,
+.main-view-header .focus-nav-prev {
+  left: 8px;
+}
+
+.main-view-header .nav-arrow-right,
+.main-view-header .focus-nav-next {
+  right: 8px;
+}
+
+
+/* Resumen de resultados con chips de iconos en Results */
+.results-summary {
+  margin-bottom: 8px;
+}
+
+.results-summary-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.results-summary .chip.icon-only {
+  min-height: 32px;
+  padding-inline: 10px 14px;
 }

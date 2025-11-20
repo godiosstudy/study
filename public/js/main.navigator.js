@@ -196,12 +196,16 @@ window.MainNavigator = (function () {
   // Navegación por flechas
   // ======================
 
-  function createArrowButton(className, label, disabled, onClick) {
+  function createArrowButton(className, iconName, disabled, onClick) {
     var btn = document.createElement("button");
     btn.type = "button";
-    btn.className =
-      "nav-arrow " + className + (disabled ? " nav-arrow-disabled" : "");
-    btn.innerHTML = "<span>" + label + "</span>";
+    var cls = "nav-arrow " + className;
+    if (disabled) cls += " nav-arrow-disabled";
+    btn.className = cls;
+
+    var icon = document.createElement("i");
+    icon.setAttribute("data-lucide", iconName);
+    btn.appendChild(icon);
 
     if (!disabled && typeof onClick === "function") {
       btn.addEventListener("click", function (ev) {
@@ -365,13 +369,25 @@ var prefs = getPrefs();
     header.appendChild(h1);
     body.appendChild(header);
 
-if (!collection || !corpus || !level_3 || !level_4 || !level_5) {
-      var p = document.createElement("p");
-      p.textContent =
-        lang === "en"
-          ? "Use the breadcrumb to select Collection, Corpus and levels."
-          : "Usa el breadcrumb para seleccionar Colección, Corpus y niveles.";
-      body.appendChild(p);
+    if (!collection || !corpus || !level_3 || !level_4 || !level_5) {
+      // Mensaje de bienvenida mientras no haya contexto completo de navegación
+      body.innerHTML = "";
+
+      var wrap = document.createElement("div");
+      wrap.className = "main-welcome";
+
+      var line1 = document.createElement("div");
+      line1.className = "main-welcome-line1";
+      line1.textContent = lang === "en" ? "Welcome to" : "Bienvenido a";
+
+      var line2 = document.createElement("div");
+      line2.className = "main-welcome-line2";
+      line2.textContent =
+        lang === "en" ? "Study.GODiOS.org" : "Estudio.GODiOS.org";
+
+      wrap.appendChild(line1);
+      wrap.appendChild(line2);
+      body.appendChild(wrap);
       return;
     }
 
@@ -424,7 +440,7 @@ if (!collection || !corpus || !level_3 || !level_4 || !level_5) {
 
     var leftBtn = createArrowButton(
       "nav-arrow-left",
-      "◀",
+      "step-back",
       !prevVerse,
       function () {
         navigateSection(prevVerse, arrowsCtx);
@@ -432,17 +448,22 @@ if (!collection || !corpus || !level_3 || !level_4 || !level_5) {
     );
     var rightBtn = createArrowButton(
       "nav-arrow-right",
-      "▶",
+      "step-forward",
       !nextVerse,
       function () {
         navigateSection(nextVerse, arrowsCtx);
       }
     );
 
-    arrowsLayer.appendChild(leftBtn);
-    arrowsLayer.appendChild(rightBtn);
-
-    body.appendChild(arrowsLayer);
+    if (header) {
+      header.appendChild(leftBtn);
+      header.appendChild(rightBtn);
+      try {
+        if (window.lucide && typeof window.lucide.createIcons === "function") {
+          window.lucide.createIcons();
+        }
+      } catch (eLucide) {}
+    }
 
     // Sin versículos => mensaje
     if (!items.length) {

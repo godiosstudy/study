@@ -144,8 +144,9 @@ window.Main = (function () {
   }
 
   function init() {
-    // Vista inicial
-    showView("navigator");
+    // La vista inicial se decidirá después de que las preferencias y la base
+    // se hayan cargado (system.bootstrap.prefs.js llamará a Main.showView).
+    // Aquí no forzamos ninguna vista para permitir mostrar el mensaje de bienvenida.
   }
 
   if (document.readyState === "loading") {

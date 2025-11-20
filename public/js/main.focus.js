@@ -125,17 +125,33 @@ window.MainFocus = (function () {
     header.appendChild(h1);
     body.appendChild(header);
 
-    // Fila con flecha izquierda + versículo (marco existente) + flecha derecha
+    // Fila principal solo con el versículo en su marco
     var row = document.createElement("div");
     row.className = "focus-main-row";
 
-    // Botón flecha izquierda (versículo anterior)
+    // Versículo estrella (nivel 7) dentro de su marco
+    var content = document.createElement("div");
+    content.className = "focus-main-text";
+
+    if (l7) {
+      content.textContent = l7;
+    } else {
+      content.textContent =
+        lang === "en"
+          ? "When you click an item in Navigation or Results, its Level 7 will appear here."
+          : "Cuando hagas clic en un elemento de Navegación o Resultados, su Nivel 7 aparecerá aquí.";
+    }
+
+    row.appendChild(content);
+    body.appendChild(row);
+
+    // Botones de flecha integrados en el título (header)
     var prevBtn = document.createElement("button");
     prevBtn.type = "button";
-    prevBtn.className = "focus-nav-btn";
+    prevBtn.className = "focus-nav-btn focus-nav-prev";
 
     var prevIcon = document.createElement("i");
-    prevIcon.setAttribute("data-lucide", "arrow-big-left");
+    prevIcon.setAttribute("data-lucide", "step-back");
     prevBtn.appendChild(prevIcon);
 
     if (!prevRow) {
@@ -158,30 +174,12 @@ window.MainFocus = (function () {
       });
     }
 
-    row.appendChild(prevBtn);
-
-    // Versículo estrella (nivel 7) dentro de su marco
-    var content = document.createElement("div");
-    content.className = "focus-main-text";
-
-    if (l7) {
-      content.textContent = l7;
-    } else {
-      content.textContent =
-        lang === "en"
-          ? "When you click an item in Navigation or Results, its Level 7 will appear here."
-          : "Cuando hagas clic en un elemento de Navegación o Resultados, su Nivel 7 aparecerá aquí.";
-    }
-
-    row.appendChild(content);
-
-    // Botón flecha derecha (versículo siguiente)
     var nextBtn = document.createElement("button");
     nextBtn.type = "button";
-    nextBtn.className = "focus-nav-btn";
+    nextBtn.className = "focus-nav-btn focus-nav-next";
 
     var nextIcon = document.createElement("i");
-    nextIcon.setAttribute("data-lucide", "arrow-big-right");
+    nextIcon.setAttribute("data-lucide", "step-forward");
     nextBtn.appendChild(nextIcon);
 
     if (!nextRow) {
@@ -204,8 +202,9 @@ window.MainFocus = (function () {
       });
     }
 
-    row.appendChild(nextBtn);
-    body.appendChild(row);
+    // Añadimos las flechas al header para que queden a los lados del título
+    header.appendChild(prevBtn);
+    header.appendChild(nextBtn);
 
     // Panel de acciones debajo del versículo (centrado)
     var actions = document.createElement("div");

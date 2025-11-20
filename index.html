@@ -64,15 +64,16 @@
   <!-- Main (contenido dinámico, scrollable) -->
   <main id="app-main"></main>
 
-  <!-- Loader (entre main y footer; SystemLoader lo muestra/oculta) -->
+  <!-- Loader de pantalla completa; SystemLoader lo muestra/oculta -->
   <div id="app-loader" class="loader-root">
     <div class="loader-wrap">
       <div class="loader">
+        <img class="loader-logo" src="/public/img/logo.png" alt="Logo">
         <div class="loader-bar">
           <div class="loader-bar-inner" data-loader-bar></div>
         </div>
         <div class="loader-info">
-          <span data-loader-text>Cargando contenido…</span>
+          <span data-loader-text>Cargando</span>
           <span data-loader-pct>0%</span>
         </div>
       </div>

@@ -16,6 +16,19 @@ window.SystemLoader = (function () {
     if (el) el.style.display = "none";
   }
 
+  function resolveLanguage() {
+    var language = "es";
+    try {
+      if (window.PrefsStore && typeof window.PrefsStore.load === "function") {
+        var p = window.PrefsStore.load() || {};
+        if (p.language) language = p.language;
+      } else if (document.documentElement && document.documentElement.lang) {
+        language = document.documentElement.lang || "es";
+      }
+    } catch (e) {}
+    return language === "en" ? "en" : "es";
+  }
+
   function setProgress(pct, text) {
     var el = getOverlay();
     if (!el) return;
@@ -29,13 +42,18 @@ window.SystemLoader = (function () {
     if (v > 100) v = 100;
 
     if (bar) {
-      bar.style.width = v + "%";
+      bar.style.height = v + "%";
     }
     if (lblPct) {
       lblPct.textContent = v + "%";
     }
-    if (lblTxt && text) {
-      lblTxt.textContent = text;
+
+    var lang = resolveLanguage();
+    var baseLabel = lang === "en" ? "Loading" : "Cargando";
+    var finalLabel = (typeof text === "string" && text.trim()) ? text : baseLabel;
+
+    if (lblTxt) {
+      lblTxt.textContent = finalLabel + " " + v + "%";
     }
   }
 
