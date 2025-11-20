@@ -36,68 +36,48 @@ window.MainNavigator = (function () {
 
   // Versículos (level_6 / 7) para la combinación actual
   async function loadLevel6_7(filters) {
-    var client = getSupabaseClient();
-    if (!client) return [];
+    var allRows = [];
+    try {
+      if (window.EntriesMemory && typeof window.EntriesMemory.getRows === "function") {
+        allRows = window.EntriesMemory.getRows() || [];
+      }
+    } catch (e) {
+      console.warn("[Navigator] EntriesMemory.getRows error", e);
+    }
+    if (!allRows.length) return [];
 
     var map = new Map();
-    var chunkSize = 1000;
-    var from = 0;
-    var done = false;
 
-    while (!done) {
-      var to = from + chunkSize - 1;
-      var q = client
-        .from("entries")
-        .select("level_6, level_7, entry_order")
-        .eq("language_code", filters.language_code)
-        .eq("level_1", filters.level_1)
-        .eq("level_2", filters.level_2)
-        .eq("level_3", filters.level_3)
-        .eq("level_4", filters.level_4)
-        .eq("level_5", filters.level_5)
-        .range(from, to);
+    allRows.forEach(function (row) {
+      if (filters.language_code && row.language_code !== filters.language_code) return;
+      if (filters.level_1 && row.level_1 !== filters.level_1) return;
+      if (filters.level_2 && row.level_2 !== filters.level_2) return;
+      if (filters.level_3 && row.level_3 !== filters.level_3) return;
+      if (filters.level_4 && row.level_4 !== filters.level_4) return;
+      if (filters.level_5 && row.level_5 !== filters.level_5) return;
 
-      try {
-        var resp = await q;
-        if (resp.error) {
-          console.warn("[Navigator] entries level_6/7 error", resp.error);
-          break;
-        }
+      var l6 = row.level_6 || "";
+      var l7 = row.level_7 || "";
+      if (!l6 && !l7) return;
 
-        var rows = resp.data || [];
-        rows.forEach(function (row) {
-          var l6 = row.level_6 || "";
-          var l7 = row.level_7 || "";
-          if (!l6 && !l7) return;
+      var key = l6 + "||" + l7;
+      var order =
+        typeof row.entry_order === "number"
+          ? row.entry_order
+          : Number.MAX_SAFE_INTEGER;
 
-          var key = l6 + "||" + l7;
-          var order =
-            typeof row.entry_order === "number"
-              ? row.entry_order
-              : Number.MAX_SAFE_INTEGER;
-
-          var existing = map.get(key);
-          if (!existing || order < existing.order) {
-            map.set(key, { level_6: l6, level_7: l7, order: order });
-          }
-        });
-
-        if (rows.length < chunkSize) {
-          done = true;
-        } else {
-          from += chunkSize;
-        }
-      } catch (e) {
-        console.warn("[Navigator] error cargando level_6/7", e);
-        break;
+      var existing = map.get(key);
+      if (!existing || order < existing.order) {
+        map.set(key, { level_6: l6, level_7: l7, order: order });
       }
-    }
+    });
 
-    var items = Array.from(map.values()).sort(function (a, b) {
+    var items = Array.from(map.values());
+
+    items.sort(function (a, b) {
       var n1 = parseInt(a.level_6, 10);
       var n2 = parseInt(b.level_6, 10);
       var bothNumeric = !isNaN(n1) && !isNaN(n2);
-
       if (bothNumeric && n1 !== n2) return n1 - n2;
 
       var diff = a.order - b.order;
@@ -111,64 +91,48 @@ window.MainNavigator = (function () {
 
   // Lista de libros (level_4) para la colección/corpus/nivel 3 actuales
   async function loadChaptersList(ctx) {
-    var client = getSupabaseClient();
-    if (!client) return [];
+    var allRows = [];
+    try {
+      if (window.EntriesMemory && typeof window.EntriesMemory.getRows === "function") {
+        allRows = window.EntriesMemory.getRows() || [];
+      }
+    } catch (e) {
+      console.warn("[Navigator] EntriesMemory.getRows error (chapters)", e);
+    }
+    if (!allRows.length) return [];
 
     var map = new Map();
-    var chunkSize = 1000;
-    var from = 0;
-    var done = false;
 
-    while (!done) {
-      var to = from + chunkSize - 1;
-      var q = client
-        .from("entries")
-        .select("level_4, entry_order")
-        .eq("language_code", ctx.language_code)
-        .eq("level_1", ctx.level_1)
-        .eq("level_2", ctx.level_2)
-        .eq("level_3", ctx.level_3)
-        .not("level_4", "is", null)
-        .range(from, to);
+    allRows.forEach(function (row) {
+      if (row.language_code !== ctx.language_code) return;
+      if (row.level_1 !== ctx.level_1) return;
+      if (row.level_2 !== ctx.level_2) return;
+      if (row.level_3 !== ctx.level_3) return;
 
-      try {
-        var resp = await q;
-        if (resp.error) {
-          console.warn("[Navigator] loadChaptersList error", resp.error);
-          break;
-        }
+      var l4 = row.level_4;
+      if (!l4) return;
+      var key = String(l4);
+      var order =
+        typeof row.entry_order === "number"
+          ? row.entry_order
+          : Number.MAX_SAFE_INTEGER;
 
-        var rows = resp.data || [];
-        rows.forEach(function (row) {
-          var l4 = row.level_4;
-          if (!l4) return;
-          var key = String(l4);
-          var order =
-            typeof row.entry_order === "number"
-              ? row.entry_order
-              : Number.MAX_SAFE_INTEGER;
-
-          var existing = map.get(key);
-          if (!existing || order < existing.order) {
-            map.set(key, { value: key, order: order });
-          }
-        });
-
-        if (rows.length < chunkSize) {
-          done = true;
-        } else {
-          from += chunkSize;
-        }
-      } catch (e) {
-        console.warn("[Navigator] error cargando capítulos (level_4)", e);
-        break;
+      var existing = map.get(key);
+      if (!existing || order < existing.order) {
+        map.set(key, { value: key, order: order });
       }
-    }
+    });
 
     var arr = Array.from(map.values()).sort(function (a, b) {
+      var n1 = parseInt(a.value, 10);
+      var n2 = parseInt(b.value, 10);
+      var bothNumeric = !isNaN(n1) && !isNaN(n2);
+      if (bothNumeric && n1 !== n2) return n1 - n2;
+
       var diff = a.order - b.order;
       if (diff !== 0) return diff;
-      return a.value.localeCompare(b.value);
+
+      return String(a.value).localeCompare(String(b.value));
     });
 
     return arr.map(function (x) {
@@ -178,60 +142,38 @@ window.MainNavigator = (function () {
 
   // Lista de capítulos/sections (level_5) para el libro actual
   async function loadVersesList(ctx) {
-    var client = getSupabaseClient();
-    if (!client) return [];
+    var allRows = [];
+    try {
+      if (window.EntriesMemory && typeof window.EntriesMemory.getRows === "function") {
+        allRows = window.EntriesMemory.getRows() || [];
+      }
+    } catch (e) {
+      console.warn("[Navigator] EntriesMemory.getRows error (verses)", e);
+    }
+    if (!allRows.length) return [];
 
     var map = new Map();
-    var chunkSize = 1000;
-    var from = 0;
-    var done = false;
 
-    while (!done) {
-      var to = from + chunkSize - 1;
-      var q = client
-        .from("entries")
-        .select("level_5, entry_order")
-        .eq("language_code", ctx.language_code)
-        .eq("level_1", ctx.level_1)
-        .eq("level_2", ctx.level_2)
-        .eq("level_3", ctx.level_3)
-        .eq("level_4", ctx.level_4)
-        .not("level_5", "is", null)
-        .range(from, to);
+    allRows.forEach(function (row) {
+      if (row.language_code !== ctx.language_code) return;
+      if (row.level_1 !== ctx.level_1) return;
+      if (row.level_2 !== ctx.level_2) return;
+      if (row.level_3 !== ctx.level_3) return;
+      if (row.level_4 !== ctx.level_4) return;
 
-      try {
-        var resp = await q;
-        if (resp.error) {
-          console.warn("[Navigator] loadVersesList error", resp.error);
-          break;
-        }
+      var l5 = row.level_5;
+      if (!l5) return;
+      var key = String(l5);
+      var order =
+        typeof row.entry_order === "number"
+          ? row.entry_order
+          : Number.MAX_SAFE_INTEGER;
 
-        var rows = resp.data || [];
-        rows.forEach(function (row) {
-          var l5 = row.level_5;
-          if (!l5) return;
-          var key = String(l5);
-          var order =
-            typeof row.entry_order === "number"
-              ? row.entry_order
-              : Number.MAX_SAFE_INTEGER;
-
-          var existing = map.get(key);
-          if (!existing || order < existing.order) {
-            map.set(key, { value: key, order: order });
-          }
-        });
-
-        if (rows.length < chunkSize) {
-          done = true;
-        } else {
-          from += chunkSize;
-        }
-      } catch (e) {
-        console.warn("[Navigator] error cargando level_5", e);
-        break;
+      var existing = map.get(key);
+      if (!existing || order < existing.order) {
+        map.set(key, { value: key, order: order });
       }
-    }
+    });
 
     var arr = Array.from(map.values()).sort(function (a, b) {
       var n1 = parseInt(a.value, 10);
@@ -405,20 +347,25 @@ var prefs = getPrefs();
     var collection = prefs.collection || null;
     var corpus = prefs.corpus || null;
 
-    // Solapa (#view-title) = "Mateo 17"
-    var viewTitle = document.getElementById("view-title");
+    // Encabezado principal dentro del main (sin solapa invertida)
+    var header = document.createElement("div");
+    header.className = "main-view-header";
+
+    var h1 = document.createElement("h1");
+    h1.className = "main-view-title";
+
     var defaultTitle = lang === "en" ? "Navigation" : "Navegación";
 
-    if (viewTitle) {
-      if (level_4 && level_5) {
-        viewTitle.textContent = level_4 + " " + level_5;
-      } else {
-        viewTitle.textContent = defaultTitle;
-      }
-      viewTitle.style.display = "inline-block";
+    if (level_4 && level_5) {
+      h1.textContent = level_4 + " " + level_5;
+    } else {
+      h1.textContent = defaultTitle;
     }
 
-    if (!collection || !corpus || !level_3 || !level_4 || !level_5) {
+    header.appendChild(h1);
+    body.appendChild(header);
+
+if (!collection || !corpus || !level_3 || !level_4 || !level_5) {
       var p = document.createElement("p");
       p.textContent =
         lang === "en"

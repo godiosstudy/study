@@ -72,7 +72,7 @@ window.MainSignout = (function () {
     wrap.className = 'panel-single';
 
     wrap.innerHTML = [
-      '<h1 id="signout-title"></h1>',
+      '<h1 class="main-view-title" id="signout-title"></h1>',
       '<p class="signout-message" id="signout-msg"></p>',
     ].join('\n');
 

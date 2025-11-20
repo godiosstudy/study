@@ -147,119 +147,61 @@ window.Toolbar = (function () {
   // Utilidad: cargar valores distintos para un nivel dado, en tandas de 1000,
   // ordenados por entry_order asc (y luego por texto / numérico)
   async function loadDistinctLevel(levelField, filters, loadingKind, setSelectLoadingUI) {
-    var client = getSupabaseClient();
-    if (!client) return [];
+    var allRows = [];
+    try {
+      if (window.EntriesMemory && typeof window.EntriesMemory.getRows === "function") {
+        allRows = window.EntriesMemory.getRows() || [];
+      }
+    } catch (e) {
+      console.warn("[Toolbar] EntriesMemory.getRows error", e);
+    }
 
     if (setSelectLoadingUI) setSelectLoadingUI(loadingKind, true, 0);
 
+    if (!allRows.length) {
+      if (setSelectLoadingUI) setSelectLoadingUI(loadingKind, false, 100);
+      return [];
+    }
+
     var map = new Map(); // valor -> menor entry_order
-    var chunkSize = 1000;
-    var from = 0;
-    var done = false;
-    var totalCount = null;
-    var loadedRows = 0;
 
-    // conteo estimado para porcentaje
-    try {
-      var headQ = client
-        .from("entries")
-        .select("id", { count: "estimated", head: true })
-        .eq("language_code", filters.language_code)
-        .eq("level_1", filters.level_1)
-        .eq("level_2", filters.level_2)
-        .not(levelField, "is", null);
+    allRows.forEach(function (row) {
+      if (filters.language_code && row.language_code !== filters.language_code) return;
+      if (filters.level_1 && row.level_1 !== filters.level_1) return;
+      if (filters.level_2 && row.level_2 !== filters.level_2) return;
 
-      if (filters.level_3 && levelField !== "level_3") {
-        headQ = headQ.eq("level_3", filters.level_3);
+      if (filters.level_3 && levelField !== "level_3" && row.level_3 !== filters.level_3) return;
+      if (filters.level_4 && levelField === "level_5" && row.level_4 !== filters.level_4) return;
+
+      var v = row[levelField];
+      if (!v) return;
+
+      var order =
+        typeof row.entry_order === "number"
+          ? row.entry_order
+          : Number.MAX_SAFE_INTEGER;
+
+      if (!map.has(v) || order < map.get(v)) {
+        map.set(v, order);
       }
-      if (filters.level_4 && levelField === "level_5") {
-        headQ = headQ.eq("level_4", filters.level_4);
-      }
-
-      var headResp = await headQ;
-      if (!headResp.error) {
-        totalCount = headResp.count || null;
-      }
-    } catch (eCount) {
-      console.warn("[Toolbar] " + levelField + " count error", eCount);
-    }
-
-    while (!done) {
-      var to = from + chunkSize - 1;
-      var q = client
-        .from("entries")
-        .select(levelField + ", entry_order")
-        .eq("language_code", filters.language_code)
-        .eq("level_1", filters.level_1)
-        .eq("level_2", filters.level_2)
-        .not(levelField, "is", null)
-        .range(from, to);
-
-      if (filters.level_3 && levelField !== "level_3") {
-        q = q.eq("level_3", filters.level_3);
-      }
-      if (filters.level_4 && levelField === "level_5") {
-        q = q.eq("level_4", filters.level_4);
-      }
-
-      var resp;
-      try {
-        resp = await q;
-      } catch (e) {
-        console.warn("[Toolbar] error entries " + levelField, e);
-        break;
-      }
-
-      if (resp.error) {
-        console.warn("[Toolbar] entries " + levelField + " error", resp.error);
-        break;
-      }
-
-      var rows = resp.data || [];
-      rows.forEach(function (row) {
-        var v = row[levelField];
-        if (!v) return;
-        var order =
-          typeof row.entry_order === "number"
-            ? row.entry_order
-            : Number.MAX_SAFE_INTEGER;
-        if (!map.has(v) || order < map.get(v)) {
-          map.set(v, order);
-        }
-      });
-
-      loadedRows += rows.length;
-
-      if (totalCount && totalCount > 0 && setSelectLoadingUI) {
-        var perc = (loadedRows / totalCount) * 100;
-        setSelectLoadingUI(loadingKind, true, perc);
-      }
-
-      if (rows.length < chunkSize) {
-        done = true;
-      } else {
-        from += chunkSize;
-      }
-    }
-
-    if (setSelectLoadingUI) setSelectLoadingUI(loadingKind, false, 100);
+    });
 
     var arr = Array.from(map.entries()).sort(function (a, b) {
-      var orderDiff = a[1] - b[1];
-      if (orderDiff !== 0) return orderDiff;
-
-      // Para level_5: ordenar numéricamente 1,2,3,4,5,6...
-      if (levelField === "level_5") {
-        var nA = parseInt(a[0], 10);
-        var nB = parseInt(b[0], 10);
-        if (!isNaN(nA) && !isNaN(nB) && nA !== nB) {
-          return nA - nB;
-        }
+      var orderA = a[1];
+      var orderB = b[1];
+      if (typeof orderA === "number" && typeof orderB === "number" && orderA !== orderB) {
+        return orderA - orderB;
       }
 
-      // fallback: orden alfabético
+      var n1 = parseInt(a[0], 10);
+      var n2 = parseInt(b[0], 10);
+      var bothNumeric = !isNaN(n1) && !isNaN(n2);
+      if (bothNumeric && n1 !== n2) return n1 - n2;
+
       return String(a[0]).localeCompare(String(b[0]));
     });
+
+    if (setSelectLoadingUI) setSelectLoadingUI(loadingKind, false, 100);
 
     return arr.map(function (entry) {
       return entry[0];

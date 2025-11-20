@@ -1,5 +1,18 @@
 [
   {
+    "version": "0.3.0",
+    "date": "2025-11-19",
+    "notes": [
+      "Carga inicial de la colección/corpus completo en memoria según idioma y preferencias del usuario.",
+      "Uso de Fuse.js para búsquedas difusas, contemplando mayúsculas, minúsculas y caracteres especiales.",
+      "Resultados de búsqueda trabajando íntegramente sobre el contenido en memoria, sin consultas repetidas a Supabase.",
+      "Nuevo loader entre main y footer con barra de progreso del 0% al 100% mientras se carga la Biblia.",
+      "Navigator y Toolbar leyendo capítulos, versículos y listas desde el cache de entries en memoria.",
+      "Resultados de búsqueda remaquetados con layout tipo Navigator, clickeables para saltar directamente a Focus.",
+      "Título de resultados mostrando conteo de coincidencias exactas vs aproximadas devueltas por Fuse."
+    ]
+  },
+  {
     "version": "0.2.9",
     "date": "2025-11-19",
     "notes": [

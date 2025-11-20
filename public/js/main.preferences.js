@@ -121,7 +121,7 @@ window.MainPreferences = (function () {
     panel.className = "panel-single prefs-panel";
 
     panel.innerHTML = [
-      '<h1 data-i18n="prefs.title">Preferencias</h1>',
+      '<h1 data-i18n="prefs.title" class="main-view-title">Preferencias</h1>',
       "",
       '<div class="prefs-grid">',
       '  <div class="prefs-fields">',
@@ -865,7 +865,34 @@ window.MainPreferences = (function () {
           console.warn("[Prefs] sync user preferences error", e);
         }
 
-        // 3) ACTUALIZAR BREADCRUMB con los nuevos Collection / Corpus
+        // 3) Recargar contenido en memoria para las nuevas preferencias
+        try {
+          if (window.SystemLoader && typeof window.SystemLoader.show === "function") {
+            window.SystemLoader.show();
+          }
+          if (window.SystemLoader && typeof window.SystemLoader.setProgress === "function") {
+            var msg = (next.language === "en" ? "Loading content…" : "Cargando contenido…");
+            window.SystemLoader.setProgress(0, msg);
+          }
+          if (window.EntriesMemory && typeof window.EntriesMemory.loadForPrefs === "function") {
+            await window.EntriesMemory.loadForPrefs(next, function (pct, text) {
+              try {
+                if (window.SystemLoader && typeof window.SystemLoader.setProgress === "function") {
+                  var msg2 = text || (next.language === "en" ? "Loading content…" : "Cargando contenido…");
+                  window.SystemLoader.setProgress(pct, msg2);
+                }
+              } catch (e) {}
+            });
+          }
+        } catch (e) {
+          console.warn("[Prefs] error recargando entries en memoria", e);
+        } finally {
+          if (window.SystemLoader && typeof window.SystemLoader.hide === "function") {
+            window.SystemLoader.hide();
+          }
+        }
+
+        // 4) ACTUALIZAR BREADCRUMB con los nuevos Collection / Corpus
         try {
           if (
             window.Toolbar &&

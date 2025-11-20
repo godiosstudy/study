@@ -65,13 +65,19 @@
   <main id="app-main"></main>
 
   <!-- Loader (entre main y footer; SystemLoader lo muestra/oculta) -->
-  <!--
   <div id="app-loader" class="loader-root">
     <div class="loader-wrap">
-      <div class="loader"></div>
+      <div class="loader">
+        <div class="loader-bar">
+          <div class="loader-bar-inner" data-loader-bar></div>
+        </div>
+        <div class="loader-info">
+          <span data-loader-text>Cargando contenido…</span>
+          <span data-loader-pct>0%</span>
+        </div>
+      </div>
     </div>
   </div>
-  -->
 
   <!-- Footer -->
   <footer id="app-footer" class="ftr-wrap">
@@ -93,6 +99,9 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <!-- Sistema / preferencias / idioma -->
+  <!-- Búsqueda difusa -->
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"></script>
+
   <script src="/public/js/system.languaje.js"></script>
   <script src="/public/js/system.languaje.translations.js"></script>
   <script src="/public/js/system.i18n.bootstrap.js"></script>
@@ -100,6 +109,7 @@
   <script src="/public/js/system.backend.supabase.adapter.js"></script>
   <script src="/public/js/system.backend.vercel.adapter.js"></script>
   <script src="/public/js/system.prefs.store.js"></script>
+  <script src="/public/js/system.entries.memory.js"></script>
   <script src="/public/js/system.bootstrap.prefs.js"></script>
 
   <!-- Header -->

@@ -27,17 +27,23 @@ window.MainFocus = (function () {
     var l6 = opts.level_6 || "";
     var l7 = opts.level_7 || "";
 
-    // Solapa de título: "Mateo 17:5"
-    var pill = document.getElementById("view-title");
-    if (pill && l4 && l5 && l6) {
-      pill.textContent = l4 + " " + l5 + ": " + l6;
-      pill.style.display = "inline-block";
-    } else if (pill) {
-      pill.textContent = lang === "en" ? "Focus" : "Focus";
-      pill.style.display = "inline-block";
+    // Encabezado principal dentro del main (sin solapa invertida)
+    var header = document.createElement("div");
+    header.className = "main-view-header";
+
+    var h1 = document.createElement("h1");
+    h1.className = "main-view-title";
+
+    if (l4 && l5 && l6) {
+      h1.textContent = l4 + " " + l5 + ": " + l6;
+    } else {
+      h1.textContent = lang === "en" ? "Focus" : "Focus";
     }
 
+    header.appendChild(h1);
+
     body.innerHTML = "";
+    body.appendChild(header);
 
     // Versículo estrella (nivel 7)
     var content = document.createElement("div");

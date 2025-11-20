@@ -53,11 +53,12 @@ window.MainResults = (function () {
   function highlightHTML(text, query) {
     if (!query) return escapeHtml(text);
 
-    var q = query.toLowerCase();
-    var t = String(text);
+    var q = String(query || "").toLowerCase();
+    var t = String(text || "");
     var tl = t.toLowerCase();
-    var result = "";
+
     var idx = 0;
+    var result = "";
 
     while (true) {
       var found = tl.indexOf(q, idx);
@@ -74,240 +75,130 @@ window.MainResults = (function () {
     return result;
   }
 
-
   function normalizeStr(str) {
     if (!str) return "";
     var s = String(str).toLowerCase();
     try {
       s = s.normalize("NFD").replace(/\p{Diacritic}+/gu, "");
     } catch (e) {
-      s = s.replace(/[ÁÄÂÀáäâà]/g, "a")
-           .replace(/[ÉËÊÈéëêè]/g, "e")
-           .replace(/[ÍÏÎÌíïîì]/g, "i")
-           .replace(/[ÓÖÔÒóöôò]/g, "o")
-           .replace(/[ÚÜÛÙúüûù]/g, "u")
-           .replace(/ñ/g, "n");
+      s = s
+        .replace(/[ÁÄÂÀáäâà]/g, "a")
+        .replace(/[ÉËÊÈéëêè]/g, "e")
+        .replace(/[ÍÏÎÌíïîì]/g, "i")
+        .replace(/[ÓÖÔÒóöôò]/g, "o")
+        .replace(/[ÚÜÛÙúüûù]/g, "u")
+        .replace(/ñ/g, "n");
     }
     return s.replace(/\s+/g, " ").trim();
   }
 
-  function resolveBookFromQuery(bookPart) {
-    var n = normalizeStr(bookPart);
-    if (!n) return null;
+  // ===== mapa dinámico de libros por idioma (sin atajos hardcodeados) =====
+  var bookMapByLang = {};
+  var bookPromiseByLang = {};
 
-    var map = {
-      juan: "Juan",
-      jn: "Juan",
-      isaias: "Isaías",
-      isaas: "Isaías",
-      genesis: "Génesis",
-      gen: "Génesis",
-      exodo: "Éxodo",
-      exo: "Éxodo",
-      mateo: "Mateo",
-      mt: "Mateo",
-      marco: "Marcos",
-      marcos: "Marcos",
-      mr: "Marcos",
-      lucas: "Lucas",
-      lc: "Lucas",
-      hechos: "Hechos",
-      romanos: "Romanos",
-      rom: "Romanos"
-    };
+  async function ensureBookMap(lang) {
+    lang = lang || getLang();
+    if (bookMapByLang[lang]) return;
 
-    if (map[n]) return map[n];
-    return null;
+    if (bookPromiseByLang[lang]) {
+      await bookPromiseByLang[lang];
+      return;
+    }
+
+    var client = getSupabaseClient();
+    var map = {};
+
+    if (!client) {
+      bookMapByLang[lang] = map;
+      return;
+    }
+
+    var p = client
+      .from("entries")
+      .select("level_4", { distinct: true })
+      .eq("language_code", lang)
+      .not("level_4", "is", null)
+      .order("level_4", { ascending: true });
+
+    bookPromiseByLang[lang] = p;
+
+    try {
+      var resp = await p;
+      if (!resp.error && Array.isArray(resp.data)) {
+        resp.data.forEach(function (row) {
+          var name = row && row.level_4;
+          if (!name) return;
+          var norm = normalizeStr(name);
+          if (norm && !map[norm]) {
+            map[norm] = name;
+          }
+        });
+      } else if (resp && resp.error) {
+        console.warn("[Results] ensureBookMap error", resp.error);
+      }
+    } catch (e) {
+      console.warn("[Results] ensureBookMap exception", e);
+    }
+
+    bookMapByLang[lang] = map;
+    bookPromiseByLang[lang] = null;
   }
 
-  // ===== búsqueda en Supabase =====
+  async function resolveBookFromQuery(bookPart, lang) {
+    var n = normalizeStr(bookPart);
+    if (!n) return null;
+    lang = lang || getLang();
 
+    await ensureBookMap(lang);
+    var map = bookMapByLang[lang] || {};
+    return map[n] || null;
+  }
+
+  function sortEntriesList(rows) {
+    rows.sort(function (a, b) {
+      var o1 =
+        typeof a.entry_order === "number"
+          ? a.entry_order
+          : Number.MAX_SAFE_INTEGER;
+      var o2 =
+        typeof b.entry_order === "number"
+          ? b.entry_order
+          : Number.MAX_SAFE_INTEGER;
+      if (o1 !== o2) return o1 - o2;
+
+      var b1 = String(a.level_4 || "");
+      var b2 = String(b.level_4 || "");
+      var cmpB = b1.localeCompare(b2);
+      if (cmpB !== 0) return cmpB;
+
+      var c1 = parseInt(a.level_5, 10);
+      var c2 = parseInt(b.level_5, 10);
+      if (!isNaN(c1) && !isNaN(c2) && c1 !== c2) return c1 - c2;
+
+      var v1 = parseInt(a.level_6, 10);
+      var v2 = parseInt(b.level_6, 10);
+      if (!isNaN(v1) && !isNaN(v2) && v1 !== v2) return v1 - v2;
+
+      return String(a.level_7 || "").localeCompare(String(b.level_7 || ""));
+    });
+
+    return rows;
+  }
+
+  // ===== búsqueda en memoria con Fuse.js (EntriesMemory) =====
   async function searchEntries(query, prefs) {
-    var client = getSupabaseClient();
-    if (!client || !query) return [];
-
-    var lang = prefs.language || "es";
     var raw = String(query || "").trim();
     if (!raw) return [];
 
-    var norm = normalizeStr(raw);
-    var book = null;
-    var chapter = null;
-    var verse = null;
-
-    // Patrón "Libro 3" o "Libro 3:16"
-    var m = raw.match(/^(.+?)\s+(\d+)(?::(\d+))?$/);
-    if (m) {
-      book = resolveBookFromQuery(m[1]);
-      chapter = m[2];
-      verse = m[3] || null;
-    }
-
-    // Caso especial: solo nombre de libro (sin números), ej. "Isaias" o "Juan"
-    var hasDigit = /\d/.test(raw);
-    var bookOnly = !hasDigit ? resolveBookFromQuery(raw) : null;
-
-    // 1) Si es referencia tipo libro+capítulo(+verso)
-    if (book && chapter) {
-      var qRef = client
-        .from("entries")
-        .select(
-          "id, language_code, level_1, level_2, level_3, level_4, level_5, level_6, level_7, entry_order"
-        )
-        .eq("language_code", lang)
-        .eq("level_4", book)
-        .eq("level_5", chapter);
-
-      if (verse) {
-        qRef = qRef.eq("level_6", verse);
-      }
-
-      if (prefs.collection) qRef = qRef.eq("level_1", prefs.collection);
-      if (prefs.corpus) qRef = qRef.eq("level_2", prefs.corpus);
-
-      try {
-        var respRef = await qRef;
-        if (!respRef.error && respRef.data && respRef.data.length) {
-          var rowsRef = respRef.data.slice();
-          rowsRef.sort(function (a, b) {
-            var o1 =
-              typeof a.entry_order === "number"
-                ? a.entry_order
-                : Number.MAX_SAFE_INTEGER;
-            var o2 =
-              typeof b.entry_order === "number"
-                ? b.entry_order
-                : Number.MAX_SAFE_INTEGER;
-            if (o1 !== o2) return o1 - o2;
-
-            var b1 = String(a.level_4 || "");
-            var b2 = String(b.level_4 || "");
-            var cmpB = b1.localeCompare(b2);
-            if (cmpB !== 0) return cmpB;
-
-            var c1 = parseInt(a.level_5, 10);
-            var c2 = parseInt(b.level_5, 10);
-            if (!isNaN(c1) && !isNaN(c2) && c1 !== c2) return c1 - c2;
-
-            var v1 = parseInt(a.level_6, 10);
-            var v2 = parseInt(b.level_6, 10);
-            if (!isNaN(v1) && !isNaN(v2) && v1 !== v2) return v1 - v2;
-
-            return String(a.level_7 || "").localeCompare(String(b.level_7 || ""));
-          });
-          return rowsRef;
-        }
-      } catch (e) {
-        console.warn("[Results] search ref exception", e);
-      }
-      // Si no encontró nada como referencia, cae a búsqueda de texto más abajo
-    }
-
-    // 2) Si es solo nombre de libro (sin números), devolvemos todos los versículos de ese libro
-    if (!book && bookOnly) {
-      var qBook = client
-        .from("entries")
-        .select(
-          "id, language_code, level_1, level_2, level_3, level_4, level_5, level_6, level_7, entry_order"
-        )
-        .eq("language_code", lang)
-        .eq("level_4", bookOnly);
-
-      if (prefs.collection) qBook = qBook.eq("level_1", prefs.collection);
-      if (prefs.corpus) qBook = qBook.eq("level_2", prefs.corpus);
-
-      try {
-        var respBook = await qBook;
-        if (!respBook.error && respBook.data && respBook.data.length) {
-          var rowsBook = respBook.data.slice();
-          rowsBook.sort(function (a, b) {
-            var o1 =
-              typeof a.entry_order === "number"
-                ? a.entry_order
-                : Number.MAX_SAFE_INTEGER;
-            var o2 =
-              typeof b.entry_order === "number"
-                ? b.entry_order
-                : Number.MAX_SAFE_INTEGER;
-            if (o1 !== o2) return o1 - o2;
-
-            var b1 = String(a.level_4 || "");
-            var b2 = String(b.level_4 || "");
-            var cmpB = b1.localeCompare(b2);
-            if (cmpB !== 0) return cmpB;
-
-            var c1 = parseInt(a.level_5, 10);
-            var c2 = parseInt(b.level_5, 10);
-            if (!isNaN(c1) && !isNaN(c2) && c1 !== c2) return c1 - c2;
-
-            var v1 = parseInt(a.level_6, 10);
-            var v2 = parseInt(b.level_6, 10);
-            if (!isNaN(v1) && !isNaN(v2) && v1 !== v2) return v1 - v2;
-
-            return String(a.level_7 || "").localeCompare(String(b.level_7 || ""));
-          });
-          return rowsBook;
-        }
-      } catch (e) {
-        console.warn("[Results] search book-only exception", e);
-      }
-      // Si tampoco encontró nada así, seguimos hacia búsqueda de texto
-    }
-
-    // 3) Búsqueda normal de texto en level_7
-    var qText = client
-      .from("entries")
-      .select(
-        "id, language_code, level_1, level_2, level_3, level_4, level_5, level_6, level_7, entry_order"
-      )
-      .eq("language_code", lang)
-      .ilike("level_7", "%" + raw + "%")
-      .limit(200);
-
-    if (prefs.collection) qText = qText.eq("level_1", prefs.collection);
-    if (prefs.corpus) qText = qText.eq("level_2", prefs.corpus);
-
-    try {
-      var resp = await qText;
-      if (resp.error) {
-        console.warn("[Results] search error", resp.error);
-        return [];
-      }
-      var rows = resp.data || [];
-
-      rows.sort(function (a, b) {
-        var o1 =
-          typeof a.entry_order === "number"
-            ? a.entry_order
-            : Number.MAX_SAFE_INTEGER;
-        var o2 =
-          typeof b.entry_order === "number"
-            ? b.entry_order
-            : Number.MAX_SAFE_INTEGER;
-        if (o1 !== o2) return o1 - o2;
-
-        var b1 = String(a.level_4 || "");
-        var b2 = String(b.level_4 || "");
-        var cmpB = b1.localeCompare(b2);
-        if (cmpB !== 0) return cmpB;
-
-        var c1 = parseInt(a.level_5, 10);
-        var c2 = parseInt(b.level_5, 10);
-        if (!isNaN(c1) && !isNaN(c2) && c1 !== c2) return c1 - c2;
-
-        var v1 = parseInt(a.level_6, 10);
-        var v2 = parseInt(b.level_6, 10);
-        if (!isNaN(v1) && !isNaN(v2) && v1 !== v2) return v1 - v2;
-
-        return String(a.level_7 || "").localeCompare(String(b.level_7 || ""));
-      });
-
-      return rows;
-    } catch (e) {
-      console.warn("[Results] search exception", e);
+    if (!window.EntriesMemory || typeof window.EntriesMemory.search !== "function") {
+      console.warn("[Results] EntriesMemory.search no disponible");
       return [];
     }
+
+    var items = window.EntriesMemory.search(raw) || [];
+    return items.slice();
   }
+
   // ===== render principal =====
   async function render(container, options) {
     if (!container) return;
@@ -319,12 +210,22 @@ window.MainResults = (function () {
     var lang = getLang();
     var query = (options && options.query) || "";
 
-    // Solapa de título: "Resultados de búsqueda"
-    var viewTitle = document.getElementById("view-title");
-    if (viewTitle) {
-      viewTitle.textContent =
-        lang === "en" ? "Search results" : "Resultados de búsqueda";
-    }
+    // Encabezado (título dentro del main)
+    var header = document.createElement("div");
+    header.className = "main-view-header";
+
+    var h1 = document.createElement("h1");
+    h1.className = "main-view-title";
+    h1.textContent =
+      lang === "en" ? "Search results" : "Resultados de búsqueda";
+
+    header.appendChild(h1);
+    body.appendChild(header);
+
+    // Contenedor para resultados (usamos el layout tipo Navigator)
+    var list = document.createElement("div");
+    list.className = "nav-items-list panel-single";
+    body.appendChild(list);
 
     if (!query) {
       var pEmpty = document.createElement("p");
@@ -344,15 +245,41 @@ window.MainResults = (function () {
         : 'Buscando "' + query + '"...';
     body.appendChild(info);
 
-    var list = document.createElement("div");
-    list.className = "results-list";
-    body.appendChild(list);
-
-    // Buscar en Supabase
+    // Buscar en memoria vía EntriesMemory/Fuse
     var items = await searchEntries(query, prefs);
 
-    // Quitamos el texto "Resultados para..."
+    // Quitamos el texto informativo
     info.remove();
+
+    // Calcular exactos (texto que realmente contiene la palabra buscada)
+    var exactCount = 0;
+    var decorated = (items || []).map(function (row) {
+      var verseText = row.level_7 || "";
+      var html = highlightHTML(verseText, query);
+      var isExact = html.indexOf("<mark>") !== -1;
+      if (isExact) exactCount++;
+      return {
+        row: row,
+        html: html,
+        isExact: isExact
+      };
+    });
+
+    items = decorated;
+
+    // Actualizar título con cantidad de resultados
+    var count = (items && items.length) || 0;
+    if (lang === "en") {
+      h1.textContent =
+        "Search results: " + exactCount + " exact of " + count + " approx";
+    } else {
+      h1.textContent =
+        "Resultados de búsqueda: " +
+        exactCount +
+        " exactos de " +
+        count +
+        " aproximados";
+    }
 
     if (!items.length) {
       var none = document.createElement("p");
@@ -364,49 +291,58 @@ window.MainResults = (function () {
       return;
     }
 
-    // Cada item: una línea, referencia chica & en bold + texto con highlight
-    items.forEach(function (row) {
+    // Render de la lista (similar a Navigator)
+    items.forEach(function (entry) {
+      var row = entry.row;
+      var book = row.level_4 || "";
+      var chapter = row.level_5 || "";
+      var verse = row.level_6 || "";
+      var text = row.level_7 || "";
+
       var item = document.createElement("div");
-      // Reutilizamos estilos de Navigator para hover (20% color sitio)
-      item.className = "results-item nav-item-row";
+      item.className = "nav-item-row";
+      item.dataset.level4 = book;
+      item.dataset.level5 = chapter;
+      item.dataset.level6 = verse;
 
-      var ref =
-        (row.level_4 || "?") +
-        " " +
-        (row.level_5 || "") +
-        ":" +
-        (row.level_6 || "");
+      var numSpan = document.createElement("span");
+      numSpan.className = "nav-item-num";
 
-      var refSpan = document.createElement("span");
-      refSpan.className = "results-ref";
-      refSpan.textContent = ref;
+      var refText = "";
+      if (book) refText += book;
+      if (chapter) refText += (refText ? " " : "") + chapter;
+      if (verse) refText += ":" + verse;
+      numSpan.textContent = refText || verse || "";
 
       var textSpan = document.createElement("span");
-      textSpan.className = "results-text";
-      textSpan.innerHTML = highlightHTML(row.level_7 || "", query);
+      textSpan.className = "nav-item-text";
+      textSpan.innerHTML = entry.html;
 
-      item.appendChild(refSpan);
+      item.appendChild(numSpan);
       item.appendChild(textSpan);
 
       item.addEventListener("click", function () {
         if (!window.Main || typeof window.Main.showView !== "function") return;
 
-        window.Main.showView("focus", {
-          level_1: row.level_1 || null,
-          level_2: row.level_2 || null,
+        var navParams = {
+          level_1: prefs.collection || row.level_1 || null,
+          level_2: prefs.corpus || row.level_2 || null,
           level_3: row.level_3 || null,
-          level_4: row.level_4 || null,
-          level_5: row.level_5 || null,
-          level_6: row.level_6 || null,
-          level_7: row.level_7 || null,
-        });
+          level_4: book || null,
+          level_5: chapter || null,
+          level_6: verse || null,
+          level_7: text || null
+        };
+
+        window.Main.showView("focus", navParams);
       });
 
       list.appendChild(item);
     });
+
   }
 
   return {
-    render: render,
+    render: render
   };
 })();

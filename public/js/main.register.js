@@ -70,7 +70,7 @@ window.MainRegister = (function () {
     wrap.className = 'panel-single';
 
     wrap.innerHTML = [
-      '<h1 id="reg-title"></h1>',
+      '<h1 class="main-view-title" id="reg-title"></h1>',
       '',
       '<form class="form-vert" id="form-register" novalidate>',
       '  <div class="form-group">',

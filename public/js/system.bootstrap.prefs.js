@@ -81,6 +81,30 @@
     } catch (e) {}
   }
 
+  async function loadBibleCache(prefs) {
+    if (!prefs) return;
+
+    try {
+      if (window.SystemLoader && typeof window.SystemLoader.setProgress === "function") {
+        var msg = (prefs.language === "en" ? "Loading content…" : "Cargando contenido…");
+        window.SystemLoader.setProgress(0, msg);
+      }
+
+      if (window.EntriesMemory && typeof window.EntriesMemory.loadForPrefs === "function") {
+        await window.EntriesMemory.loadForPrefs(prefs, function (pct, text) {
+          try {
+            if (window.SystemLoader && typeof window.SystemLoader.setProgress === "function") {
+              var msg2 = text || (prefs.language === "en" ? "Loading content…" : "Cargando contenido…");
+              window.SystemLoader.setProgress(pct, msg2);
+            }
+          } catch (e) {}
+        });
+      }
+    } catch (e) {
+      console.warn("[BootstrapPrefs] error precargando entries en memoria", e);
+    }
+  }
+
   function ptFromSqlFontSize(v) {
     var n = parseInt(v, 10);
     if (isNaN(n)) return 12;
@@ -300,6 +324,7 @@
       // 1) Usuario logueado → perfil
       prefs = await step1_UserProfile(store);
       if (prefs) {
+        await loadBibleCache(prefs);
         try {
           if (window.Toolbar && typeof window.Toolbar.refreshBreadcrumb === "function") {
             window.Toolbar.refreshBreadcrumb();
@@ -327,6 +352,7 @@
         } catch (e) {
           console.warn("[BootstrapPrefs] error aplicando prefs locales", e);
         }
+        await loadBibleCache(prefs);
         try {
           if (window.Toolbar && typeof window.Toolbar.refreshBreadcrumb === "function") {
             window.Toolbar.refreshBreadcrumb();
@@ -337,6 +363,7 @@
 
       // 3) No hay usuario ni prefs locales → mirar entries
       prefs = await step3_DefaultFromEntries(store);
+      await loadBibleCache(prefs);
 
       try {
         if (window.Toolbar && typeof window.Toolbar.refreshBreadcrumb === "function") {
