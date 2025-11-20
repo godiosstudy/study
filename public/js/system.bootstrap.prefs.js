@@ -67,16 +67,84 @@
 
   function showLoader() {
     try {
-      if (window.SystemLoader && typeof window.SystemLoader.show === "function") {
-        window.SystemLoader.show();
+      // Estado global para saber si es la primera carga del sitio
+      window.BootstrapState = window.BootstrapState || {};
+      if (typeof window.BootstrapState.firstLoad === "undefined") {
+        window.BootstrapState.firstLoad = true;
+      }
+
+      var isFirst = !!window.BootstrapState.firstLoad;
+
+      if (isFirst) {
+        // Ocultar breadcrumb hasta que termine la primera carga
+        var bc = document.getElementById("tbar-breadcrumb");
+        if (bc) {
+          bc.style.visibility = "hidden";
+        }
+
+        // Mensaje de bienvenida en el centro del main
+        var main = document.getElementById("app-main");
+        if (main) {
+          var overlay = document.getElementById("startup-welcome");
+          if (!overlay) {
+            overlay = document.createElement("div");
+            overlay.id = "startup-welcome";
+            overlay.className = "startup-welcome";
+            main.appendChild(overlay);
+          } else {
+            overlay.innerHTML = "";
+          }
+
+          // Idioma para el mensaje
+          var lang = "es";
+          try {
+            var store = getStore && getStore();
+            if (store && typeof store.load === "function") {
+              var p = store.load() || {};
+              if (p.language) lang = p.language;
+            }
+          } catch (ePrefs) {}
+
+          var line1 = document.createElement("div");
+          line1.className = "startup-welcome-line1";
+          line1.textContent = lang === "en" ? "Welcome to" : "Bienvenido a";
+
+          var line2 = document.createElement("div");
+          line2.className = "startup-welcome-line2";
+          line2.textContent = lang === "en" ? "Study.GODiOS.org" : "Estudio.GODiOS.org";
+
+          overlay.appendChild(line1);
+          overlay.appendChild(line2);
+        }
+      }
+
+      // El cargador principal ahora es el del footer.
+      if (window.FooterLoader && typeof window.FooterLoader.show === "function") {
+        // Lo iniciamos en 0%; el detalle real lo marcará loadBibleCache.
+        window.FooterLoader.show(0, "", null);
       }
     } catch (e) {}
   }
 
   function hideLoader() {
     try {
-      if (window.SystemLoader && typeof window.SystemLoader.hide === "function") {
-        window.SystemLoader.hide();
+      if (window.FooterLoader && typeof window.FooterLoader.hide === "function") {
+        window.FooterLoader.hide();
+      }
+
+      // Al terminar la primera carga, mostramos breadcrumb y quitamos mensaje
+      if (window.BootstrapState && window.BootstrapState.firstLoad) {
+        var bc = document.getElementById("tbar-breadcrumb");
+        if (bc) {
+          bc.style.visibility = "";
+        }
+
+        var overlay = document.getElementById("startup-welcome");
+        if (overlay && overlay.parentNode) {
+          overlay.parentNode.removeChild(overlay);
+        }
+
+        window.BootstrapState.firstLoad = false;
       }
     } catch (e) {}
   }
@@ -85,17 +153,18 @@
     if (!prefs) return;
 
     try {
-      if (window.SystemLoader && typeof window.SystemLoader.setProgress === "function") {
-        var msg = (prefs.language === "en" ? "Loading content…" : "Cargando contenido…");
-        window.SystemLoader.setProgress(0, msg);
+      var lang = (prefs && prefs.language) || "es";
+
+      // El progreso detallado se muestra solo en el footer.
+      if (window.FooterLoader && typeof window.FooterLoader.show === "function") {
+        window.FooterLoader.show(0, "", lang);
       }
 
       if (window.EntriesMemory && typeof window.EntriesMemory.loadForPrefs === "function") {
-        await window.EntriesMemory.loadForPrefs(prefs, function (pct, text) {
+        await window.EntriesMemory.loadForPrefs(prefs, function (pct, snippet) {
           try {
-            if (window.SystemLoader && typeof window.SystemLoader.setProgress === "function") {
-              var msg2 = text || (prefs.language === "en" ? "Loading content…" : "Cargando contenido…");
-              window.SystemLoader.setProgress(pct, msg2);
+            if (window.FooterLoader && typeof window.FooterLoader.setProgress === "function") {
+              window.FooterLoader.setProgress(pct, snippet, lang);
             }
           } catch (e) {}
         });
@@ -104,6 +173,7 @@
       console.warn("[BootstrapPrefs] error precargando entries en memoria", e);
     }
   }
+
 
   function ptFromSqlFontSize(v) {
     var n = parseInt(v, 10);

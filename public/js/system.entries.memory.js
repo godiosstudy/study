@@ -54,6 +54,36 @@
     return row;
   }
 
+
+  function makeSnippetFromRow(row) {
+    if (!row) return "";
+    try {
+      var refParts = [];
+      if (row.level_4) {
+        refParts.push(String(row.level_4));
+      }
+
+      var capVers = "";
+      if (row.level_5) {
+        capVers += String(row.level_5);
+      }
+      if (row.level_6) {
+        capVers += ":" + String(row.level_6);
+      }
+      if (capVers) {
+        refParts.push(capVers);
+      }
+
+      var prefix = refParts.join(" ");
+      var txt = row.level_7 ? String(row.level_7) : "";
+      var full = prefix ? (txt ? prefix + " " + txt : prefix) : txt;
+
+      return full || "";
+    } catch (e) {
+      return "";
+    }
+  }
+
   function buildFuse(data) {
     if (!window.Fuse) {
       console.warn("[EntriesMemory] Fuse.js no está disponible");
@@ -86,7 +116,22 @@
 
     if (currentKey === key && rows.length && fuse) {
       if (typeof onProgress === "function") {
-        onProgress(100, "Contenido cargado.");
+        var snippet = "";
+        try {
+          var maxSnippets = 64;
+          var snippets = [];
+          for (var i = 0; i < rows.length && snippets.length < maxSnippets; i++) {
+            var r = rows[i];
+            var sn = makeSnippetFromRow(r);
+            if (sn) {
+              snippets.push(sn);
+            }
+          }
+          if (snippets.length) {
+            snippet = snippets[0];
+          }
+        } catch (eSnippet) {}
+        onProgress(100, snippet);
       }
       return { key: currentKey, rows: rows, fuse: fuse };
     }
@@ -102,8 +147,11 @@
     rows = [];
     fuse = null;
 
+    var snippets = [];
+    var maxSnippets = 64;
+
     if (typeof onProgress === "function") {
-      onProgress(0, (prefs && prefs.language) === "en" ? "Loading content…" : "Cargando contenido…");
+      onProgress(0, "");
     }
 
     var total = 0;
@@ -157,6 +205,15 @@
 
         chunk.forEach(function (row) {
           rows.push(buildSearchFields(row));
+
+          if (row && snippets.length < maxSnippets) {
+            try {
+              var sn = makeSnippetFromRow(row);
+              if (sn) {
+                snippets.push(sn);
+              }
+            } catch (eSnippet) {}
+          }
         });
 
         loaded += chunk.length;
@@ -165,7 +222,15 @@
         if (total > 0 && typeof onProgress === "function") {
           var pct = Math.round((loaded / total) * 100);
           if (pct > 100) pct = 100;
-          onProgress(pct, (prefs && prefs.language) === "en" ? "Loading content…" : "Cargando contenido…");
+
+          var snippetText = "";
+          if (snippets.length) {
+            var idx = Math.floor((pct / 100) * snippets.length);
+            if (idx >= snippets.length) idx = snippets.length - 1;
+            snippetText = snippets[idx];
+          }
+
+          onProgress(pct, snippetText);
         }
 
         if (chunk.length < pageSize) {
@@ -178,7 +243,11 @@
     }
 
     if (typeof onProgress === "function") {
-      onProgress(100, (prefs && prefs.language) === "en" ? "Content loaded." : "Contenido cargado.");
+      var snippetText = "";
+      if (snippets && snippets.length) {
+        snippetText = snippets[snippets.length - 1];
+      }
+      onProgress(100, snippetText);
     }
 
     fuse = buildFuse(rows);

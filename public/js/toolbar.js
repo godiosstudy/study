@@ -227,7 +227,46 @@ window.Toolbar = (function () {
     }
   }
 
-  async function initBreadcrumb() {
+  
+  function setFromFocus(level3, level4, level5) {
+    try {
+      window.ToolbarState = window.ToolbarState || {};
+
+      if (typeof level3 === "string" && level3) {
+        window.ToolbarState.level_3 = level3;
+      }
+      if (typeof level4 === "string" && level4) {
+        window.ToolbarState.level_4 = level4;
+      }
+      if (typeof level5 === "string" && level5) {
+        window.ToolbarState.level_5 = level5;
+      }
+
+      var selL3 = document.getElementById("crumb-l3");
+      var selL4 = document.getElementById("crumb-l4");
+      var selL5 = document.getElementById("crumb-l5");
+
+      function applyValue(sel, val) {
+        if (!sel || !val) return;
+        var found = false;
+        for (var i = 0; i < sel.options.length; i++) {
+          if (String(sel.options[i].value) === String(val)) {
+            sel.value = val;
+            found = true;
+            break;
+          }
+        }
+      }
+
+      applyValue(selL3, window.ToolbarState.level_3);
+      applyValue(selL4, window.ToolbarState.level_4);
+      applyValue(selL5, window.ToolbarState.level_5);
+    } catch (e) {
+      console.warn("[Toolbar] error en setFromFocus", e);
+    }
+  }
+
+async function initBreadcrumb() {
     var container = document.getElementById("tbar-breadcrumb");
     if (!container) return;
 
@@ -551,5 +590,6 @@ window.Toolbar = (function () {
   return {
     init: init,
     refreshBreadcrumb: refreshBreadcrumb,
+    setFromFocus: setFromFocus,
   };
 })();

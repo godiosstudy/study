@@ -50,32 +50,6 @@
   font-weight: 600;
 }
 
-
-/* Encabezado principal reutilizable dentro de MAIN
-   (se usa en Navigator, Results, Focus, Login, Register, Account, etc.) */
-.main-view-header {
-  max-width: 720px;
-  margin: 16px auto 8px;
-}
-
-.main-view-title {
-  margin: 0;
-  padding: 10px 24px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 12%, var(--main-bg));
-  text-align: center;
-  font-size: 20px;
-  font-weight: 700;
-}
-
-/* Subtítulo opcional justo debajo del título principal */
-.main-view-header + .main-subtitle,
-.panel-single .main-subtitle {
-  max-width: 720px;
-  margin: 0 auto 8px;
-  text-align: center;
-}
-
 /* Panel "single" (welcome, prefs, changelog, login, etc.) */
 .panel-single {
   max-width: 720px;
@@ -795,4 +769,125 @@ select.prefs-select-loading option {
 .focus-action-btn i[data-lucide] {
   width: 18px;
   height: 18px;
+}
+/* === Forzar que la solapa invertida NO se vea nunca === */
+#view-title {
+  display: none !important;
+}
+/* === Focus: estilos para que el botón BACK se vea bien === */
+
+/* Contenedor centrado de acciones en Focus (si no lo tienes ya) */
+.focus-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+/* Botón de acción: círculo con icono bien visible */
+.focus-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  background: rgba(255, 255, 255, 0.85);
+  color: #111827;              /* 🔹 icono oscuro, bien visible */
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+.focus-action-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
+  transform: translateY(-1px);
+}
+
+/* Aseguramos que el SVG de Lucide use el color del botón */
+.focus-action-btn svg,
+.focus-action-btn i[data-lucide] {
+  stroke: currentColor;
+}
+
+/* Main title styling */
+.main-title {
+  margin-top: 12px;
+  margin-bottom: 16px;
+  padding: 16px 20px;
+  background: #ffffff;
+  border-radius: 16px;
+  text-align: center;
+  font-size: 1.8em;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+#app-main[data-light="off"] .main-title {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+
+/* Fila principal de Focus: flecha izquierda + versículo + flecha derecha */
+.focus-main-row {
+  margin-top: 18px;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* Dentro de la fila, el marco del versículo conserva su estilo pero sin margen extra arriba */
+.focus-main-row .focus-main-text {
+  margin-top: 0;
+  flex: 1 1 auto;
+}
+
+/* Botones de navegación de versículo (anterior / siguiente) */
+.focus-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.18);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--accent, #154a8e);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease, opacity 0.1s ease;
+}
+
+.focus-nav-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
+  transform: translateY(-1px);
+}
+
+#app-main[data-light="off"] .focus-nav-btn {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(148, 163, 184, 0.7);
+  color: #e5e7eb;
+}
+
+#app-main[data-light="off"] .focus-nav-btn:hover {
+  background: rgba(15, 23, 42, 0.95);
+}
+
+/* Estado desactivado cuando no hay versículo anterior/siguiente */
+.focus-nav-btn.is-disabled {
+  opacity: 0.35;
+  cursor: default;
+  box-shadow: none;
+  transform: none;
+  pointer-events: none;
+}
+
+.focus-nav-btn i[data-lucide],
+.focus-nav-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
 }

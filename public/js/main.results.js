@@ -75,6 +75,13 @@ window.MainResults = (function () {
     return result;
   }
 
+  function normalizeNoAccents(str) {
+    return String(str || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+  }
+
   function normalizeStr(str) {
     if (!str) return "";
     var s = String(str).toLowerCase();
@@ -245,41 +252,88 @@ window.MainResults = (function () {
         : 'Buscando "' + query + '"...';
     body.appendChild(info);
 
-    // Buscar en memoria vía EntriesMemory/Fuse
+        // Buscar en memoria vía EntriesMemory/Fuse
     var items = await searchEntries(query, prefs);
 
     // Quitamos el texto informativo
     info.remove();
 
-    // Calcular exactos (texto que realmente contiene la palabra buscada)
+    // Clasificación: exactos, contemplados (solo diferencia de acentos) y aproximados
+    var qRaw = String(query || "");
+    var qLower = qRaw.toLowerCase();
+    var qNorm = normalizeNoAccents(qRaw);
+
     var exactCount = 0;
+    var contempladoCount = 0;
+
     var decorated = (items || []).map(function (row) {
       var verseText = row.level_7 || "";
+      var tLower = verseText.toLowerCase();
+      var tNorm = normalizeNoAccents(verseText);
+
+      var hasExact = qLower && tLower.indexOf(qLower) !== -1;
+      var hasContemplado = !hasExact && qNorm && tNorm.indexOf(qNorm) !== -1;
+
+      if (hasExact) {
+        exactCount++;
+      } else if (hasContemplado) {
+        contempladoCount++;
+      }
+
       var html = highlightHTML(verseText, query);
-      var isExact = html.indexOf("<mark>") !== -1;
-      if (isExact) exactCount++;
+
       return {
         row: row,
         html: html,
-        isExact: isExact
+        isExact: !!hasExact,
+        isContemplado: !!hasContemplado
       };
     });
 
     items = decorated;
 
-    // Actualizar título con cantidad de resultados
-    var count = (items && items.length) || 0;
+    var totalCount = (items && items.length) || 0;
+    var approxCount = totalCount - exactCount - contempladoCount;
+
+    // Título general
     if (lang === "en") {
-      h1.textContent =
-        "Search results: " + exactCount + " exact of " + count + " approx";
+      h1.textContent = "Search results";
     } else {
-      h1.textContent =
-        "Resultados de búsqueda: " +
-        exactCount +
-        " exactos de " +
-        count +
-        " aproximados";
+      h1.textContent = "Resultados de búsqueda";
     }
+
+    // Resumen de conteos antes de la lista
+    var summary = document.createElement("div");
+    summary.className = "results-summary";
+
+    var line1 = document.createElement("p");
+    line1.innerHTML =
+      '<span style="background: yellow; padding: 0 4px; border-radius: 3px;">' +
+      (lang === "en"
+        ? (exactCount + " exact results")
+        : (exactCount + " resultados exactos")) +
+      "</span>";
+
+    var line2 = document.createElement("p");
+    line2.innerHTML =
+      '<span style="background: #e0e0e0; padding: 0 4px; border-radius: 3px;">' +
+      (lang === "en"
+        ? (contempladoCount + " covered results (accent-insensitive)")
+        : (contempladoCount + " resultados contemplados (sin acentos)")) +
+      "</span>";
+
+    var line3 = document.createElement("p");
+    line3.textContent =
+      lang === "en"
+        ? (approxCount + " additional approximate matches by Fuse.js")
+        : (approxCount + " resultados aproximados adicionales por Fuse.js");
+
+    summary.appendChild(line1);
+    summary.appendChild(line2);
+    summary.appendChild(line3);
+
+    // Insertar el resumen antes de la lista de resultados
+    body.insertBefore(summary, list);
 
     if (!items.length) {
       var none = document.createElement("p");
@@ -305,21 +359,23 @@ window.MainResults = (function () {
       item.dataset.level5 = chapter;
       item.dataset.level6 = verse;
 
-      var numSpan = document.createElement("span");
-      numSpan.className = "nav-item-num";
+      // Fila 1: referencia (Ej: Efesios 5:1), en bold y más pequeña
+      var refDiv = document.createElement("div");
+      refDiv.style.fontWeight = "600";
+      refDiv.style.fontSize = "0.75em";
 
       var refText = "";
       if (book) refText += book;
       if (chapter) refText += (refText ? " " : "") + chapter;
       if (verse) refText += ":" + verse;
-      numSpan.textContent = refText || verse || "";
+      refDiv.textContent = refText || verse || "";
 
-      var textSpan = document.createElement("span");
-      textSpan.className = "nav-item-text";
-      textSpan.innerHTML = entry.html;
+      // Fila 2: texto del versículo
+      var textDiv = document.createElement("div");
+      textDiv.innerHTML = entry.html;
 
-      item.appendChild(numSpan);
-      item.appendChild(textSpan);
+      item.appendChild(refDiv);
+      item.appendChild(textDiv);
 
       item.addEventListener("click", function () {
         if (!window.Main || typeof window.Main.showView !== "function") return;
