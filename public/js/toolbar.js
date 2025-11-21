@@ -256,6 +256,14 @@ window.Toolbar = (function () {
             break;
           }
         }
+        // Si no existe, creamos una opción dinámica para reflejar el foco actual
+        if (!found) {
+          var opt = document.createElement("option");
+          opt.value = val;
+          opt.textContent = val;
+          sel.appendChild(opt);
+          sel.value = val;
+        }
       }
 
       applyValue(selL3, window.ToolbarState.level_3);
@@ -265,6 +273,7 @@ window.Toolbar = (function () {
       console.warn("[Toolbar] error en setFromFocus", e);
     }
   }
+
 
 async function initBreadcrumb() {
     var container = document.getElementById("tbar-breadcrumb");

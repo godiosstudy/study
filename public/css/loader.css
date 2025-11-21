@@ -1,72 +1,48 @@
-/* Loader de pantalla completa al arrancar / recargar corpus */
+
+/* Loader fullscreen: fondo completo que se llena desde abajo hacia arriba */
 #app-loader {
-  display: none; /* SystemLoader.show/hide lo controla */
   position: fixed;
   inset: 0;
-  z-index: 2000;
-  background: var(--main-bg, #ffffff);
-  display: none;
+  z-index: 9999;
+  background: transparent;
+  overflow: hidden;
+  display: none; /* SystemLoader.show/hide lo controla */
 }
 
-#app-loader .loader-wrap {
+/* Fondo de color del sistema que sube desde abajo */
+#app-loader .loader-fill {
+  position: absolute;
+  left: 0;
+  bottom: 0;
   width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  height: 0%; /* 0–100% según SystemLoader.setProgress */
+  background: var(--accent, var(--header-bg));
+  transition: height 0.25s linear;
 }
 
-#app-loader .loader {
+/* Contenido centrado: logo y texto */
+#app-loader .loader-center {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  justify-content: center;
+  z-index: 2; /* por encima del fondo */
 }
 
-/* Logo centrado */
 #app-loader .loader-logo {
   max-width: 40vw;
   width: 140px;
   height: auto;
+  margin-bottom: 16px;
 }
 
-/* Barra vertical que se llena de abajo hacia arriba */
-#app-loader .loader-bar {
-  width: 14px;
-  height: 180px;
-  border-radius: 999px;
-  overflow: hidden;
-  background: rgba(15, 23, 42, 0.08);
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.25);
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end; /* para que la barra interna crezca desde abajo */
-}
-
-#app-loader .loader-bar-inner {
-  width: 100%;
-  height: 0%;
-  background: var(--accent, var(--header-bg));
-  transition: height 0.2s ease-out;
-}
-
-/* Texto Cargando / Loading + porcentaje debajo del logo */
-#app-loader .loader-info {
-  margin-top: 4px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-size: 14px;
-  color: #111827;
-}
-
-#app-loader .loader-info span[data-loader-text] {
-  font-weight: 500;
-  margin-bottom: 2px;
-}
-
-#app-loader .loader-info span[data-loader-pct] {
-  font-variant-numeric: tabular-nums;
+#app-loader .loader-text span {
+  display: block;
+  text-align: center;
+  font-size: 15px;
+  color: #000000; /* texto en negro */
 }
 
 /* Mientras la app está cargando, se ocultan las demás secciones */

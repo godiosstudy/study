@@ -104,6 +104,7 @@ window.MainFocus = (function () {
         window.ToolbarState.level_4 = l4 || window.ToolbarState.level_4 || "";
         window.ToolbarState.level_5 = l5 || window.ToolbarState.level_5 || "";
       }
+
     } catch (e) {}
 
     // Limpiar contenedor

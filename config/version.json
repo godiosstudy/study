@@ -1,5 +1,24 @@
 [
   {
+    "version": "0.3.3",
+    "date": "2025-11-20",
+    "notes": [
+      "Registro: campo de nombre de usuario con validación en vivo y reglas [a-z0-9_-].",
+      "Cuenta: permite ver y cambiar el nombre de usuario si el nuevo está disponible.",
+      "Loader: el color de fondo del sistema sube detrás del logo, y en este proceso se precargan datos para Collection/Corpus.",
+      "Cambio de idioma en Preferencias recarga las tablas en memoria y reinicia la app."
+    ]
+  },
+  {
+    "version": "0.3.2",
+    "date": "2025-11-20",
+    "notes": [
+      "Loader restaurado al comportamiento original (barra vertical que se llena de 0% a 100% desde abajo hacia arriba).",
+      "Pre-carga opcional de colecciones para acelerar la apertura de Preferencias.",
+      "Botones de Preferencias, Login, Registro y Cuenta centrados y usando el color del sistema con texto invertido."
+    ]
+  },
+  {
     "version": "0.3.1",
     "date": "2025-11-20",
     "notes": [

@@ -13,6 +13,7 @@ window.MainRegister = (function () {
   var TEXTS = {
     es: {
       title: 'Registrarse',
+      username: 'Nombre de usuario',
       firstName: 'Nombre',
       lastName: 'Apellido',
       email: 'Correo',
@@ -32,6 +33,7 @@ window.MainRegister = (function () {
     },
     en: {
       title: 'Sign up',
+      username: 'Username',
       firstName: 'First name',
       lastName: 'Last name',
       email: 'Email',
@@ -56,11 +58,62 @@ window.MainRegister = (function () {
     return dict[key] || key;
   }
 
+
   function isEmailFormatValid(email) {
     if (!email) return false;
     var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
   }
+
+  function isUsernameFormatValid(username) {
+    if (!username) return false;
+    var v = String(username).trim();
+    // Solo minúsculas, números, guion y guion bajo
+    var re = /^[a-z0-9_-]+$/;
+    return re.test(v);
+  }
+
+  // Consulta a Supabase para ver si el nombre de usuario ya existe en profiles.p_username
+  async function checkUsernameExists(username) {
+    username = (username || '').trim().toLowerCase();
+    if (!username) return null;
+
+    if (
+      !window.BackendSupabase ||
+      typeof window.BackendSupabase.client !== 'function' ||
+      typeof window.BackendSupabase.isConfigured !== 'function' ||
+      !window.BackendSupabase.isConfigured()
+    ) {
+      return null;
+    }
+
+    var client = window.BackendSupabase.client();
+    if (!client) return null;
+
+    try {
+      var query = client.from('profiles').select('p_username').eq('p_username', username).limit(1);
+      var res;
+      if (query && typeof query.maybeSingle === 'function') {
+        res = await query.maybeSingle();
+        if (res.error) {
+          console.warn('[Register] username check error', res.error);
+          return null;
+        }
+        return !!res.data;
+      } else {
+        res = await query;
+        if (res.error) {
+          console.warn('[Register] username check error', res.error);
+          return null;
+        }
+        return Array.isArray(res.data) && res.data.length > 0;
+      }
+    } catch (e) {
+      console.warn('[Register] username check exception', e);
+      return null;
+    }
+  }
+
 
   function render(container) {
     if (!container) return;
@@ -73,6 +126,11 @@ window.MainRegister = (function () {
       '<h1 class="main-view-title" id="reg-title"></h1>',
       '',
       '<form class="form-vert" id="form-register" novalidate>',
+      '  <div class="form-group">',
+      '    <label for="reg-username" id="lbl-username"></label>',
+      '    <input type="text" id="reg-username" autocomplete="username" />',
+      '    <p class="field-hint" id="reg-username-hint"></p>',
+      '  </div>',
       '  <div class="form-group">',
       '    <label for="reg-first-name" id="lbl-first-name"></label>',
       '    <input type="text" id="reg-first-name" autocomplete="given-name" />',
@@ -109,15 +167,18 @@ window.MainRegister = (function () {
   function applyTexts(root) {
     root.querySelector('#reg-title').textContent = t('title');
 
+    var lblUsername = root.querySelector('#lbl-username');
     var lblFirst = root.querySelector('#lbl-first-name');
     var lblLast = root.querySelector('#lbl-last-name');
     var lblEmail = root.querySelector('#lbl-email');
     var lblPass = root.querySelector('#lbl-password');
     var btnSubmit = root.querySelector('#reg-submit');
     var emailHint = root.querySelector('#reg-email-hint');
+    var usernameHint = root.querySelector('#reg-username-hint');
     var hint = root.querySelector('#reg-hint');
     var successEl = root.querySelector('#reg-success');
 
+    if (lblUsername) lblUsername.textContent = t('username');
     if (lblFirst) lblFirst.textContent = t('firstName');
     if (lblLast) lblLast.textContent = t('lastName');
     if (lblEmail) lblEmail.textContent = t('email');
@@ -127,6 +188,10 @@ window.MainRegister = (function () {
     if (emailHint) {
       emailHint.textContent = '';
       emailHint.classList.remove('error', 'ok');
+    }
+    if (usernameHint) {
+      usernameHint.textContent = '';
+      usernameHint.classList.remove('error', 'ok');
     }
     if (hint) {
       hint.textContent = '';
@@ -183,16 +248,19 @@ window.MainRegister = (function () {
 
   function wireLogic(root) {
     var form = root.querySelector('#form-register');
+    var usernameEl = root.querySelector('#reg-username');
     var firstEl = root.querySelector('#reg-first-name');
     var lastEl = root.querySelector('#reg-last-name');
     var emailEl = root.querySelector('#reg-email');
     var passEl = root.querySelector('#reg-password');
     var submitBtn = root.querySelector('#reg-submit');
     var emailHint = root.querySelector('#reg-email-hint');
+    var usernameHint = root.querySelector('#reg-username-hint');
     var globalHint = root.querySelector('#reg-hint');
     var successEl = root.querySelector('#reg-success');
 
     var emailStatus = 'unknown'; // 'unknown' | 'invalid' | 'checking' | 'exists' | 'available'
+    var usernameStatus = 'unknown'; // 'unknown' | 'invalid' | 'checking' | 'exists' | 'available'
 
     function setBusy(isBusy) {
       if (!submitBtn) return;
@@ -203,20 +271,73 @@ window.MainRegister = (function () {
     function recomputeCanSubmit() {
       if (!submitBtn) return;
 
+      var username = (usernameEl && usernameEl.value || '').trim();
+      var username = (usernameEl && usernameEl.value || '').trim().toLowerCase();
       var first = (firstEl && firstEl.value || '').trim();
       var last = (lastEl && lastEl.value || '').trim();
       var email = (emailEl && emailEl.value || '').trim();
       var pass = passEl ? passEl.value || '' : '';
 
-      var fieldsFilled = !!(first && last && email && pass);
+      var fieldsFilled = !!(username && first && last && email && pass);
       var passValid = pass.length >= 6;
       var emailOk = emailStatus === 'available';
+      var usernameOk = usernameStatus === 'available';
 
       submitBtn.disabled = !(
         fieldsFilled &&
         passValid &&
-        emailOk
+        emailOk &&
+        usernameOk
       );
+    }
+
+
+    if (usernameEl) {
+      usernameEl.addEventListener('input', function () {
+        var val = (usernameEl.value || '').trim();
+        usernameStatus = 'unknown';
+        showFieldHint(usernameHint, '', null);
+
+        if (val && !isUsernameFormatValid(val.toLowerCase())) {
+          usernameStatus = 'invalid';
+          showFieldHint(usernameHint, t('usernameInvalid'), 'error');
+        }
+        recomputeCanSubmit();
+      });
+
+      usernameEl.addEventListener('blur', async function () {
+        var val = (usernameEl.value || '').trim().toLowerCase();
+        if (!val) {
+          usernameStatus = 'invalid';
+          showFieldHint(usernameHint, t('usernameInvalid'), 'error');
+          recomputeCanSubmit();
+          return;
+        }
+
+        if (!isUsernameFormatValid(val)) {
+          usernameStatus = 'invalid';
+          showFieldHint(usernameHint, t('usernameInvalid'), 'error');
+          recomputeCanSubmit();
+          return;
+        }
+
+        usernameStatus = 'checking';
+        showFieldHint(usernameHint, '', null);
+        recomputeCanSubmit();
+
+        var exists = await checkUsernameExists(val);
+        if (exists === true) {
+          usernameStatus = 'exists';
+          showFieldHint(usernameHint, t('usernameExists'), 'error');
+        } else if (exists === false) {
+          usernameStatus = 'available';
+          showFieldHint(usernameHint, t('usernameAvailable'), 'ok');
+        } else {
+          usernameStatus = 'invalid';
+          showFieldHint(usernameHint, t('usernameInvalid'), 'error');
+        }
+        recomputeCanSubmit();
+      });
     }
 
     // mientras se escribe: validar formato
@@ -281,12 +402,13 @@ window.MainRegister = (function () {
       if (submitBtn && submitBtn.disabled) return;
       if (!emailEl || !passEl) return;
 
+      var username = (usernameEl && usernameEl.value || '').trim().toLowerCase();
       var first = (firstEl && firstEl.value || '').trim();
       var last = (lastEl && lastEl.value || '').trim();
       var email = (emailEl.value || '').trim();
       var password = passEl.value || '';
 
-      if (!first || !last || !email || !password) {
+      if (!username || !first || !last || !email || !password) {
         showGlobalHint(globalHint, t('errorRequired'), 'error');
         return;
       }
@@ -296,6 +418,10 @@ window.MainRegister = (function () {
       }
       if (emailStatus !== 'available') {
         showGlobalHint(globalHint, t('emailInvalid'), 'error');
+        return;
+      }
+      if (usernameStatus !== 'available') {
+        showGlobalHint(globalHint, t('usernameInvalid'), 'error');
         return;
       }
 
@@ -328,6 +454,7 @@ window.MainRegister = (function () {
             first_name: first || null,
             last_name: last || null,
             language: lang || 'es',
+            username: username || null,
           },
         });
 

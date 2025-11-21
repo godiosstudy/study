@@ -366,7 +366,25 @@
 
 
 
-  function showInitialView() {
+  
+  async function afterBibleLoaded(prefs) {
+    // Pre-cargar colecciones/corpus para Preferencias durante el loader
+    try {
+      if (window.MainPreferences && typeof window.MainPreferences.preloadCollections === "function") {
+        await window.MainPreferences.preloadCollections();
+      }
+    } catch (e) {
+      console.warn("[BootstrapPrefs] preloadCollections error", e);
+    }
+
+    try {
+      if (window.Toolbar && typeof window.Toolbar.refreshBreadcrumb === "function") {
+        window.Toolbar.refreshBreadcrumb();
+      }
+    } catch (e) {}
+  }
+
+function showInitialView() {
     try {
       if (window.Main && typeof window.Main.showView === "function") {
         window.Main.showView("navigator");
@@ -386,11 +404,7 @@
       prefs = await step1_UserProfile(store);
       if (prefs) {
         await loadBibleCache(prefs);
-        try {
-          if (window.Toolbar && typeof window.Toolbar.refreshBreadcrumb === "function") {
-            window.Toolbar.refreshBreadcrumb();
-          }
-        } catch (e) {}
+        await afterBibleLoaded(prefs);
         showInitialView();
         return;
       }
@@ -415,11 +429,7 @@
           console.warn("[BootstrapPrefs] error aplicando prefs locales", e);
         }
         await loadBibleCache(prefs);
-        try {
-          if (window.Toolbar && typeof window.Toolbar.refreshBreadcrumb === "function") {
-            window.Toolbar.refreshBreadcrumb();
-          }
-        } catch (e) {}
+        await afterBibleLoaded(prefs);
         showInitialView();
         return;
       }
@@ -427,12 +437,7 @@
       // 3) No hay usuario ni prefs locales → mirar entries
       prefs = await step3_DefaultFromEntries(store);
       await loadBibleCache(prefs);
-
-      try {
-        if (window.Toolbar && typeof window.Toolbar.refreshBreadcrumb === "function") {
-          window.Toolbar.refreshBreadcrumb();
-        }
-      } catch (e) {}
+      await afterBibleLoaded(prefs);
       showInitialView();
     } finally {
       hideLoader();

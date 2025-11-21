@@ -65,26 +65,21 @@
   <main id="app-main"></main>
 
   <!-- Loader de pantalla completa; SystemLoader lo muestra/oculta -->
-  <div id="app-loader" class="loader-root">
-    <div class="loader-wrap">
-      <div class="loader">
-        <img class="loader-logo" src="/public/img/logo.png" alt="Logo">
-        <div class="loader-bar">
-          <div class="loader-bar-inner" data-loader-bar></div>
-        </div>
-        <div class="loader-info">
-          <span data-loader-text>Cargando</span>
-          <span data-loader-pct>0%</span>
-        </div>
-      </div>
+  <div id="app-loader">
+  <!-- Fondo que sube con el color del sistema -->
+  <div class="loader-fill" data-loader-fill></div>
+
+  <!-- Contenido centrado: logo + texto -->
+  <div class="loader-center">
+    <img class="loader-logo" src="/public/img/logo.png" alt="Logo Study.GODiOS">
+    <div class="loader-text">
+      <span data-loader-text>Cargando</span>
+      <span data-loader-pct>0%</span>
     </div>
   </div>
+</div>
 
-  <!-- Footer -->
-  <footer id="app-footer" class="ftr-wrap">
-    <div class="container ftr">
-      <div class="ftr-left">
-        <div id="ftr-crumb-static" class="ftr-crumb-static"></div>
+crumb-static" class="ftr-crumb-static"></div>
       </div>
 
       <div class="ftr-right">

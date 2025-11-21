@@ -586,7 +586,7 @@ select.prefs-select-loading option {
 }
 
 .nav-item-row {
-  padding: 6px 8px;
+  padding: 6px 4px;
   border-radius: 6px;
   cursor: pointer;
   display: flex;
@@ -629,6 +629,24 @@ select.prefs-select-loading option {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* Layout: número a la izquierda + (ref + texto) a la derecha */
+.results-index {
+  font-weight: 700;
+  font-size: 0.75em;
+  min-width: 2ch;
+  text-align: right;
+  margin-top: 2px;
+}
+
+.results-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
 }
 
 /* Cada resultado: misma lógica visual que Navigator (hover 20% color sitio) */
@@ -956,17 +974,109 @@ select.prefs-select-loading option {
 
 
 /* Resumen de resultados con chips de iconos en Results */
+
 .results-summary {
   margin-bottom: 8px;
 }
 
+/* Fila de 3 iconos de resumen (exactos / contemplados / aproximados) */
 .results-summary-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 16px;
+  margin-top: 4px;
 }
 
+/* Botón redondo tipo estadística de resultados */
+.results-summary-chip {
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.results-summary-chip.is-inactive {
+  opacity: 0.35;
+}
+
+.results-summary-count {
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.results-summary-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-soft);
+  color: var(--header-bg);
+}
+
+.results-summary-icon i {
+  width: 20px;
+  height: 20px;
+}
+
+.results-summary-label {
+  font-size: 11px;
+  opacity: 0.85;
+  text-align: center;
+}
+
+/* compat: estilos antiguos de chip en otros paneles */
 .results-summary .chip.icon-only {
   min-height: 32px;
   padding-inline: 10px 14px;
+}
+
+
+/* Alternancia de fondo para resultados (3% / 0%), igual que Navigator */
+.results-list .results-item:nth-child(odd) {
+  background: rgba(15, 23, 42, 0.03);
+}
+
+.results-list .results-item:nth-child(even) {
+  background: transparent;
+}
+
+
+/* Acciones de Preferencias: centradas y con color del sistema */
+.prefs-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.prefs-actions .chip,
+.prefs-actions .chip.primary,
+.prefs-actions .chip.ghost {
+  background: var(--accent, var(--header-bg));
+  color: #ffffff;
+  border-color: var(--accent, var(--header-bg));
+}
+
+
+/* Acciones de formularios de usuario (login, register, account): centradas y con color del sistema */
+.form-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.form-actions .chip,
+.form-actions .chip.primary {
+  background: var(--accent, var(--header-bg));
+  color: #ffffff;
+  border-color: var(--accent, var(--header-bg));
 }

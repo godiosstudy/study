@@ -21,6 +21,7 @@ window.MainAccount = (function () {
       goLogin: "Ir a Iniciar sesión",
 
       // Campos
+      username: "Nombre de usuario",
       firstName: "Nombre",
       lastName: "Apellido",
       email: "Correo",
@@ -61,6 +62,7 @@ window.MainAccount = (function () {
       goLogin: "Go to Sign in",
 
       // Fields
+      username: "Username",
       firstName: "First name",
       lastName: "Last name",
       email: "Email",
@@ -109,6 +111,57 @@ window.MainAccount = (function () {
     return re.test(email);
   }
 
+
+  function isUsernameFormatValid(username) {
+    if (!username) return false;
+    var v = String(username).trim();
+    var re = /^[a-z0-9_-]+$/; // minúsculas, números, guion, guion bajo
+    return re.test(v);
+  }
+
+  async function checkUsernameExists(username, currentUsername) {
+    username = (username || '').trim().toLowerCase();
+    currentUsername = (currentUsername || '').trim().toLowerCase();
+    if (!username) return null;
+    // si es el mismo que ya tiene el perfil, se considera aceptable
+    if (username === currentUsername) return false;
+
+    if (
+      !window.BackendSupabase ||
+      typeof window.BackendSupabase.client !== "function" ||
+      typeof window.BackendSupabase.isConfigured !== "function" ||
+      !window.BackendSupabase.isConfigured()
+    ) {
+      return null;
+    }
+
+    var client = window.BackendSupabase.client();
+    if (!client) return null;
+
+    try {
+      var query = client.from("profiles").select("p_username").eq("p_username", username).limit(1);
+      var res;
+      if (query && typeof query.maybeSingle === "function") {
+        res = await query.maybeSingle();
+        if (res.error) {
+          console.warn("[Account] username check error", res.error);
+          return null;
+        }
+        return !!res.data;
+      } else {
+        res = await query;
+        if (res.error) {
+          console.warn("[Account] username check error", res.error);
+          return null;
+        }
+        return Array.isArray(res.data) && res.data.length > 0;
+      }
+    } catch (e) {
+      console.warn("[Account] username check exception", e);
+      return null;
+    }
+  }
+
   // ======================
   // Render principal
   // ======================
@@ -155,6 +208,7 @@ window.MainAccount = (function () {
     var title = root.querySelector("#acc-title");
     var subtitle = root.querySelector("#acc-subtitle");
     var hint = root.querySelector("#acc-hint");
+    var usernameHint = root.querySelector("#acc-username-hint");
     var btnLogin = root.querySelector("#acc-go-login");
 
     if (title) title.textContent = t("title");
@@ -190,6 +244,11 @@ window.MainAccount = (function () {
       '<p class="account-subtitle" id="acc-subtitle"></p>',
       "",
       '<form class="form-vert" id="form-account" novalidate>',
+      '  <div class="form-group">',
+      '    <label for="acc-username" id="lbl-username"></label>',
+      '    <input type="text" id="acc-username" autocomplete="username" />',
+      '    <p class="field-hint" id="acc-username-hint"></p>',
+      '  </div>',
       '  <div class="form-group">',
       '    <label for="acc-first-name" id="lbl-first-name"></label>',
       '    <input type="text" id="acc-first-name" autocomplete="given-name" />',
@@ -256,6 +315,7 @@ window.MainAccount = (function () {
   function applyTextsWithUser(root) {
     var title = root.querySelector("#acc-title");
     var subtitle = root.querySelector("#acc-subtitle");
+    var lblUsername = root.querySelector("#lbl-username");
     var lblFirst = root.querySelector("#lbl-first-name");
     var lblLast = root.querySelector("#lbl-last-name");
     var lblEmail = root.querySelector("#lbl-email");
@@ -274,6 +334,7 @@ window.MainAccount = (function () {
     if (title) title.textContent = t("title");
     if (subtitle) subtitle.textContent = t("subtitle");
 
+    if (lblUsername) lblUsername.textContent = t("username");
     if (lblFirst) lblFirst.textContent = t("firstName");
     if (lblLast) lblLast.textContent = t("lastName");
     if (lblEmail) lblEmail.textContent = t("email");
@@ -305,11 +366,16 @@ window.MainAccount = (function () {
     var form = root.querySelector("#form-account");
     var btnPrefs = root.querySelector("#acc-open-preferences");
     var hint = root.querySelector("#acc-hint");
+    var usernameHint = root.querySelector("#acc-username-hint");
     var btnSubmit = root.querySelector("#acc-submit");
 
     if (hint) {
       hint.textContent = "";
       hint.className = "field-hint";
+    }
+    if (usernameHint) {
+      usernameHint.textContent = "";
+      usernameHint.classList.remove("error", "ok");
     }
 
     if (btnPrefs) {
@@ -355,6 +421,9 @@ window.MainAccount = (function () {
 
   function loadProfileIntoForm(root, user) {
     var hint = root.querySelector("#acc-hint");
+    var usernameHint = root.querySelector("#acc-username-hint");
+    var usernameInput = root.querySelector("#acc-username");
+    var usernameInput = root.querySelector("#acc-username");
     var firstInput = root.querySelector("#acc-first-name");
     var lastInput = root.querySelector("#acc-last-name");
     var emailInput = root.querySelector("#acc-email");
@@ -401,6 +470,7 @@ window.MainAccount = (function () {
       "country",
       "birth_date",
       "gender",
+      "p_username",
     ].join(",");
 
     var query = client.from("profiles").select(cols).eq("id", user.id).limit(1);
@@ -445,6 +515,7 @@ window.MainAccount = (function () {
           };
         }
 
+        if (usernameInput) usernameInput.value = row.p_username || (meta && meta.username) || "";
         if (firstInput) firstInput.value = row.first_name || meta.first_name || "";
         if (lastInput) lastInput.value = row.last_name || meta.last_name || "";
         if (emailInput) emailInput.value = row.email || user.email || "";
@@ -475,8 +546,11 @@ window.MainAccount = (function () {
   // ======================
   function saveProfileFromForm(root, user) {
     var hint = root.querySelector("#acc-hint");
+    var usernameHint = root.querySelector("#acc-username-hint");
     var btnSubmit = root.querySelector("#acc-submit");
 
+    var usernameInput = root.querySelector("#acc-username");
+    var usernameInput = root.querySelector("#acc-username");
     var firstInput = root.querySelector("#acc-first-name");
     var lastInput = root.querySelector("#acc-last-name");
     var emailInput = root.querySelector("#acc-email");
@@ -488,9 +562,26 @@ window.MainAccount = (function () {
     var birthInput = root.querySelector("#acc-birth");
     var genderInput = root.querySelector("#acc-gender");
 
+    var username = usernameInput ? (usernameInput.value || "").trim().toLowerCase() : "";
     var firstName = firstInput ? firstInput.value.trim() : "";
     var lastName = lastInput ? lastInput.value.trim() : "";
     var email = emailInput ? emailInput.value.trim() : "";
+
+    if (!username) {
+      if (hint) {
+        hint.textContent = t("usernameInvalid");
+        hint.className = "field-hint error";
+      }
+      return;
+    }
+
+    if (!isUsernameFormatValid(username)) {
+      if (hint) {
+        hint.textContent = t("usernameInvalid");
+        hint.className = "field-hint error";
+      }
+      return;
+    }
 
     if (!firstName || !lastName) {
       if (hint) {
@@ -521,6 +612,23 @@ window.MainAccount = (function () {
     if (hint) {
       hint.textContent = t("hintLoading");
       hint.className = "field-hint";
+    }
+
+
+    var currentUsername = "";
+    try {
+      if (user && user.user_metadata && user.user_metadata.username) {
+        currentUsername = user.user_metadata.username;
+      }
+    } catch (e) {}
+
+    var exists = await checkUsernameExists(username, currentUsername);
+    if (exists === true) {
+      if (hint) {
+        hint.textContent = t("usernameExists");
+        hint.className = "field-hint error";
+      }
+      return;
     }
 
     var payload = {

@@ -1,4 +1,5 @@
-// system.loader.js – control de overlay de carga con progreso
+
+// system.loader.js – overlay fullscreen que se llena con el color del sitio
 window.SystemLoader = (function () {
   var overlayId = "app-loader";
 
@@ -8,32 +9,21 @@ window.SystemLoader = (function () {
 
   function show() {
     var el = getOverlay();
-    if (el) el.style.display = "flex";
+    if (el) el.style.display = "block";
+    document.body.classList.add("app-loading");
   }
 
   function hide() {
     var el = getOverlay();
     if (el) el.style.display = "none";
-  }
-
-  function resolveLanguage() {
-    var language = "es";
-    try {
-      if (window.PrefsStore && typeof window.PrefsStore.load === "function") {
-        var p = window.PrefsStore.load() || {};
-        if (p.language) language = p.language;
-      } else if (document.documentElement && document.documentElement.lang) {
-        language = document.documentElement.lang || "es";
-      }
-    } catch (e) {}
-    return language === "en" ? "en" : "es";
+    document.body.classList.remove("app-loading");
   }
 
   function setProgress(pct, text) {
     var el = getOverlay();
     if (!el) return;
 
-    var bar = el.querySelector("[data-loader-bar]");
+    var fill   = el.querySelector("[data-loader-fill]");
     var lblPct = el.querySelector("[data-loader-pct]");
     var lblTxt = el.querySelector("[data-loader-text]");
 
@@ -41,19 +31,19 @@ window.SystemLoader = (function () {
     if (v < 0) v = 0;
     if (v > 100) v = 100;
 
-    if (bar) {
-      bar.style.height = v + "%";
+    if (fill) {
+      fill.style.height = v + "%";
     }
     if (lblPct) {
       lblPct.textContent = v + "%";
     }
 
-    var lang = resolveLanguage();
-    var baseLabel = lang === "en" ? "Loading" : "Cargando";
-    var finalLabel = (typeof text === "string" && text.trim()) ? text : baseLabel;
+    var finalLabel = (typeof text === "string" && text.trim())
+      ? text
+      : "Cargando";
 
     if (lblTxt) {
-      lblTxt.textContent = finalLabel + " " + v + "%";
+      lblTxt.textContent = finalLabel;
     }
   }
 

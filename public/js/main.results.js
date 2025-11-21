@@ -231,7 +231,7 @@ window.MainResults = (function () {
 
     // Contenedor para resultados (usamos el layout tipo Navigator)
     var list = document.createElement("div");
-    list.className = "nav-items-list panel-single";
+    list.className = "nav-items-list results-list";
     body.appendChild(list);
 
     if (!query) {
@@ -266,6 +266,8 @@ window.MainResults = (function () {
     var exactCount = 0;
     var contempladoCount = 0;
 
+    
+    
     var decorated = (items || []).map(function (row) {
       var verseText = row.level_7 || "";
       var tLower = verseText.toLowerCase();
@@ -280,20 +282,30 @@ window.MainResults = (function () {
         contempladoCount++;
       }
 
+      // ÚNICO: la palabra buscada aparece como palabra aislada (no parte de otra)
+      var isUnique = false;
+      if (qNorm) {
+        var tokens = tNorm.split(/[^a-z0-9ñ]+/i).filter(function (tok) { return !!tok; });
+        isUnique = tokens.some(function (tok) {
+          return tok === qNorm;
+        });
+      }
+
       var html = highlightHTML(verseText, query);
 
       return {
         row: row,
         html: html,
         isExact: !!hasExact,
-        isContemplado: !!hasContemplado
+        isContemplado: !!hasContemplado,
+        isUnique: !!isUnique
       };
     });
 
-    items = decorated;
+   items = decorated;
 
-    var totalCount = (items && items.length) || 0;
-    var approxCount = totalCount - exactCount - contempladoCount;
+{ return it.isUnique; }).length;
+
 
     // Título general
     if (lang === "en") {
@@ -309,19 +321,54 @@ window.MainResults = (function () {
     var chipsRow = document.createElement("div");
     chipsRow.className = "results-summary-chips";
 
-    function addSummaryChip(iconName, count, label) {
+    var filterState = {
+      exact: true,
+      contemplado: true,
+      approx: true,
+      unique: true,
+    };
+
+    function addSummaryChip(key, iconName, count, label) {
       var chip = document.createElement("button");
       chip.type = "button";
-      chip.className = "chip icon-only";
-      chip.disabled = true;
+      chip.className = "results-summary-chip is-active";
+      chip.dataset.filterKey = key;
 
+      var spanCount = document.createElement("div");
+      spanCount.className = "results-summary-count";
+      spanCount.textContent = String(count);
+      chip.appendChild(spanCount);
+
+      var iconWrap = document.createElement("div");
+      iconWrap.className = "results-summary-icon";
       var iconEl = document.createElement("i");
       iconEl.setAttribute("data-lucide", iconName);
-      chip.appendChild(iconEl);
+      iconWrap.appendChild(iconEl);
+      chip.appendChild(iconWrap);
 
-      var spanText = document.createElement("span");
-      spanText.textContent = String(count) + " " + label;
-      chip.appendChild(spanText);
+      var spanLabel = document.createElement("div");
+      spanLabel.className = "results-summary-label";
+      spanLabel.textContent = label;
+      chip.appendChild(spanLabel);
+
+      chip.addEventListener("click", function () {
+        // alternar estado del filtro; evitar que todos queden apagados
+        var current = !!filterState[key];
+        filterState[key] = !current;
+
+        if (!filterState.exact && !filterState.contemplado && !filterState.approx && !filterState.unique) {
+          // no permitir que los tres queden en OFF
+          filterState[key] = true;
+          return;
+        }
+
+        chip.classList.toggle("is-active", filterState[key]);
+        chip.classList.toggle("is-inactive", !filterState[key]);
+
+        if (typeof renderList === "function") {
+          renderList();
+        }
+      });
 
       chipsRow.appendChild(chip);
     }
@@ -329,10 +376,98 @@ window.MainResults = (function () {
     var lblExact = lang === "en" ? "exact" : "exactos";
     var lblCont = lang === "en" ? "covered" : "contemplados";
     var lblApprox = lang === "en" ? "approx." : "aprox.";
+    var lblUnique = lang === "en" ? "unique" : "únicos";
 
-    addSummaryChip("target", exactCount, lblExact);
-    addSummaryChip("crosshair", contempladoCount, lblCont);
-    addSummaryChip("circle-dashed", approxCount, lblApprox);
+    addSummaryChip("unique", "check-circle", uniqueCount, lblUnique);
+    addSummaryChip("exact", "target", exactCount, lblExact);
+    addSummaryChip("contemplado", "crosshair", contempladoCount, lblCont);
+    addSummaryChip("approx", "circle-dashed", approxCount, lblApprox);
+
+    function entryPassesFilters(entry) {
+      if (entry.isExact && !filterState.exact) return false;
+      if (entry.isContemplado && !filterState.contemplado) return false;
+      if (!entry.isExact && !entry.isContemplado && !filterState.approx) return false;
+      if (entry.isUnique && !filterState.unique) return false;
+      return true;
+    }
+
+    function renderList() {
+      list.innerHTML = "";
+
+      var filtered = (items || []).filter(entryPassesFilters);
+
+      if (!filtered.length) {
+        var none = document.createElement("p");
+        none.textContent =
+          lang === "en"
+            ? "No entries found for the selected filters."
+            : "No hay resultados para los filtros seleccionados.";
+        list.appendChild(none);
+        return;
+      }
+
+      filtered.forEach(function (entry, idx) {
+        var row = entry.row;
+        var book = row.level_4 || "";
+        var chapter = row.level_5 || "";
+        var verse = row.level_6 || "";
+        var text = row.level_7 || "";
+
+        var item = document.createElement("div");
+        item.className = "results-item";
+        item.dataset.level4 = book;
+        item.dataset.level5 = chapter;
+        item.dataset.level6 = verse;
+
+        // Índice numérico a la izquierda
+        var idxSpan = document.createElement("span");
+        idxSpan.className = "results-index";
+        idxSpan.textContent = String(idx + 1);
+
+        // Contenedor vertical para referencia + texto
+        var bodyBox = document.createElement("div");
+        bodyBox.className = "results-item-body";
+
+        // Fila 1: referencia (Ej: Efesios 5:1), en bold y más pequeña
+        var refDiv = document.createElement("div");
+        refDiv.className = "results-ref";
+
+        var refText = "";
+        if (book) refText += book;
+        if (chapter) refText += (refText ? " " : "") + chapter;
+        if (verse) refText += ":" + verse;
+        refDiv.textContent = refText || verse || "";
+
+        // Fila 2: texto del versículo
+        var textDiv = document.createElement("div");
+        textDiv.className = "results-text";
+        textDiv.innerHTML = entry.html;
+
+        bodyBox.appendChild(refDiv);
+        bodyBox.appendChild(textDiv);
+
+        item.appendChild(idxSpan);
+        item.appendChild(bodyBox);
+
+        item.addEventListener("click", function () {
+          if (!window.Main || typeof window.Main.showView !== "function") return;
+
+          var navParams = {
+            level_1: prefs.collection || row.level_1 || null,
+            level_2: prefs.corpus || row.level_2 || null,
+            level_3: row.level_3 || null,
+            level_4: book || null,
+            level_5: chapter || null,
+            level_6: verse || null,
+            level_7: text || null
+          };
+
+          window.Main.showView("focus", navParams);
+        });
+
+        list.appendChild(item);
+      });
+    }
 
     summary.appendChild(chipsRow);
 
@@ -356,56 +491,8 @@ window.MainResults = (function () {
       return;
     }
 
-    // Render de la lista (similar a Navigator)
-    items.forEach(function (entry) {
-      var row = entry.row;
-      var book = row.level_4 || "";
-      var chapter = row.level_5 || "";
-      var verse = row.level_6 || "";
-      var text = row.level_7 || "";
-
-      var item = document.createElement("div");
-      item.className = "nav-item-row";
-      item.dataset.level4 = book;
-      item.dataset.level5 = chapter;
-      item.dataset.level6 = verse;
-
-      // Fila 1: referencia (Ej: Efesios 5:1), en bold y más pequeña
-      var refDiv = document.createElement("div");
-      refDiv.style.fontWeight = "600";
-      refDiv.style.fontSize = "0.75em";
-
-      var refText = "";
-      if (book) refText += book;
-      if (chapter) refText += (refText ? " " : "") + chapter;
-      if (verse) refText += ":" + verse;
-      refDiv.textContent = refText || verse || "";
-
-      // Fila 2: texto del versículo
-      var textDiv = document.createElement("div");
-      textDiv.innerHTML = entry.html;
-
-      item.appendChild(refDiv);
-      item.appendChild(textDiv);
-
-      item.addEventListener("click", function () {
-        if (!window.Main || typeof window.Main.showView !== "function") return;
-
-        var navParams = {
-          level_1: prefs.collection || row.level_1 || null,
-          level_2: prefs.corpus || row.level_2 || null,
-          level_3: row.level_3 || null,
-          level_4: book || null,
-          level_5: chapter || null,
-          level_6: verse || null,
-          level_7: text || null
-        };
-
-        window.Main.showView("focus", navParams);
-      });
-
-      list.appendChild(item);
-    });
+    // Al inicio, con los tres filtros activos, renderizar la lista completa
+    renderList();
 
   }
 
