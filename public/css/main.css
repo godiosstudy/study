@@ -1219,4 +1219,13 @@ select.prefs-select-loading option {
   #view-title.view-title-pill {
     top: calc(60px + 88px);
   }
+
+  /* Más espacio entre el toolbar y los títulos principales en mobile */
+  .main-title {
+    margin-top: 32px;
+  }
+
+  .panel-single h1 {
+    margin-top: 24px;
+  }
 }
