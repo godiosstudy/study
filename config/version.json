@@ -1,5 +1,16 @@
 [
   {
+    "version": "0.3.4",
+    "date": "2025-11-21",
+    "notes": [
+      "Títulos fijos en el main con cerramiento y flechas laterales para Navigator, Results, Focus y vistas de usuario (Preferencias, Iniciar sesión, Registro y Cuenta).",
+      "Preferencias: dropdowns de Colección y Corpus se alimentan desde entries_meta en memoria y cargan correctamente al abrir y al cambiar de idioma.",
+      "Loader: al guardar Preferencias se muestra el loader fullscreen con progreso mientras se recarga el corpus en memoria.",
+      "Navigator: se elimina el mensaje intermedio de 'No hay entradas para esta combinación' y se mejora el espaciado entre título y lista.",
+      "Toolbar: buscador siempre en la misma línea que los selects en mobile y se reduce el padding lateral del main para aprovechar mejor el ancho."
+    ]
+  },
+  {
     "version": "0.3.3",
     "date": "2025-11-20",
     "notes": [

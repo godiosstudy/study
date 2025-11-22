@@ -142,21 +142,23 @@ select.crumb-select-loading option {
   .tbar {
     padding-inline: 8px;
     gap: 8px;
-    flex-wrap: wrap;
-    align-items: flex-start;
+    flex-wrap: nowrap;        /* mantenemos todo en una sola línea */
+    align-items: center;
   }
 
   .crumbs {
-    font-size: 0.8rem;   /* solo reducimos un poco el tamaño */
-    /* sin max-width: el breadcrumb puede usar todo el ancho */
-    width: 100%;
-    order: 1;
+    font-size: 0.8rem;        /* texto un poco más pequeño */
+    min-width: 0;
+    flex: 0 1 auto;           /* deja espacio para el buscador */
+    width: auto;
+    order: 0;
   }
 
   .search {
-    width: 100%;
-    order: 2;
-    justify-content: flex-start;
+    flex: 1 1 auto;
+    width: auto;
+    order: 0;
+    justify-content: flex-end;
   }
 
   .search-inner {

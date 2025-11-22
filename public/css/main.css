@@ -18,8 +18,8 @@
   min-height: calc(100vh - (60px + 44px) - var(--footer-h));
 
     /* 👉 Nuevo: padding lateral para que nada toque los bordes de la ventana */
-  padding-left: 50px;
-  padding-right: 50px;
+  padding-left: 3px;
+  padding-right: 3px;
 }
 
 /* Contenedor interno del main */
@@ -927,8 +927,8 @@ select.prefs-select-loading option {
   position: fixed;
   /* fijo justo debajo del header (60) + toolbar (44), con un pequeño aire */
   top: calc(60px + 44px + 8px);
-  left: 50px;
-  right: 50px;
+  left: 3px;
+  right: 3px;
   z-index: 40;
   display: flex;
   align-items: center;

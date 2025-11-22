@@ -192,7 +192,9 @@ window.MainAccount = (function () {
   // ======================
   function renderNoUser(root) {
     root.innerHTML = [
-      '<h1 class="main-view-title" id="acc-title"></h1>',
+      '<div class="main-view-header">',
+      '  <h1 class="main-view-title" id="acc-title"></h1>',
+      '</div>',
       '<p class="account-subtitle" id="acc-subtitle"></p>',
       '<p class="field-hint error" id="acc-hint"></p>',
       '<div class="form-actions">',
@@ -237,10 +239,11 @@ window.MainAccount = (function () {
 
   // ======================
   // Vista cuando SÍ hay usuario
-  // ======================
   function renderWithUser(root, user) {
     root.innerHTML = [
-      '<h1 class="main-view-title" id="acc-title"></h1>',
+      '<div class="main-view-header">',
+      '  <h1 class="main-view-title" id="acc-title"></h1>',
+      '</div>',
       '<p class="account-subtitle" id="acc-subtitle"></p>',
       "",
       '<form class="form-vert" id="form-account" novalidate>',

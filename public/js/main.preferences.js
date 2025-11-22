@@ -110,8 +110,10 @@ window.MainPreferences = (function () {
     panel.className = "panel-single prefs-panel";
 
     panel.innerHTML = [
-      '<h1 data-i18n="prefs.title" class="main-view-title">Preferencias</h1>',
-      "",
+      '<div class="main-view-header">',
+      '  <h1 data-i18n="prefs.title" class="main-view-title">Preferencias</h1>',
+      '</div>',
+      '',
       '<div class="prefs-grid">',
       '  <div class="prefs-fields">',
       '    <div class="prefs-field">',
@@ -904,18 +906,43 @@ window.MainPreferences = (function () {
 
         // 3) Recargar contenido en memoria para las nuevas preferencias
         try {
+          var loaderMsg = (next.language === "en" ? "Loading content…" : "Cargando contenido…");
+          var fakeTimer = null;
+
           if (window.SystemLoader && typeof window.SystemLoader.show === "function") {
             window.SystemLoader.show();
           }
           if (window.SystemLoader && typeof window.SystemLoader.setProgress === "function") {
-            var msg = (next.language === "en" ? "Loading content…" : "Cargando contenido…");
-            window.SystemLoader.setProgress(0, msg);
+            window.SystemLoader.setProgress(0, loaderMsg);
           }
+
+          // Fallback: si por algún motivo loadForPrefs tarda en reportar progreso,
+          // simulamos un avance suave hasta ~90% para evitar quedar clavados en 0%.
+          if (window.SystemLoader && typeof window.SystemLoader.setProgress === "function") {
+            var fakePct = 0;
+            fakeTimer = window.setInterval(function () {
+              try {
+                fakePct += 3;
+                if (fakePct > 90) fakePct = 90;
+                window.SystemLoader.setProgress(fakePct, loaderMsg);
+                if (fakePct >= 90) {
+                  window.clearInterval(fakeTimer);
+                  fakeTimer = null;
+                }
+              } catch (eInt) {
+                try {
+                  window.clearInterval(fakeTimer);
+                } catch (_) {}
+                fakeTimer = null;
+              }
+            }, 500);
+          }
+
           if (window.EntriesMemory && typeof window.EntriesMemory.loadForPrefs === "function") {
             await window.EntriesMemory.loadForPrefs(next, function (pct, text) {
               try {
                 if (window.SystemLoader && typeof window.SystemLoader.setProgress === "function") {
-                  var msg2 = text || (next.language === "en" ? "Loading content…" : "Cargando contenido…");
+                  var msg2 = text || loaderMsg;
                   window.SystemLoader.setProgress(pct, msg2);
                 }
               } catch (e) {}
@@ -931,6 +958,11 @@ window.MainPreferences = (function () {
         } catch (e) {
           console.warn("[Prefs] error recargando entries en memoria", e);
         } finally {
+          try {
+            if (typeof window !== "undefined" && window.clearInterval && fakeTimer) {
+              window.clearInterval(fakeTimer);
+            }
+          } catch (_) {}
           if (window.SystemLoader && typeof window.SystemLoader.hide === "function") {
             window.SystemLoader.hide();
           }

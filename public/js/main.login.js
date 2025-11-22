@@ -268,7 +268,9 @@ window.MainLogin = (function () {
     wrap.className = "panel-single";
 
     wrap.innerHTML = [
-      '<h1 class="main-view-title" id="login-title"></h1>',
+      '<div class="main-view-header">',
+      '  <h1 class="main-view-title" id="login-title"></h1>',
+      '</div>',
       "",
       '<form class="form-vert" id="form-login" novalidate>',
       '  <div class="form-group">',
