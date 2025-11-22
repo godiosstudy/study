@@ -911,6 +911,12 @@ window.MainPreferences = (function () {
                 }
               }
 
+
+              var lang = sqlLanguage(next.language);
+              var pColor = sqlColorFromPrefs(next);
+              var pFontType = sqlFontType(next.font);
+              var pFontSize = sqlFontSize(next.fontSizePt);
+
               try {
                 var payload = {
                   id: user.id,
