@@ -684,9 +684,18 @@ select.prefs-select-loading option {
 
 /* Resaltado amarillo del término buscado */
 .results-text mark {
-  background: #fff59d;
   padding: 0 1px;
 }
+
+/* Colores de resaltado por tipo */
+.results-text mark.mark-unique {
+  background: #fff59d; /* amarillo para Únicos */
+}
+
+.results-text mark.mark-similar {
+  background: #c8e6c9; /* verde suave para Similares */
+}
+
 /* === Navegación por flechas en Navigator === */
 .nav-arrows-layer {
   position: relative;
@@ -1028,6 +1037,18 @@ select.prefs-select-loading option {
   color: var(--header-bg);
 }
 
+/* Colores de icono según tipo de coincidencia */
+.results-summary-chip--unique .results-summary-icon {
+  background: #fff59d;  /* amarillo para Únicos */
+  color: #000000;
+}
+
+.results-summary-chip--similar .results-summary-icon {
+  background: #c8e6c9;  /* verde suave para Similares */
+  color: #000000;
+}
+
+
 .results-summary-icon i {
   width: 20px;
   height: 20px;
@@ -1085,4 +1106,104 @@ select.prefs-select-loading option {
   background: var(--accent, var(--header-bg));
   color: #ffffff;
   border-color: var(--accent, var(--header-bg));
+}
+
+/* Resaltados de resultados por tipo */
+.results-text mark {
+  padding: 0 1px;
+}
+
+.results-text mark.mark-unique {
+  background: #fff59d; /* amarillo Únicos */
+}
+
+.results-text mark.mark-similar {
+  background: #c8e6c9; /* verde Similares */
+}
+
+.results-text mark.mark-included {
+  background: #b3e5fc; /* celeste Incluidas */
+}
+
+/* Colores de iconos por tipo de resultado */
+.results-summary-chip--unique .results-summary-icon {
+  background: #fff59d;
+  color: #000;
+}
+
+.results-summary-chip--similar .results-summary-icon {
+  background: #c8e6c9;
+  color: #000;
+}
+
+.results-summary-chip--included .results-summary-icon {
+  background: #b3e5fc;
+  color: #000;
+}
+
+
+/* Resaltados de resultados por tipo */
+.results-text mark {
+  padding: 0 1px;
+}
+
+.results-text mark.mark-unique {
+  background: #fff59d; /* amarillo Únicos */
+}
+
+.results-text mark.mark-similar {
+  background: #c8e6c9; /* verde Similares */
+}
+
+.results-text mark.mark-included {
+  background: #b3e5fc; /* celeste Incluidas */
+}
+
+/* Cercanías: colorear el renglón completo en rosado suave */
+.results-item--near .results-text {
+  background: #f8bbd0;
+  border-radius: 3px;
+  padding: 0 2px;
+}
+
+/* Colores de iconos por tipo de resultado */
+.results-summary-chip--unique .results-summary-icon {
+  background: #fff59d;
+  color: #000;
+}
+
+.results-summary-chip--similar .results-summary-icon {
+  background: #c8e6c9;
+  color: #000;
+}
+
+.results-summary-chip--included .results-summary-icon {
+  background: #b3e5fc;
+  color: #000;
+}
+
+.results-summary-chip--near .results-summary-icon {
+  background: #f8bbd0;
+  color: #000;
+}
+
+/* === Colores de íconos de resumen por tipo de resultado (coinciden con los textos) === */
+.results-summary-chip--unique .results-summary-icon {
+  background: #fff59d; /* Amarillo Únicos */
+  color: #000000;
+}
+
+.results-summary-chip--similar .results-summary-icon {
+  background: #c8e6c9; /* Verde Similares */
+  color: #000000;
+}
+
+.results-summary-chip--included .results-summary-icon {
+  background: #b3e5fc; /* Celeste Incluidas */
+  color: #000000;
+}
+
+.results-summary-chip--near .results-summary-icon {
+  background: #f8bbd0; /* Rosado Cercanías */
+  color: #000000;
 }

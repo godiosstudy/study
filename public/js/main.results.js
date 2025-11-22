@@ -99,6 +99,74 @@ window.MainResults = (function () {
     return s.replace(/\s+/g, " ").trim();
   }
 
+  function classifyUniqueSimilarIncluded(text, query) {
+    var t = String(text || "");
+    var q = String(query || "");
+    if (!q) {
+      return {
+        html: escapeHtml(t),
+        hasUnique: false,
+        hasSimilar: false,
+        hasIncluded: false
+      };
+    }
+
+    var qNorm = normalizeNoAccents(q);
+    var hasUnique = false;
+    var hasSimilar = false;
+    var hasIncluded = false;
+    var result = "";
+    var lastIndex = 0;
+
+    // Palabras = secuencias de letras/números (incluyendo acentos y ñ)
+    var wordRe = /[A-Za-zÁÉÍÓÚÜáéíóúÑñ0-9]+/g;
+    var match;
+    while ((match = wordRe.exec(t)) !== null) {
+      var word = match[0];
+      var start = match.index;
+      var end = start + word.length;
+
+      // texto entre palabras
+      if (lastIndex < start) {
+        result += escapeHtml(t.slice(lastIndex, start));
+      }
+
+      var wordNorm = normalizeNoAccents(word);
+
+      if (word === q) {
+        // ÚNICO: coincide exactamente, incluyendo mayúsculas/minúsculas y acentos
+        hasUnique = true;
+        result += '<mark class="mark-unique">' + escapeHtml(word) + '</mark>';
+      } else if (wordNorm === qNorm) {
+        // SIMILAR: misma palabra al normalizar, pero con alguna variación
+        hasSimilar = true;
+        result += '<mark class="mark-similar">' + escapeHtml(word) + '</mark>';
+      } else if (qNorm && wordNorm.indexOf(qNorm) !== -1) {
+        // INCLUIDA: contiene la base normalizada en cualquier posición (inicio, medio, fin)
+        hasIncluded = true;
+        result += '<mark class="mark-included">' + escapeHtml(word) + '</mark>';
+      } else {
+        // no coincide: se deja tal cual
+        result += escapeHtml(word);
+      }
+
+      lastIndex = end;
+    }
+
+    // resto del texto después de la última palabra
+    if (lastIndex < t.length) {
+      result += escapeHtml(t.slice(lastIndex));
+    }
+
+    return {
+      html: result,
+      hasUnique: hasUnique,
+      hasSimilar: hasSimilar,
+      hasIncluded: hasIncluded
+    };
+  }
+
+
   // ===== mapa dinámico de libros por idioma (sin atajos hardcodeados) =====
   var bookMapByLang = {};
   var bookPromiseByLang = {};
@@ -224,7 +292,7 @@ window.MainResults = (function () {
     var h1 = document.createElement("h1");
     h1.className = "main-view-title";
     h1.textContent =
-      lang === "en" ? "Results" : "Resultados";
+      lang === "en" ? "Search results" : "Resultados de búsqueda";
 
     header.appendChild(h1);
     body.appendChild(header);
@@ -258,60 +326,46 @@ window.MainResults = (function () {
     // Quitamos el texto informativo
     info.remove();
 
-    // Clasificación: exactos, contemplados (solo diferencia de acentos) y aproximados
+    // Clasificación: Únicos, Similares, Incluidas y Cercanías
     var qRaw = String(query || "");
-    var qLower = qRaw.toLowerCase();
-    var qNorm = normalizeNoAccents(qRaw);
 
-    var exactCount = 0;
-    var contempladoCount = 0;
-
-    
-    
-    
     var decorated = (items || []).map(function (row) {
       var verseText = row.level_7 || "";
-      var tLower = verseText.toLowerCase();
-      var tNorm = normalizeNoAccents(verseText);
+      var info = classifyUniqueSimilarIncluded(verseText, qRaw);
 
-      var hasExact = qLower && tLower.indexOf(qLower) !== -1;
-      var hasContemplado = !hasExact && qNorm && tNorm.indexOf(qNorm) !== -1;
-
-      if (hasExact) {
-        exactCount++;
-      } else if (hasContemplado) {
-        contempladoCount++;
-      }
-
-      // ÚNICO: la palabra buscada aparece como palabra aislada (no parte de otra)
-      var isUnique = false;
-      if (qNorm) {
-        var tokens = tNorm.split(/[^a-z0-9ñ]+/i).filter(function (tok) { return !!tok; });
-        isUnique = tokens.some(function (tok) {
-          return tok === qNorm;
-        });
-      }
-
-      var html = highlightHTML(verseText, query);
+      var isU = !!info.hasUnique;
+      var isS = !!info.hasSimilar;
+      var isI = !!info.hasIncluded;
+      var isN = !isU && !isS && !isI;
 
       return {
         row: row,
-        html: html,
-        isExact: !!hasExact,
-        isContemplado: !!hasContemplado,
-        isUnique: !!isUnique
+        html: info.html,
+        isUnique: isU,
+        isSimilar: isS,
+        isIncluded: isI,
+        isNear: isN
       };
     });
 
     items = decorated;
 
-    var totalCount  = (items && items.length) || 0;
-    var approxCount = totalCount - exactCount - contempladoCount;
-    var uniqueCount = (items || []).filter(function (it) { return it.isUnique; }).length;
+    var totalCount   = (items && items.length) || 0;
+    var uniqueCount  = 0;
+    var similarCount = 0;
+    var includedCount = 0;
+    var nearCount    = 0;
 
-// Título general
+    items.forEach(function (it) {
+      if (it.isUnique)   uniqueCount++;
+      if (it.isSimilar)  similarCount++;
+      if (it.isIncluded) includedCount++;
+      if (it.isNear)     nearCount++;
+    });
+
+    // Título general
     if (lang === "en") {
-      h1.textContent = "Results";
+      h1.textContent = "Search results";
     } else {
       h1.textContent = "Resultados";
     }
@@ -324,16 +378,17 @@ window.MainResults = (function () {
     chipsRow.className = "results-summary-chips";
 
     var filterState = {
-      exact: true,
-      contemplado: true,
-      approx: true,
       unique: true,
+      similar: true,
+      included: true,
+      near: true
     };
 
     function addSummaryChip(key, iconName, count, label) {
       var chip = document.createElement("button");
       chip.type = "button";
       chip.className = "results-summary-chip is-active";
+      chip.classList.add("results-summary-chip--" + key);
       chip.dataset.filterKey = key;
 
       var spanCount = document.createElement("div");
@@ -354,15 +409,11 @@ window.MainResults = (function () {
       chip.appendChild(spanLabel);
 
       chip.addEventListener("click", function () {
-        // alternar estado del filtro; evitar que todos queden apagados
-        var current = !!filterState[key];
-        filterState[key] = !current;
+        var key = chip.dataset.filterKey;
+        if (!key) return;
 
-        if (!filterState.exact && !filterState.contemplado && !filterState.approx && !filterState.unique) {
-          // no permitir que los tres queden en OFF
-          filterState[key] = true;
-          return;
-        }
+        var isActive = !!filterState[key];
+        filterState[key] = !isActive;
 
         chip.classList.toggle("is-active", filterState[key]);
         chip.classList.toggle("is-inactive", !filterState[key]);
@@ -375,22 +426,28 @@ window.MainResults = (function () {
       chipsRow.appendChild(chip);
     }
 
-    var lblExact = lang === "en" ? "exact" : "exactos";
-    var lblCont = lang === "en" ? "covered" : "contemplados";
-    var lblApprox = lang === "en" ? "approx." : "aproximado";
-    var lblUnique = lang === "en" ? "unique" : "únicos";
+    var lblUnique   = lang === "en" ? "Unique"    : "Únicos";
+    var lblSimilar  = lang === "en" ? "Similar"   : "Similares";
+    var lblIncluded = lang === "en" ? "Included"  : "Incluidas";
+    var lblNear     = lang === "en" ? "Nearby"    : "Cercanías";
 
-    addSummaryChip("unique", "check-circle", uniqueCount, lblUnique);
-    addSummaryChip("exact", "target", exactCount, lblExact);
-    addSummaryChip("contemplado", "crosshair", contempladoCount, lblCont);
-    addSummaryChip("approx", "circle-dashed", approxCount, lblApprox);
+    addSummaryChip("unique",   "check-circle", uniqueCount,   lblUnique);
+    addSummaryChip("similar",  "sparkles",     similarCount,  lblSimilar);
+    addSummaryChip("included", "link-2",       includedCount, lblIncluded);
+    addSummaryChip("near",     "radar",        nearCount,     lblNear);
 
     function entryPassesFilters(entry) {
-      if (entry.isExact && !filterState.exact) return false;
-      if (entry.isContemplado && !filterState.contemplado) return false;
-      if (!entry.isExact && !entry.isContemplado && !filterState.approx) return false;
-      if (entry.isUnique && !filterState.unique) return false;
-      return true;
+      if (entry.isUnique   && !filterState.unique)   return false;
+      if (entry.isSimilar  && !filterState.similar)  return false;
+      if (entry.isIncluded && !filterState.included) return false;
+      if (entry.isNear     && !filterState.near)     return false;
+
+      return (
+        (entry.isUnique   && filterState.unique) ||
+        (entry.isSimilar  && filterState.similar) ||
+        (entry.isIncluded && filterState.included) ||
+        (entry.isNear     && filterState.near)
+      );
     }
 
     function renderList() {
@@ -416,7 +473,14 @@ window.MainResults = (function () {
         var text = row.level_7 || "";
 
         var item = document.createElement("div");
-        item.className = "results-item";
+        var catClass = entry.isUnique
+          ? "unique"
+          : (entry.isSimilar
+              ? "similar"
+              : (entry.isIncluded ? "included" : (entry.isNear ? "near" : "none")));
+        item.className =
+          "results-item" +
+          (catClass && catClass !== "none" ? " results-item--" + catClass : "");
         item.dataset.level4 = book;
         item.dataset.level5 = chapter;
         item.dataset.level6 = verse;
@@ -429,7 +493,7 @@ window.MainResults = (function () {
         // Contenedor vertical para referencia + texto
         var bodyBox = document.createElement("div");
         bodyBox.className = "results-item-body";
-
+        // Índice numérico a la izquierda
         // Fila 1: referencia (Ej: Efesios 5:1), en bold y más pequeña
         var refDiv = document.createElement("div");
         refDiv.className = "results-ref";

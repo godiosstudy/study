@@ -856,6 +856,7 @@ window.MainPreferences = (function () {
         }
 
         // 2) Si hay usuario logueado, guardar TAMBIÉN en profiles (SQL)
+        // 2) Si hay usuario logueado, guardar TAMBIÉN en profiles (SQL)
         try {
           if (
             window.AuthSession &&
@@ -872,37 +873,76 @@ window.MainPreferences = (function () {
             var client2 = window.BackendSupabase.client();
 
             if (user && user.id && client2) {
-              var lang = sqlLanguage(next.language);
-              var pColor = sqlColorFromPrefs(next);
-              var pFontType = sqlFontType(next.font);
-              var pFontSize = sqlFontSize(next.fontSizePt);
+              var meta = (user && user.user_metadata) || {};
+              var pUsername = meta.username || null;
 
-              var payload = {
-                id: user.id,
-                email: user.email || null,
-                first_name:
-                  (user.user_metadata && user.user_metadata.first_name) || null,
-                last_name:
-                  (user.user_metadata && user.user_metadata.last_name) || null,
+              // Si no tenemos username en metadata, intentamos leerlo desde profiles.
+              if (!pUsername) {
+                try {
+                  var q = client2
+                    .from("profiles")
+                    .select("p_username")
+                    .eq("id", user.id)
+                    .limit(1);
+                  var resp;
+                  if (q && typeof q.maybeSingle === "function") {
+                    resp = await q.maybeSingle();
+                  } else if (q && typeof q.single === "function") {
+                    resp = await q.single();
+                  } else {
+                    resp = await q;
+                  }
+                  if (resp && !resp.error && resp.data && resp.data.p_username) {
+                    pUsername = resp.data.p_username;
+                  }
+                } catch (eLookup) {
+                  console.warn("[Prefs] lookup p_username error", eLookup);
+                }
+              }
 
-                p_language: lang,
-                p_color: pColor,
-                p_font_type: pFontType,
-                p_font_size: pFontSize,
-                p_light: next.light === "on",
-                p_level_1: next.collection || null,
-                p_level_2: next.corpus || null,
-              };
+              // Último recurso: derivar un username a partir del email o del id,
+              // solo para no violar la restricción NOT NULL en p_username.
+              if (!pUsername) {
+                if (user.email) {
+                  pUsername = String(user.email).split("@")[0] || null;
+                }
+                if (!pUsername) {
+                  pUsername = "user_" + String(user.id).slice(0, 8);
+                }
+              }
 
-              var up = await client2.from("profiles").upsert(payload);
-              if (up && up.error) {
-                console.warn("[Prefs] profiles upsert error", up.error);
+              try {
+                var payload = {
+                  id: user.id,
+                  email: user.email || null,
+                  first_name:
+                    (user.user_metadata && user.user_metadata.first_name) || null,
+                  last_name:
+                    (user.user_metadata && user.user_metadata.last_name) || null,
+
+                  p_username: pUsername,
+                  p_language: lang,
+                  p_color: pColor,
+                  p_font_type: pFontType,
+                  p_font_size: pFontSize,
+                  p_light: next.light === "on",
+                  p_level_1: next.collection || null,
+                  p_level_2: next.corpus || null,
+                };
+
+                var up = await client2.from("profiles").upsert(payload);
+                if (up && up.error) {
+                  console.warn("[Prefs] profiles upsert error", up.error);
+                }
+              } catch (eUpsert) {
+                console.warn("[Prefs] profiles upsert exception", eUpsert);
               }
             }
           }
         } catch (e) {
           console.warn("[Prefs] sync user preferences error", e);
         }
+
 
         // 3) Recargar contenido en memoria para las nuevas preferencias
         try {
