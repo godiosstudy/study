@@ -8,9 +8,11 @@ window.MainChangelog = (function () {
     var wrap = document.createElement("div");
     wrap.className = "panel-single";
     wrap.innerHTML =
-      '<h1 class="main-view-title">Changelog</h1>' +
-      '<p class="main-subtitle">Historial de versiones de Study.GODiOS.org</p>' +
+      '<div class="main-view-header">' +
+      '  <h1 class="main-view-title">Changelog</h1>' +
+      '</div>' +
       '<div id="changelog-list">Cargando versiones…</div>';
+
 
     container.appendChild(wrap);
 

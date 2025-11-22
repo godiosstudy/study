@@ -224,7 +224,7 @@ window.MainResults = (function () {
     var h1 = document.createElement("h1");
     h1.className = "main-view-title";
     h1.textContent =
-      lang === "en" ? "Search results" : "Resultados de búsqueda";
+      lang === "en" ? "Results" : "Resultados";
 
     header.appendChild(h1);
     body.appendChild(header);
@@ -311,9 +311,9 @@ window.MainResults = (function () {
 
 // Título general
     if (lang === "en") {
-      h1.textContent = "Search results";
+      h1.textContent = "Results";
     } else {
-      h1.textContent = "Resultados de búsqueda";
+      h1.textContent = "Resultados";
     }
 
     // Resumen de conteos antes de la lista
