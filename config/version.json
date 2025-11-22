@@ -2,12 +2,12 @@
   {
   "version": "0.3.6",
   "date": "2025-11-22",
-  "changes": [
+  "notes": [
     "Buscador avanzado: Únicos, Similares, Incluidas y Cercanías ahora contemplan letras Unicode como î y otros caracteres especiales en la clasificación.",
     "Texto escrito en el campo de búsqueda del toolbar ahora se muestra en bold para mayor legibilidad.",
     "Ajustes visuales menores en breadcrumb y resultados para mantener consistencia con la nueva lógica de búsqueda."
     ]
-  } 
+  },
   {
     "version": "0.3.5",
     "date": "2025-11-21",

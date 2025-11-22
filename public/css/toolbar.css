@@ -145,39 +145,35 @@ select.crumb-select-loading option {
 
 /* Layout responsive: en mobile el buscador va debajo del breadcrumb */
 @media (max-width: 768px) {
+  /* En pantallas tipo celular: primera línea breadcrumbs, segunda línea buscador */
   .tbar {
-    padding-inline: 4px;
-    gap: 4px;
-    flex-wrap: nowrap;        /* mantenemos todo en una sola línea */
-    align-items: center;
-    overflow-x: auto;         /* si no entra todo, se puede desplazar horizontalmente */
+    padding: 4px 8px;
+    gap: 4px 8px;       /* fila x columna */
+    flex-wrap: wrap;    /* permitimos varias líneas */
+    align-items: flex-start;
   }
 
   .crumbs {
-    font-size: 0.8rem;        /* texto un poco más pequeño */
+    font-size: 0.8rem;
+    flex: 0 0 100%;     /* ocupa toda la primera línea */
     min-width: 0;
-    flex: 0 0 auto;           /* los selects mantienen su ancho mínimo */
-    width: auto;
     order: 0;
-  }
-
-  .crumb-select {
-    min-width: 64px;
-    max-width: 120px;
+    overflow-x: auto;   /* si hay muchos niveles, que scrollee horizontal */
   }
 
   .search {
-    flex: 1 1 auto;
-    width: auto;
-    order: 0;
-    justify-content: flex-end;
+    flex: 0 0 100%;     /* buscador a lo ancho en segunda línea */
+    order: 1;
+    justify-content: flex-start;
   }
 
   .search-inner {
+    width: 100%;
     max-width: none;
   }
 
   #tbar-search {
+    width: 100%;
     max-width: 100%;
   }
 }
