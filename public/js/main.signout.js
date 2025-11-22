@@ -31,83 +31,81 @@ window.MainSignout = (function () {
 
   // Ejecuta el signout real contra Supabase y re-aplica preferencias locales
   async function doSignOut() {
-    try {
-      if (window.AuthSession && typeof window.AuthSession.clear === 'function') {
-        await window.AuthSession.clear();
-      } else if (
-        window.BackendSupabase &&
-        typeof window.BackendSupabase.signOut === 'function'
-      ) {
-        await window.BackendSupabase.signOut();
-      }
-    } catch (e) {
-      console.warn('[Signout] error while signing out', e);
+  // 1) Cerrar sesión en Supabase y limpiar cualquier sesión en memoria
+  try {
+    if (window.AuthSession && typeof window.AuthSession.clear === 'function') {
+      await window.AuthSession.clear();
+    } else if (
+      window.BackendSupabase &&
+      typeof window.BackendSupabase.signOut === 'function'
+    ) {
+      await window.BackendSupabase.signOut();
     }
-
-    // Reaplicamos preferencias locales para forzar refresco de header/buttons
-    try {
-      if (
-        window.PrefsStore &&
-        typeof window.PrefsStore.apply === 'function'
-      ) {
-        var prefs =
-          (window.PrefsStore.load && window.PrefsStore.load()) ||
-          window.PrefsStore.DEFAULTS ||
-          {};
-        window.PrefsStore.apply(prefs);
-      }
-    } catch (e) {
-      console.warn('[Signout] prefs apply error', e);
-    }
-
-    // Forzamos refresco explícito del estado de autenticación y del header,
-    // por si algún navegador no dispara correctamente los eventos.
-    try {
-      if (window.AuthSession && typeof window.AuthSession.refresh === 'function') {
-        await window.AuthSession.refresh();
-      }
-    } catch (e) {
-      console.warn('[Signout] auth refresh error', e);
-    }
-
-    // Emitimos manualmente el evento auth:changed como fallback
-    try {
-      if (typeof window !== 'undefined') {
-        var ev = null;
-        if (typeof window.CustomEvent === 'function') {
-          ev = new CustomEvent('auth:changed', { detail: null });
-        } else if (typeof Event === 'function') {
-          ev = new Event('auth:changed');
-        }
-        if (ev) window.dispatchEvent(ev);
-      }
-    } catch (e) {
-      console.warn('[Signout] auth:changed event error', e);
-    }
-
-    // Forzamos re-render del header (iconos de usuario, bendecido X, etc.)
-    try {
-      if (window.HeaderButtons && typeof window.HeaderButtons.render === 'function') {
-        var container = document.getElementById('hdr-actions');
-        if (!container) {
-          var hdrRight = document.querySelector('.hdr-right');
-          if (hdrRight) {
-            container = document.createElement('div');
-            container.id = 'hdr-actions';
-            hdrRight.appendChild(container);
-          }
-        }
-        if (container) {
-          window.HeaderButtons.render(container);
-        }
-      }
-    } catch (e) {
-      console.warn('[Signout] header render error', e);
-    }
+  } catch (e) {
+    console.warn('[Signout] error while signing out', e);
   }
 
+  // 2) Limpiar posibles restos en localStorage usados por el header
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('auth.user');
+      localStorage.removeItem('sb-auth-token');
+    }
+  } catch (e) {
+    console.warn('[Signout] localStorage cleanup error', e);
+  }
 
-  function render(container) {
+  // 3) Reaplicar preferencias locales (por idioma / estilo) sin sesión
+  try {
+    if (window.PrefsStore && typeof window.PrefsStore.apply === 'function') {
+      var prefs =
+        (window.PrefsStore.load && window.PrefsStore.load()) ||
+        window.PrefsStore.DEFAULTS ||
+        {};
+      window.PrefsStore.apply(prefs);
+    }
+  } catch (e) {
+    console.warn('[Signout] prefs apply error', e);
+  }
+
+  // 4) Forzar un refresh explícito de AuthSession, por si el adapter lo soporta
+  try {
+    if (window.AuthSession && typeof window.AuthSession.refresh === 'function') {
+      await window.AuthSession.refresh();
+    }
+  } catch (e) {
+    console.warn('[Signout] auth refresh error', e);
+  }
+
+  // 5) Emitir un evento auth:changed para que header/buttons se re-rendericen
+  try {
+    if (typeof window !== 'undefined') {
+      var ev = null;
+      if (typeof window.CustomEvent === 'function') {
+        ev = new CustomEvent('auth:changed', { detail: null });
+      } else if (typeof Event === 'function') {
+        ev = new Event('auth:changed');
+      }
+      if (ev) window.dispatchEvent(ev);
+    }
+  } catch (e) {
+    console.warn('[Signout] auth:changed event error', e);
+  }
+
+  // 6) Forzar el re-render explícito del header (iconos de login/registro/etc.)
+  try {
+    if (window.HeaderButtons && typeof window.HeaderButtons.render === 'function') {
+      var container = document.getElementById('hdr-actions');
+      if (container) {
+        window.HeaderButtons.render(container);
+      }
+    }
+  } catch (e) {
+    console.warn('[Signout] header render error', e);
+  }
+}
+
+function render(container) {
     if (!container) return;
     container.innerHTML = '';
 
