@@ -1207,3 +1207,16 @@ select.prefs-select-loading option {
   background: #f8bbd0; /* Rosado Cercanías */
   color: #000000;
 }
+
+
+/* Ajuste mobile: dejar espacio extra para header + toolbar de 2 líneas */
+@media (max-width: 768px) {
+  #app-main {
+    /* Header (60px) + Toolbar (~88px en 2 líneas) */
+    margin-top: calc(60px + 88px);
+  }
+
+  #view-title.view-title-pill {
+    top: calc(60px + 88px);
+  }
+}
