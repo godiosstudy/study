@@ -28,7 +28,7 @@
   --main-bg: color-mix(in srgb, var(--accent) 3%, var(--bg));
 }
 
-html, body { height: 100%; }
+html, body { min-height: 100%; }
 body {
   margin: 0;
   font: var(--base-pt)/1.5 var(--app-font);
