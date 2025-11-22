@@ -1,6 +1,15 @@
 [
   {
-    "version": "0.3.4",
+  "version": "0.3.6",
+  "date": "2025-11-22",
+  "changes": [
+    "Buscador avanzado: Únicos, Similares, Incluidas y Cercanías ahora contemplan letras Unicode como î y otros caracteres especiales en la clasificación.",
+    "Texto escrito en el campo de búsqueda del toolbar ahora se muestra en bold para mayor legibilidad.",
+    "Ajustes visuales menores en breadcrumb y resultados para mantener consistencia con la nueva lógica de búsqueda."
+    ]
+  } 
+  {
+    "version": "0.3.5",
     "date": "2025-11-21",
     "notes": [
       "Títulos fijos en el main con cerramiento y flechas laterales para Navigator, Results, Focus y vistas de usuario (Preferencias, Iniciar sesión, Registro y Cuenta).",
@@ -11,7 +20,7 @@
     ]
   },
   {
-    "version": "0.3.3",
+    "version": "0.3.4",
     "date": "2025-11-20",
     "notes": [
       "Registro: campo de nombre de usuario con validación en vivo y reglas [a-z0-9_-].",
@@ -21,7 +30,7 @@
     ]
   },
   {
-    "version": "0.3.2",
+    "version": "0.3.3",
     "date": "2025-11-20",
     "notes": [
       "Loader restaurado al comportamiento original (barra vertical que se llena de 0% a 100% desde abajo hacia arriba).",
@@ -30,7 +39,7 @@
     ]
   },
   {
-    "version": "0.3.1",
+    "version": "0.3.2",
     "date": "2025-11-20",
     "notes": [
       "Nuevo loader de pantalla completa al arrancar la app, con logo centrado y barra vertical que se llena de 0% a 100% desde abajo hacia arriba.",

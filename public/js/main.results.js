@@ -119,8 +119,12 @@ window.MainResults = (function () {
     var lastIndex = 0;
 
     // Palabras = secuencias de letras/números (incluyendo acentos y ñ)
-    var wordRe = /[A-Za-zÁÉÍÓÚÜáéíóúÑñ0-9]+/g;
-    var match;
+    var wordRe;
+    try {
+      wordRe = new RegExp("[\\p{L}0-9]+", "gu");
+    } catch (eWord) {
+      wordRe = /[A-Za-zÁÉÍÓÚÜáéíóúÑñ0-9]+/g;
+    }
     while ((match = wordRe.exec(t)) !== null) {
       var word = match[0];
       var start = match.index;
