@@ -5,7 +5,8 @@
   margin-top: calc(60px + 44px);
 
   /* espacio para que el contenido NO se meta debajo de la solapa */
-  padding-top: 40px;
+  /* espacio para que el contenido NO se meta debajo del título fijo */
+  padding-top: 72px;
 
   /* que nada quede detrás del footer fijo */
   padding-bottom: var(--footer-h);
@@ -582,7 +583,7 @@ select.prefs-select-loading option {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin-top: 4px;
+  margin-top: 16px;
 }
 
 .nav-item-row {
@@ -629,8 +630,7 @@ select.prefs-select-loading option {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  max-width: 720px;
-  margin: 0 auto;
+  margin-top: 16px;
 }
 
 /* Layout: número a la izquierda + (ref + texto) a la derecha */
@@ -922,30 +922,33 @@ select.prefs-select-loading option {
 }
 
 
-/* Encabezados de vistas principales en el main (Navigator, Focus) */
+/* Encabezados de vistas principales en el main (Navigator, Results, Focus, Prefs, etc.) */
 .main-view-header {
-  position: sticky;
-  top: 0;
+  position: fixed;
+  /* fijo justo debajo del header (60) + toolbar (44), con un pequeño aire */
+  top: calc(60px + 44px + 8px);
+  left: 50px;
+  right: 50px;
   z-index: 40;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 0;
-  background: var(--main-bg);
-  margin-bottom: 12px; /* deja un renglón en blanco bajo el título */
+  padding: 8px 16px;
+  border-radius: 999px; /* cerramiento redondeado */
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg)); /* color del sistema al 5%, opaco */
 }
 
 .main-view-title {
   margin: 0;
   text-align: center;
   font-weight: 700;
+  padding: 0 40px; /* deja espacio interior para que el texto no choque con las flechas */
 }
-
 
 /* Flechas laterales integradas en el título (Navigator + Focus) */
 .main-view-header .nav-arrow,
 .main-view-header .focus-nav-btn {
-  position: absolute;
+  position: absolute; /* se ubican en los laterales del cerramiento */
   top: 50%;
   transform: translateY(-50%);
   width: 32px;
@@ -964,14 +967,13 @@ select.prefs-select-loading option {
 
 .main-view-header .nav-arrow-left,
 .main-view-header .focus-nav-prev {
-  left: 8px;
+  left: 16px;  /* lateral izquierdo del cerramiento */
 }
 
 .main-view-header .nav-arrow-right,
 .main-view-header .focus-nav-next {
-  right: 8px;
+  right: 16px; /* lateral derecho del cerramiento */
 }
-
 
 /* Resumen de resultados con chips de iconos en Results */
 

@@ -48,17 +48,6 @@ window.MainPreferences = (function () {
   var entriesCollectionsCache = {};     // por idioma: { es: [..], en: [..] }
   var entriesCorpusCache = {};         // por idioma+collection: { "es::Genesis": [..] }
 
-    function updateSaveButtonState() {
-      if (!saveBtn) return;
-
-      var hasCollection =
-        collectionEl && collectionEl.value && collectionEl.value.trim() !== "";
-      var hasCorpus =
-        corpusEl && corpusEl.value && corpusEl.value.trim() !== "";
-
-      // true solo cuando los dos tienen valor
-      saveBtn.disabled = !(hasCollection && hasCorpus);
-    }
 
   function getSupabaseClient() {
     try {
@@ -126,6 +115,13 @@ window.MainPreferences = (function () {
       '<div class="prefs-grid">',
       '  <div class="prefs-fields">',
       '    <div class="prefs-field">',
+      '      <label for="pref-lang">Idioma</label>',
+      '      <select id="pref-lang">',
+      '        <option value="es">Español</option>',
+      '        <option value="en">English</option>',
+      "      </select>",
+      "    </div>",
+      '    <div class="prefs-field">',
       '      <label for="pref-collection">Colección</label>',
       '      <select id="pref-collection">',
       '        <option value="">(auto)</option>',
@@ -149,29 +145,24 @@ window.MainPreferences = (function () {
       "      </div>",
       "    </div>",
       '    <div class="prefs-field">',
-      '      <label for="pref-lang">Idioma</label>',
-      '      <select id="pref-lang">',
-      '        <option value="es">Español</option>',
-      '        <option value="en">English</option>',
-      "      </select>",
-      "    </div>",
-      '    <div class="prefs-field">',
       '      <label for="pref-color">Color</label>',
       '      <div class="prefs-color">',
       '        <input type="color" id="pref-color" />',
       '        <input type="text" id="pref-color-hex" maxlength="7" />',
       "      </div>",
       "    </div>",
-      "  </div>",
-      "",
-      '  <div class="prefs-preview-wrap">',
-      '    <div class="prefs-preview" id="prefs-preview-text">',
-      "      Vista previa del texto…",
+      '    <div class="prefs-field">',
+      '      <label for="pref-preview">Vista previa del texto…</label>',
+      '      <div id="pref-preview" class="prefs-preview">',
+      "        Vista previa del texto…",
+      "      </div>",
       "    </div>",
-      '    <div class="prefs-light">',
+      '    <div class="prefs-field prefs-light-row">',
       '      <label for="pref-light">Luz</label>',
-      '      <input type="checkbox" id="pref-light" />',
-      '      <span id="pref-light-text"></span>',
+      '      <div class="prefs-light">',
+      '        <input type="checkbox" id="pref-light" />',
+      '        <span id="pref-light-text"></span>',
+      "      </div>",
       "    </div>",
       "  </div>",
       "</div>",
@@ -313,6 +304,18 @@ window.MainPreferences = (function () {
     var saveBtn = root.querySelector("#pref-save");
     var previewEl = root.querySelector("#prefs-preview-text");
 
+    function updateSaveButtonState() {
+      if (!saveBtn) return;
+
+      var hasCollection =
+        collectionEl && collectionEl.value && collectionEl.value.trim() !== "";
+      var hasCorpus =
+        corpusEl && corpusEl.value && corpusEl.value.trim() !== "";
+
+      // true solo cuando los dos tienen valor
+      saveBtn.disabled = !(hasCollection && hasCorpus);
+    }
+
     var fontsList = getFontFamiliesFromCSS();
     var client = getSupabaseClient();
     var entriesLang = prefs.language || getLang();
@@ -390,7 +393,7 @@ window.MainPreferences = (function () {
 
     // === cambio de idioma dentro de Preferencias ===
     if (langEl) {
-      langEl.addEventListener("change", function () {
+      langEl.addEventListener("change", async function () {
         var newLang = langEl.value || "es";
         prefs.language = newLang;
 
@@ -399,8 +402,21 @@ window.MainPreferences = (function () {
         entriesCorpusCache = {};
         entriesLang = newLang;
 
+        // precargar meta (collections/corpus) para el nuevo idioma usando entries_meta
+        try {
+          if (window.EntriesMemory && typeof window.EntriesMemory.preloadMetaForLang === "function") {
+            await window.EntriesMemory.preloadMetaForLang(newLang);
+          }
+        } catch (eMetaChange) {
+          console.warn("[Prefs] preloadMetaForLang on language change error", eMetaChange);
+        }
+
         if (client && typeof initEntriesCombos === "function") {
-          initEntriesCombos();
+          try {
+            await initEntriesCombos();
+          } catch (eInit) {
+            console.warn("[Prefs] initEntriesCombos error after language change", eInit);
+          }
         }
       });
     }
@@ -477,6 +493,28 @@ window.MainPreferences = (function () {
         return entriesCollectionsCache[cacheKey];
       }
 
+      var values = null;
+
+      // 1) Intentar obtener desde la meta ya precargada
+      try {
+        if (
+          window.EntriesMemory &&
+          typeof window.EntriesMemory.getCollectionsForLang === "function"
+        ) {
+          values = window.EntriesMemory.getCollectionsForLang(langCode);
+        }
+      } catch (eMeta) {
+        console.warn("[Prefs] loadCollections meta error", eMeta);
+      }
+
+
+      // 3) Si ya tenemos valores desde meta, cacheamos y devolvemos
+      if (values && values.length) {
+        entriesCollectionsCache[cacheKey] = values;
+        return values;
+      }
+
+      // 4) Fallback final: derivar a partir de las filas actualmente cargadas en memoria
       if (!window.EntriesMemory || typeof window.EntriesMemory.getRows !== "function") {
         return [];
       }
@@ -489,34 +527,110 @@ window.MainPreferences = (function () {
         if (row.level_1) set.add(row.level_1);
       });
 
-      var values = Array.from(set);
+      values = Array.from(set);
       values.sort();
       entriesCollectionsCache[cacheKey] = values;
       return values;
     }
 
-    async function loadCorpusForCollection(langCode, collectionValue) {
+
+    async function loadCorpusForCollection(langCode, collectionValue, selectedCorpus) {
       var cacheKey = (langCode || "default") + "::" + (collectionValue || "");
-      if (entriesCorpusCache[cacheKey]) {
-        return entriesCorpusCache[cacheKey];
+      var values = entriesCorpusCache[cacheKey] || null;
+
+      if (!values) {
+        // 1) Intentar primero con la meta ya precargada
+        try {
+          if (
+            window.EntriesMemory &&
+            typeof window.EntriesMemory.getCorpusForLangCollection === "function"
+          ) {
+            values = window.EntriesMemory.getCorpusForLangCollection(
+              langCode,
+              collectionValue
+            );
+          }
+        } catch (eMeta) {
+          console.warn("[Prefs] loadCorpusForCollection meta error", eMeta);
+        }
+
+
+        // 3) Fallback: derivar de las filas actualmente cargadas en memoria
+        if (!values || !values.length) {
+          if (
+            !window.EntriesMemory ||
+            typeof window.EntriesMemory.getRows !== "function"
+          ) {
+            // Sin datos en memoria todavía
+            if (corpusEl) corpusEl.innerHTML = "";
+            entriesCorpusCache[cacheKey] = [];
+            return [];
+          }
+
+          var rows = window.EntriesMemory.getRows();
+          var set = new Set();
+
+          rows.forEach(function (row) {
+            if (row.language_code && row.language_code !== langCode) return;
+            if (row.level_1 !== collectionValue) return;
+            if (row.level_2) set.add(row.level_2);
+          });
+
+          values = Array.from(set);
+          values.sort();
+        }
+
+        entriesCorpusCache[cacheKey] = values || [];
       }
 
-      if (!window.EntriesMemory || typeof window.EntriesMemory.getRows !== "function") {
-        return [];
+      // Si no hay select en DOM o no hay corpus, solo devolvemos la lista
+      if (!corpusEl) {
+        return values;
       }
 
-      var rows = window.EntriesMemory.getRows();
-      var set = new Set();
+      corpusEl.innerHTML = "";
 
-      rows.forEach(function (row) {
-        if (row.language_code && row.language_code !== langCode) return;
-        if (row.level_1 !== collectionValue) return;
-        if (row.level_2) set.add(row.level_2);
+      if (!values.length) {
+        // No hay corpus para esta colección
+        if (typeof updateSaveButtonState === "function") {
+          updateSaveButtonState();
+        }
+        return values;
+      }
+
+      var effectiveSelected = null;
+      if (selectedCorpus && values.indexOf(selectedCorpus) >= 0) {
+        effectiveSelected = selectedCorpus;
+      } else if (prefs && prefs.corpus && values.indexOf(prefs.corpus) >= 0) {
+        effectiveSelected = prefs.corpus;
+      } else {
+        effectiveSelected = values[0];
+      }
+
+      values.forEach(function (val) {
+        var opt = document.createElement("option");
+        opt.value = val;
+        opt.textContent = val;
+        if (effectiveSelected && effectiveSelected === val) opt.selected = true;
+        corpusEl.appendChild(opt);
       });
 
-      var values = Array.from(set);
-      values.sort();
-      entriesCorpusCache[cacheKey] = values;
+      var finalValue = corpusEl.value || effectiveSelected || null;
+      if (prefs) {
+        prefs.corpus = finalValue;
+        try {
+          if (window.PrefsStore && typeof window.PrefsStore.save === "function") {
+            window.PrefsStore.save(prefs);
+          }
+        } catch (e) {
+          console.warn("[Prefs] save prefs.corpus error", e);
+        }
+      }
+
+      if (typeof updateSaveButtonState === "function") {
+        updateSaveButtonState();
+      }
+
       return values;
     }
 
@@ -537,37 +651,53 @@ window.MainPreferences = (function () {
       if (!collectionEl) return;
 
       var langCode = entriesLang;
+      if (!langCode) {
+        langCode = typeof getLang === "function" ? getLang() : "es";
+      }
 
       var collections = await loadCollections(langCode);
-      if (!collections.length && langCode !== "en") {
+
+      if ((!collections || !collections.length) && langCode !== "en") {
         langCode = "en";
         collections = await loadCollections(langCode);
       }
-      if (!collections.length) {
+
+      if (!collections || !collections.length) {
         collectionEl.innerHTML = "";
         if (corpusEl) corpusEl.innerHTML = "";
         return;
       }
 
-      var selectedCollection =
-        prefs.collection && collections.indexOf(prefs.collection) >= 0
-          ? prefs.collection
-          : collections[0];
+      var selectedCollection = null;
+
+      if (prefs && prefs.collection && collections.indexOf(prefs.collection) >= 0) {
+        selectedCollection = prefs.collection;
+      } else {
+        selectedCollection = collections[0];
+      }
 
       fillCollectionsSelect(collections, selectedCollection);
 
       if (!prefs.collection || prefs.collection !== selectedCollection) {
         prefs.collection = selectedCollection;
-        try {
-          PrefsStore.save(prefs);
-        } catch (e) {
-          console.warn("[Prefs] save prefs.collection error", e);
+        if (window.PrefsStore && typeof window.PrefsStore.save === "function") {
+          try {
+            window.PrefsStore.save(prefs);
+          } catch (e) {
+            console.warn("[Prefs] save prefs.collection error", e);
+          }
         }
       }
 
       await loadCorpusForCollection(langCode, selectedCollection, prefs.corpus);
+
       entriesLang = langCode;
+
+      if (typeof updateSaveButtonState === "function") {
+        updateSaveButtonState();
+      }
     }
+
 
     if (collectionEl) {
       collectionEl.addEventListener("change", function () {
@@ -575,9 +705,32 @@ window.MainPreferences = (function () {
         prefs.collection = newCollection || null;
         if (!newCollection) {
           if (corpusEl) corpusEl.innerHTML = "";
+          if (typeof updateSaveButtonState === "function") {
+            updateSaveButtonState();
+          }
           return;
         }
         loadCorpusForCollection(entriesLang, newCollection, null);
+        if (typeof updateSaveButtonState === "function") {
+          updateSaveButtonState();
+        }
+      });
+    }
+
+    if (corpusEl) {
+      corpusEl.addEventListener("change", function () {
+        var newCorpus = corpusEl.value || "";
+        prefs.corpus = newCorpus || null;
+        if (window.PrefsStore && typeof window.PrefsStore.save === "function") {
+          try {
+            window.PrefsStore.save(prefs);
+          } catch (e) {
+            console.warn("[Prefs] save prefs.corpus (change) error", e);
+          }
+        }
+        if (typeof updateSaveButtonState === "function") {
+          updateSaveButtonState();
+        }
       });
     }
 
@@ -680,6 +833,24 @@ window.MainPreferences = (function () {
           prefs = saved;
         } catch (e) {
           console.warn("Prefs save error", e);
+        }
+
+        // Notificar al resto de la app (footer, toolbar, etc.) que se aplicaron nuevas preferencias
+        try {
+          if (typeof window !== "undefined" && typeof window.dispatchEvent === "function" && typeof window.CustomEvent === "function") {
+            window.dispatchEvent(new CustomEvent("prefs:applied", { detail: saved || next }));
+          }
+        } catch (e) {
+          console.warn("[Prefs] dispatch prefs:applied error", e);
+        }
+
+        // Recargar en segundo plano la base (entries) solo para el idioma/colección/corpus elegido
+        try {
+          if (window.EntriesMemory && typeof window.EntriesMemory.loadForPrefs === "function") {
+            window.EntriesMemory.loadForPrefs(saved || next);
+          }
+        } catch (e) {
+          console.warn("[Prefs] reload entries for new prefs error", e);
         }
 
         // 2) Si hay usuario logueado, guardar TAMBIÉN en profiles (SQL)
@@ -796,6 +967,10 @@ window.MainPreferences = (function () {
     // Aplicar prefs actuales (fuentes, color, luz, etc.)
     applyFromPrefs();
 
+    if (typeof updateSaveButtonState === "function") {
+      updateSaveButtonState();
+    }
+
     // Inicializar combos de Collections / Corpus desde entries (solo primera vez por idioma)
     if (collectionEl) {
       initEntriesCombos();
@@ -808,9 +983,46 @@ window.MainPreferences = (function () {
   // (solo calienta la cache; no modifica el DOM).
   async function preloadCollections() {
     try {
-      var langCode = (typeof entriesLang !== "undefined" && entriesLang) || getLang() || "es";
+      var langCode =
+        (typeof entriesLang !== "undefined" && entriesLang) ||
+        getLang() ||
+        "es";
+
+      // 1) Pre-cargar meta completa de entries para este idioma (solo una vez)
+      try {
+        if (
+          window.EntriesMemory &&
+          typeof window.EntriesMemory.preloadMetaForLang === "function"
+        ) {
+          await window.EntriesMemory.preloadMetaForLang(langCode);
+        }
+      } catch (eMeta) {
+        console.warn("[Prefs] preloadCollections meta error", eMeta);
+      }
+
+      // 2) Usar preferencias locales para elegir colección/corpus inicial
+      var prefsLocal = null;
+      try {
+        if (window.PrefsStore && typeof window.PrefsStore.load === "function") {
+          prefsLocal = window.PrefsStore.load() || {};
+        }
+      } catch (ePrefs) {
+        prefsLocal = null;
+      }
+
+      // 3) Calentar cache de colecciones y corpus en memoria (no toca el DOM)
       if (typeof loadCollections === "function") {
-        await loadCollections(langCode);
+        var collections = await loadCollections(langCode);
+        var col =
+          (prefsLocal && prefsLocal.collection) ||
+          (collections && collections.length ? collections[0] : null);
+        if (col && typeof loadCorpusForCollection === "function") {
+          await loadCorpusForCollection(
+            langCode,
+            col,
+            prefsLocal && prefsLocal.corpus
+          );
+        }
       }
     } catch (e) {
       console.warn("[Prefs] preloadCollections error", e);

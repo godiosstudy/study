@@ -123,14 +123,91 @@
     }
   };
 
+
+  function updateCrumbFromPrefs(prefs) {
+    try {
+      var el = document.getElementById("crumb-static");
+      if (!el) return;
+
+      var p = prefs;
+      if (!p) {
+        try {
+          if (window.PrefsStore && typeof window.PrefsStore.load === "function") {
+            p = window.PrefsStore.load() || {};
+          } else {
+            p = {};
+          }
+        } catch (e) {
+          p = {};
+        }
+      }
+
+      var collection = (p && p.collection) || "";
+      var corpus = (p && p.corpus) || "";
+
+      var label = "";
+      if (collection && corpus) {
+        label = collection + " > " + corpus;
+      } else if (collection) {
+        label = collection;
+      } else if (corpus) {
+        label = corpus;
+      } else {
+        label = "";
+      }
+
+      el.textContent = label;
+      if (label) {
+        el.title = label;
+      } else {
+        el.removeAttribute("title");
+      }
+    } catch (e) {
+      console.warn("[Footer] error actualizando crumb estático", e);
+    }
+  }
+
   function init() {
     // Inicializar logo/versión como antes
     if (window.FooterLogo && typeof window.FooterLogo.init === "function") {
       window.FooterLogo.init();
     }
 
-    // Exponer controlador global del loader
+    // Click en el breadcrumb estático para ir a Preferencias
+    try {
+      var crumbEl = document.getElementById("crumb-static");
+      if (crumbEl) {
+        crumbEl.style.cursor = "pointer";
+        crumbEl.addEventListener("click", function (ev) {
+          ev.preventDefault();
+          if (window.Main && typeof window.Main.showView === "function") {
+            window.Main.showView("preferences");
+          }
+        });
+      }
+    } catch (e) {
+      console.warn("[Footer] error configurando click en crumb estático", e);
+    }
+
+    // Inicializar el crumb con las preferencias actuales
+    try {
+      updateCrumbFromPrefs();
+    } catch (e) {}
+
+    // Escuchar cambios globales de preferencias (bootstrap / guardar prefs)
+    try {
+      window.addEventListener("prefs:applied", function (ev) {
+        try {
+          updateCrumbFromPrefs(ev && ev.detail);
+        } catch (e) {}
+      });
+    } catch (e) {}
+
+    // Exponer controlador global del loader y pequeña API del crumb
     window.FooterLoader = FooterLoader;
+    window.FooterCrumb = {
+      updateFromPrefs: updateCrumbFromPrefs,
+    };
   }
 
   documentReady(init);

@@ -36,6 +36,10 @@
   var fuse = null;
   var loading = false;
   var waiters = [];
+  // Meta caches: colecciones por idioma y corpus por idioma+colección
+  var metaCollectionsByLang = {};          // { 'es': ['Génesis', 'Éxodo', ...] }
+  var metaCorpusByLangCollection = {};     // { 'es::Génesis': ['RV1960', ...] }
+
 
   function buildSearchFields(row) {
     var parts = [];
@@ -146,6 +150,7 @@
     currentKey = key;
     rows = [];
     fuse = null;
+    loadForPrefs._stepPct = 0;
 
     var snippets = [];
     var maxSnippets = 64;
@@ -219,9 +224,24 @@
         loaded += chunk.length;
         from += pageSize;
 
-        if (total > 0 && typeof onProgress === "function") {
-          var pct = Math.round((loaded / total) * 100);
-          if (pct > 100) pct = 100;
+        if (typeof onProgress === "function") {
+          var pct;
+          if (total > 0) {
+            pct = Math.round((loaded / total) * 100);
+            if (pct > 100) pct = 100;
+          } else {
+            // Fallback cuando no tenemos total confiable:
+            // avanzamos en pasos suaves hasta un máximo del 90%,
+            // dejando el 100% para el final fuera del bucle.
+            if (typeof loadForPrefs._stepPct !== "number") {
+              loadForPrefs._stepPct = 0;
+            }
+            loadForPrefs._stepPct += 5;
+            if (loadForPrefs._stepPct > 90) {
+              loadForPrefs._stepPct = 90;
+            }
+            pct = loadForPrefs._stepPct;
+          }
 
           var snippetText = "";
           if (snippets.length) {
@@ -283,9 +303,74 @@
     });
   }
 
+  async function preloadMetaForLang(langCode) {
+    var lang = langCode || "es";
+    if (metaCollectionsByLang[lang]) return;
+
+    var client = getSupabaseClient();
+    if (!client) return;
+
+    try {
+      var collSet = new Set();
+      var corpusMap = {}; // { collection: Set(corpus) }
+
+      // ✅ Usamos la vista entries_meta para NO recorrer toda la tabla entries
+      var res = await client
+        .from("entries_meta")
+        .select("level_1, level_2")
+        .eq("language_code", lang);
+
+      if (res.error) {
+        console.warn("[EntriesMemory] meta load error", res.error);
+        return;
+      }
+
+      var data = res.data || [];
+
+      data.forEach(function (row) {
+        var col = row && row.level_1;
+        var cor = row && row.level_2;
+        if (col) collSet.add(col);
+        if (col && cor) {
+          var key = String(col);
+          var s = corpusMap[key];
+          if (!s) {
+            s = new Set();
+            corpusMap[key] = s;
+          }
+          s.add(cor);
+        }
+      });
+
+      metaCollectionsByLang[lang] = Array.from(collSet).sort();
+
+      Object.keys(corpusMap).forEach(function (col) {
+        var key = lang + "::" + col;
+        metaCorpusByLangCollection[key] = Array.from(corpusMap[col]).sort();
+      });
+    } catch (e) {
+      console.warn("[EntriesMemory] meta load exception", e);
+    }
+
+  }
+
+  function getCollectionsForLang(langCode) {
+    var lang = langCode || "es";
+    return metaCollectionsByLang[lang] || null;
+  }
+
+  function getCorpusForLangCollection(langCode, collectionValue) {
+    var lang = langCode || "es";
+    var key = lang + "::" + (collectionValue || "");
+    return metaCorpusByLangCollection[key] || null;
+  }
+
   window.EntriesMemory = {
     loadForPrefs: loadForPrefs,
     getRows: getRows,
     search: search,
+    preloadMetaForLang: preloadMetaForLang,
+    getCollectionsForLang: getCollectionsForLang,
+    getCorpusForLangCollection: getCorpusForLangCollection,
   };
 })();

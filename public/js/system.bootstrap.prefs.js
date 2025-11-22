@@ -151,6 +151,17 @@
           } catch (e) {}
         });
       }
+
+      // Además, precargamos en memoria las colecciones y corpus disponibles para este idioma,
+      // pero lo hacemos en segundo plano para no retrasar la carga inicial.
+      try {
+        if (window.EntriesMemory && typeof window.EntriesMemory.preloadMetaForLang === "function") {
+          // llamada sin await: se ejecuta en background
+          window.EntriesMemory.preloadMetaForLang(lang);
+        }
+      } catch (eMeta) {
+        console.warn("[BootstrapPrefs] error precargando meta de entries", eMeta);
+      }
     } catch (e) {
       console.warn("[BootstrapPrefs] error precargando entries en memoria", e);
     }
@@ -285,12 +296,16 @@
     var client = getSupabaseClient();
     var lang = getDeviceLang();
 
+    // Base de preferencias: lo que haya en store o los DEFAULTS
     var prefs =
       (store && typeof store.load === "function" && store.load()) ||
       (store && store.DEFAULTS) ||
       {};
     prefs.language = lang;
 
+    // Si no hay cliente Supabase, no podemos leer entries todavía.
+    // Aplicamos solo idioma y dejamos que el resto de la app funcione,
+    // igual que antes.
     if (!client) {
       try {
         if (store && typeof store.save === "function") {
@@ -307,41 +322,64 @@
       return prefs;
     }
 
+    // === Nuevo comportamiento por defecto basada en entries ===
+    // Tomamos el PRIMER registro de entries para el idioma detectado
+    // y de ahí sacamos collection (level_1) y corpus (level_2).
     var collection = null;
     var corpus = null;
 
     try {
-      var resL1 = await client
-        .from("entries")
-        .select("level_1")
+      var firstRes = await client
+        .from("entries_meta")
+        .select("level_1, level_2")
         .eq("language_code", lang)
-        .not("level_1", "is", null)
         .order("level_1", { ascending: true })
+        .order("level_2", { ascending: true })
         .limit(1);
 
-      if (!resL1.error && resL1.data && resL1.data.length) {
-        collection = resL1.data[0].level_1 || null;
+      if (!firstRes.error && firstRes.data && firstRes.data.length) {
+        var row0 = firstRes.data[0] || {};
+        collection = row0.level_1 || null;
+        corpus = row0.level_2 || null;
       }
     } catch (e) {
-      console.warn("[BootstrapPrefs] entries level_1 error", e);
+      console.warn("[BootstrapPrefs] entries first row error", e);
     }
 
-    if (collection) {
+    // Fallback suave: si por algún motivo no obtuvimos nada,
+    // mantenemos el comportamiento anterior (primer level_1 / level_2 válidos).
+    if (!collection || !corpus) {
       try {
-        var resL2 = await client
-          .from("entries")
-          .select("level_2")
+        var resL1 = await client
+          .from("entries_meta")
+          .select("level_1")
           .eq("language_code", lang)
-          .eq("level_1", collection)
-          .not("level_2", "is", null)
-          .order("level_2", { ascending: true })
+          .order("level_1", { ascending: true })
           .limit(1);
 
-        if (!resL2.error && resL2.data && resL2.data.length) {
-          corpus = resL2.data[0].level_2 || null;
+        if (!resL1.error && resL1.data && resL1.data.length) {
+          collection = collection || resL1.data[0].level_1 || null;
         }
       } catch (e) {
-        console.warn("[BootstrapPrefs] entries level_2 error", e);
+        console.warn("[BootstrapPrefs] entries level_1 error", e);
+      }
+
+      if (collection) {
+        try {
+          var resL2 = await client
+            .from("entries_meta")
+            .select("level_2")
+            .eq("language_code", lang)
+            .eq("level_1", collection)
+            .order("level_2", { ascending: true })
+            .limit(1);
+
+          if (!resL2.error && resL2.data && resL2.data.length) {
+            corpus = corpus || resL2.data[0].level_2 || null;
+          }
+        } catch (e) {
+          console.warn("[BootstrapPrefs] entries level_2 error", e);
+        }
       }
     }
 
@@ -363,6 +401,7 @@
 
     return prefs;
   }
+
 
 
 

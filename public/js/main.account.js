@@ -423,7 +423,6 @@ window.MainAccount = (function () {
     var hint = root.querySelector("#acc-hint");
     var usernameHint = root.querySelector("#acc-username-hint");
     var usernameInput = root.querySelector("#acc-username");
-    var usernameInput = root.querySelector("#acc-username");
     var firstInput = root.querySelector("#acc-first-name");
     var lastInput = root.querySelector("#acc-last-name");
     var emailInput = root.querySelector("#acc-email");
@@ -544,12 +543,11 @@ window.MainAccount = (function () {
   // ======================
   // Guardar cambios en Supabase
   // ======================
-  function saveProfileFromForm(root, user) {
+  async function saveProfileFromForm(root, user) {
     var hint = root.querySelector("#acc-hint");
     var usernameHint = root.querySelector("#acc-username-hint");
     var btnSubmit = root.querySelector("#acc-submit");
 
-    var usernameInput = root.querySelector("#acc-username");
     var usernameInput = root.querySelector("#acc-username");
     var firstInput = root.querySelector("#acc-first-name");
     var lastInput = root.querySelector("#acc-last-name");

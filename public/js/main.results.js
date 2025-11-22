@@ -268,6 +268,7 @@ window.MainResults = (function () {
 
     
     
+    
     var decorated = (items || []).map(function (row) {
       var verseText = row.level_7 || "";
       var tLower = verseText.toLowerCase();
@@ -302,12 +303,13 @@ window.MainResults = (function () {
       };
     });
 
-   items = decorated;
+    items = decorated;
 
-{ return it.isUnique; }).length;
+    var totalCount  = (items && items.length) || 0;
+    var approxCount = totalCount - exactCount - contempladoCount;
+    var uniqueCount = (items || []).filter(function (it) { return it.isUnique; }).length;
 
-
-    // Título general
+// Título general
     if (lang === "en") {
       h1.textContent = "Search results";
     } else {
@@ -375,7 +377,7 @@ window.MainResults = (function () {
 
     var lblExact = lang === "en" ? "exact" : "exactos";
     var lblCont = lang === "en" ? "covered" : "contemplados";
-    var lblApprox = lang === "en" ? "approx." : "aprox.";
+    var lblApprox = lang === "en" ? "approx." : "aproximado";
     var lblUnique = lang === "en" ? "unique" : "únicos";
 
     addSummaryChip("unique", "check-circle", uniqueCount, lblUnique);

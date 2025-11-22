@@ -289,7 +289,7 @@ function navigateSection(newLevel5, ctx) {
     var labelEl = overlay.querySelector(".main-loading-text");
     var lang = getLang();
     if (labelEl) {
-      labelEl.textContent = (lang === "en" ? "Loading " : "Cargando ") + "0%";
+      // labelEl.textContent intentionally left blank (no visible text);
     }
 
     if (overlay._timer) {
@@ -302,7 +302,7 @@ function navigateSection(newLevel5, ctx) {
       p += 2;
       overlay.dataset.progress = String(p);
       if (labelEl) {
-        labelEl.textContent = (lang === "en" ? "Loading " : "Cargando ") + p + "%";
+        // labelEl.textContent intentionally left blank (no visible text);
       }
     }, 80);
   }
@@ -316,7 +316,7 @@ function navigateSection(newLevel5, ctx) {
     var lang = getLang();
     overlay.dataset.progress = "100";
     if (labelEl) {
-      labelEl.textContent = (lang === "en" ? "Loading " : "Cargando ") + "100%";
+      // labelEl.textContent intentionally left blank on hide;
     }
 
     if (overlay._timer) {
@@ -467,12 +467,7 @@ var prefs = getPrefs();
 
     // Sin versículos => mensaje
     if (!items.length) {
-      var pEmpty = document.createElement("p");
-      pEmpty.textContent =
-        lang === "en"
-          ? "No entries found for this combination."
-          : "No hay entradas para esta combinación.";
-      body.appendChild(pEmpty);
+      // No mostramos mensajes de "sin entradas" aquí para evitar flash al cambiar preferencias.
       return;
     }
 
