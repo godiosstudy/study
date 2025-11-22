@@ -1,27 +1,14 @@
 
-/* El main se muestra ENTRE toolbar y footer */
+/* El main se muestra ENTRE header/toolbar y footer, en flujo normal */
+/* El main se muestra entre header/toolbar y footer; offset por JS */
 #app-main {
   overflow-y: visible;
-  /* Header (60px) + Toolbar (44px) */
-  
-
-  /* espacio para que el contenido NO se meta debajo de la solapa */
-  /* espacio para que el contenido NO se meta debajo del título fijo */
-  padding-top: 72px;
-
-  /* que nada quede detrás del footer fijo */
   padding-bottom: var(--footer-h);
-
-  /* Fondo propio del main */
   background: var(--main-bg);
-
-  /* Altura mínima: ventana - header - toolbar - footer */
-  min-height: calc(100vh - (60px + 44px) - var(--footer-h));
-
-    /* 👉 Nuevo: padding lateral para que nada toque los bordes de la ventana */
-  padding-left: 3px;
-  padding-right: 3px;
+  min-height: calc(100vh - var(--footer-h));
 }
+
+
 
 /* Contenedor interno del main */
 .main-wrap {
@@ -935,8 +922,7 @@ select.prefs-select-loading option {
 /* Encabezados de vistas principales en el main (Navigator, Results, Focus, Prefs, etc.) */
 .main-view-header {
   position: fixed;
-  /* fijo justo debajo del header (60) + toolbar (44), con un pequeño aire */
-  top: calc(60px + 44px + 8px);
+  /* el top real se calcula dinámicamente en JS según header + toolbar */
   left: 3px;
   right: 3px;
   z-index: 40;

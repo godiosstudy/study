@@ -1,6 +1,6 @@
 /* Header bar */
 .hdr-wrap {
-  position: sticky;  /* se mantiene arriba pero respeta el flujo */
+  position: fixed;   /* fijo arriba: primero header, luego toolbar, luego títulos y main */
   top: 0;
   left: 0;
   right: 0;

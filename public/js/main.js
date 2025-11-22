@@ -52,6 +52,7 @@ window.Main = (function () {
       ) {
         window.MainNavigator.renderNav(el);
       }
+      setTimeout(adjustLayout, 0);
       return;
     }
 
@@ -62,6 +63,7 @@ window.Main = (function () {
       ) {
         window.MainResults.render(el, currentOptions);
       }
+      setTimeout(adjustLayout, 0);
       return;
     }
 
@@ -72,6 +74,7 @@ window.Main = (function () {
       ) {
         window.MainFocus.render(el, currentOptions);
       }
+      setTimeout(adjustLayout, 0);
       return;
     }
 
@@ -82,6 +85,7 @@ window.Main = (function () {
       ) {
         window.MainPreferences.render(el);
       }
+      setTimeout(adjustLayout, 0);
       return;
     }
 
@@ -92,6 +96,7 @@ window.Main = (function () {
       ) {
         window.MainAccount.render(el);
       }
+      setTimeout(adjustLayout, 0);
       return;
     }
 
@@ -99,6 +104,7 @@ window.Main = (function () {
       if (window.MainLogin && typeof window.MainLogin.render === "function") {
         window.MainLogin.render(el);
       }
+      setTimeout(adjustLayout, 0);
       return;
     }
 
@@ -109,6 +115,7 @@ window.Main = (function () {
       ) {
         window.MainRegister.render(el);
       }
+      setTimeout(adjustLayout, 0);
       return;
     }
 
@@ -119,6 +126,7 @@ window.Main = (function () {
       ) {
         window.MainChangelog.render(el);
       }
+      setTimeout(adjustLayout, 0);
       return;
     }
 
@@ -129,6 +137,7 @@ window.Main = (function () {
       ) {
         window.MainSignout.render(el);
       }
+      setTimeout(adjustLayout, 0);
       return;
     }
 
@@ -142,6 +151,39 @@ window.Main = (function () {
   function getCurrentOptions() {
     return currentOptions;
   }
+
+  function adjustLayout() {
+  try {
+    var header = document.querySelector(".hdr-wrap");
+    var toolbar = document.querySelector(".toolbar-wrap");
+    var main = document.getElementById("app-main");
+    if (!main) return;
+
+    var headerH = header && header.offsetHeight ? header.offsetHeight : 0;
+    var toolbarH = toolbar && toolbar.offsetHeight ? toolbar.offsetHeight : 0;
+    var stackTop = headerH + toolbarH;
+
+    // Títulos fijos dentro del main (barra redonda)
+    var headerViews = document.querySelectorAll(".main-view-header");
+    var titleBlockH = 0;
+    if (headerViews && headerViews.length) {
+      for (var i = 0; i < headerViews.length; i++) {
+        headerViews[i].style.top = (stackTop + 8) + "px";
+      }
+      var first = headerViews[0];
+      var tHeight = first.offsetHeight || 0;
+      titleBlockH = tHeight + 16; // altura del título + margen inferior
+    }
+
+    // El contenido del main comienza después de header + toolbar + títulos
+    if (stackTop + titleBlockH > 0) {
+      main.style.marginTop = (stackTop + titleBlockH) + "px";
+    }
+  } catch (e) {
+    console.warn("[Main] error ajustando layout fijo:", e);
+  }
+}
+
 function init() {
     // La vista inicial se decidirá después de que las preferencias y la base
     // se hayan cargado (system.bootstrap.prefs.js llamará a Main.showView).

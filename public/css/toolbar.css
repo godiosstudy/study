@@ -1,6 +1,6 @@
 /* Barra de herramientas debajo del header */
 .toolbar-wrap {
-  position: sticky;
+  position: fixed;
   top: 60px; /* debajo del header fijo */
   left: 0;
   right: 0;
@@ -159,6 +159,11 @@ select.crumb-select-loading option {
     min-width: 0;
     order: 0;
     overflow-x: auto;   /* si hay muchos niveles, que scrollee horizontal */
+  }
+
+  .crumb-select {
+    min-width: 64px;
+    max-width: 120px;
   }
 
   .search {
