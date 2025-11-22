@@ -1209,23 +1209,3 @@ select.prefs-select-loading option {
 }
 
 
-/* Ajuste mobile: dejar espacio extra para header + toolbar de 2 líneas */
-@media (max-width: 768px) {
-  #app-main {
-    /* Header (60px) + Toolbar (~88px en 2 líneas) */
-    margin-top: calc(60px + 88px);
-  }
-
-  #view-title.view-title-pill {
-    top: calc(60px + 88px);
-  }
-
-  /* Más espacio entre el toolbar y los títulos principales en mobile */
-  .main-title {
-    margin-top: 32px;
-  }
-
-  .panel-single h1 {
-    margin-top: 24px;
-  }
-}

@@ -143,7 +143,30 @@ window.Main = (function () {
     return currentOptions;
   }
 
-  function init() {
+  function adjustLayout() {
+  try {
+    var header = document.querySelector(".hdr-wrap");
+    var toolbar = document.querySelector(".toolbar-wrap");
+    var main = document.getElementById("app-main");
+    var viewTitle = document.getElementById("view-title");
+    if (!main) return;
+
+    var headerH = header && header.offsetHeight ? header.offsetHeight : 0;
+    var toolbarH = toolbar && toolbar.offsetHeight ? toolbar.offsetHeight : 0;
+    var total = headerH + toolbarH;
+
+    if (total > 0) {
+      main.style.marginTop = total + "px";
+      if (viewTitle) {
+        viewTitle.style.top = total + "px";
+      }
+    }
+  } catch (e) {
+    console.warn("[Main] error ajustando layout:", e);
+  }
+}
+
+function init() {
     // La vista inicial se decidirá después de que las preferencias y la base
     // se hayan cargado (system.bootstrap.prefs.js llamará a Main.showView).
     // Aquí no forzamos ninguna vista para permitir mostrar el mensaje de bienvenida.
