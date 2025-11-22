@@ -1,6 +1,6 @@
 /* Barra de herramientas debajo del header */
 .toolbar-wrap {
-  position: fixed;
+  position: sticky;
   top: 60px; /* debajo del header fijo */
   left: 0;
   right: 0;

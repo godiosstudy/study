@@ -3,7 +3,7 @@
 #app-main {
   overflow-y: visible;
   /* Header (60px) + Toolbar (44px) */
-  margin-top: calc(60px + 44px);
+  
 
   /* espacio para que el contenido NO se meta debajo de la solapa */
   /* espacio para que el contenido NO se meta debajo del título fijo */
@@ -66,12 +66,9 @@
 
 /* === SOLAPA CENTRAL: título de la vista actual === */
 #view-title.view-title-pill {
-  position: fixed;
-  /* JUSTO donde termina el toolbar: header (60) + toolbar (44) */
-  top: calc(60px + 44px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 850;
+  position: static;
+  margin: 8px auto 0;
+  display: none; /* se muestra solo cuando se use explícitamente */
 
   height: 32px;
   padding: 0 20px;

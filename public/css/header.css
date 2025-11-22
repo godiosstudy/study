@@ -1,6 +1,6 @@
 /* Header bar */
 .hdr-wrap {
-  position: fixed;   /* pegado arriba al hacer scroll */
+  position: sticky;  /* se mantiene arriba pero respeta el flujo */
   top: 0;
   left: 0;
   right: 0;
