@@ -52,40 +52,53 @@ window.MainLogin = (function () {
   }
 
   var TEXTS = {
-    es: {
-      title: "Iniciar sesión",
-      email: "Correo",
-      password: "Contraseña",
-      submit: "Entrar",
+  es: {
+    title: "Iniciar sesión",
+    identifierLabel: "Usuario o correo",
+    identifierPlaceholder: "Usuario o correo",
+    passwordLabel: "Contraseña",
+    passwordPlaceholder: "Contraseña",
+    btnCancel: "Cancelar",
+    submit: "Iniciar sesión",
 
-      errorRequired: "Debes ingresar tu correo y contraseña.",
-      errorGeneric: "No fue posible iniciar sesión. Verifica tus datos.",
-      errorInvalidCredentials: "Correo o contraseña incorrectos.",
+    errorIdentifierRequired: "Debes ingresar tu usuario o correo.",
+    errorRequired: "Debes ingresar tu usuario/correo y contraseña.",
+    errorGeneric: "No fue posible iniciar sesión. Verifica tus datos.",
+    errorInvalidCredentials: "Usuario/correo o contraseña incorrectos.",
+    identifierChecking: "Buscando usuario…",
+    identifierNotFound: "No encontramos este usuario.",
+    identifierError: "No pudimos comprobar el usuario. Inténtalo de nuevo.",
 
-      welcomePrefix: "Bienvenido, ",
-      prefsFromUser:
-        " Se han aplicado en este sitio las preferencias guardadas en tu cuenta.",
-      prefsFromSite:
-        " Hemos guardado en tu cuenta las preferencias actuales de este sitio.",
-    },
-    en: {
-      title: "Sign in",
-      email: "Email",
-      password: "Password",
-      submit: "Sign in",
+    welcomePrefix: "Bienvenido, ",
+    prefsFromUser:
+      " Se han aplicado en este sitio las preferencias guardadas en tu cuenta.",
+    prefsFromSite:
+      " Hemos guardado en tu cuenta las preferencias actuales de este sitio.",
+  },
+  en: {
+    title: "Sign in",
+    identifierLabel: "Email or username",
+    identifierPlaceholder: "Email or username",
+    passwordLabel: "Password",
+    passwordPlaceholder: "Password",
+    btnCancel: "Cancel",
+    submit: "Sign in",
 
-      errorRequired: "Please enter your email and password.",
-      errorGeneric: "Could not sign you in. Please check your details.",
-      errorInvalidCredentials: "Invalid email or password.",
+    errorIdentifierRequired: "You must enter your email or username.",
+    errorRequired: "Please enter your email/username and password.",
+    errorGeneric: "Could not sign you in. Please check your details.",
+    errorInvalidCredentials: "Invalid email/username or password.",
+    identifierChecking: "Looking for your account…",
+    identifierNotFound: "We couldn't find this user.",
+    identifierError: "We couldn't verify this account. Please try again.",
 
-      welcomePrefix: "Welcome, ",
-      prefsFromUser:
-        " Your saved preferences have been applied to this site.",
-      prefsFromSite:
-        " Your current site preferences have been saved to your account.",
-    },
-  };
-
+    welcomePrefix: "Welcome, ",
+    prefsFromUser:
+      " Your saved preferences have been applied to this site.",
+    prefsFromSite:
+      " Your current site preferences have been saved to your account.",
+  },
+};
   function t(key) {
     var lang = getLang();
     var dict = TEXTS[lang] || TEXTS.es;
@@ -260,31 +273,122 @@ window.MainLogin = (function () {
   // =========================
   // UI
   // =========================
+
+  function isEmailLike(value) {
+    if (!value) return false;
+    var v = String(value).trim();
+    return v.includes("@") && v.indexOf("@") > 0 && v.indexOf("@") < v.length - 3;
+  }
+
+  async function lookupProfileByIdentifier(identifier) {
+    identifier = (identifier || "").trim();
+    if (!identifier) {
+      return { ok: false, exists: null, email: null, username: null };
+    }
+
+    if (
+      !window.BackendSupabase ||
+      typeof window.BackendSupabase.client !== "function" ||
+      typeof window.BackendSupabase.isConfigured !== "function" ||
+      !window.BackendSupabase.isConfigured()
+    ) {
+      return { ok: false, exists: null, email: null, username: null };
+    }
+
+    var client = window.BackendSupabase.client();
+    if (!client) {
+      return { ok: false, exists: null, email: null, username: null };
+    }
+
+    var isEmail = isEmailLike(identifier);
+    var value = identifier.toLowerCase();
+
+    try {
+      var query = client.from("profiles").select("email, p_username").limit(1);
+      if (isEmail) {
+        query = query.eq("email", value);
+      } else {
+        query = query.eq("p_username", value);
+      }
+
+      var res;
+      if (query && typeof query.maybeSingle === "function") {
+        res = await query.maybeSingle();
+        if (res.error) {
+          console.warn("[Login] identifier lookup error", res.error);
+          return { ok: false, exists: null, email: null, username: null };
+        }
+        if (res.data) {
+          return {
+            ok: true,
+            exists: true,
+            email: res.data.email || null,
+            username: res.data.p_username || null,
+          };
+        }
+        return { ok: true, exists: false, email: null, username: null };
+      } else {
+        res = await query;
+        if (res.error) {
+          console.warn("[Login] identifier lookup error", res.error);
+          return { ok: false, exists: null, email: null, username: null };
+        }
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          var row = res.data[0] || {};
+          return {
+            ok: true,
+            exists: true,
+            email: row.email || null,
+            username: row.p_username || null,
+          };
+        }
+        return { ok: true, exists: false, email: null, username: null };
+      }
+    } catch (e) {
+      console.warn("[Login] identifier lookup exception", e);
+      return { ok: false, exists: null, email: null, username: null };
+    }
+  }
+
+  // Limpia el MAIN y muestra el mensaje de bienvenida (saltamos directo a navigator)
+  function showWelcomeInMain(syncMode) {
+    if (window.Main && typeof window.Main.showView === "function") {
+      window.Main.showView("navigator");
+    }
+  }
+
   function render(container) {
     if (!container) return;
     container.innerHTML = "";
 
     var wrap = document.createElement("div");
-    wrap.className = "panel-single";
+    wrap.className = "panel panel-single register-panel";
 
     wrap.innerHTML = [
       '<div class="main-view-header">',
       '  <h1 class="main-view-title" id="login-title"></h1>',
-      '</div>',
+      "</div>",
       "",
-      '<form class="form-vert" id="form-login" novalidate>',
-      '  <div class="form-group">',
-      '    <label for="login-email" id="lbl-login-email"></label>',
-      '    <input type="email" id="login-email" autocomplete="email" />',
-      "  </div>",
-      '  <div class="form-group">',
-      '    <label for="login-password" id="lbl-login-password"></label>',
-      '    <input type="password" id="login-password" autocomplete="current-password" />',
-      "  </div>",
-      '  <div class="form-actions">',
-      '    <button type="submit" class="chip" id="login-submit"></button>',
-      "  </div>",
-      "</form>",
+      '<div class="register-card">',
+      '  <form id="form-login" novalidate>',
+      '    <div class="register-step" id="login-step-1">',
+      '      <div class="reg-field" data-field="identifier">',
+      '        <input type="text" id="login-identifier" autocomplete="username email" />',
+      '        <label for="login-identifier" id="lbl-login-identifier"></label>',
+      '        <p class="field-hint" id="login-identifier-hint"></p>',
+      "      </div>",
+      '      <div class="reg-field" data-field="password">',
+      '        <input type="password" id="login-password" autocomplete="current-password" />',
+      '        <label for="login-password" id="lbl-login-password"></label>',
+      '        <p class="field-hint" id="login-password-hint"></p>',
+      "      </div>",
+      '      <div class="register-actions two">',
+      '        <button type="button" class="chip" id="login-btn-cancel"></button>',
+      '        <button type="submit" class="chip primary" id="login-submit" disabled></button>',
+      "      </div>",
+      "    </div>",
+      "  </form>",
+      "</div>",
       "",
       '<p class="field-hint" id="login-hint"></p>',
     ].join("\n");
@@ -296,126 +400,274 @@ window.MainLogin = (function () {
   }
 
   function applyTexts(root) {
-    root.querySelector("#login-title").textContent = t("title");
+    var titleEl = root.querySelector("#login-title");
+    var idLabel = root.querySelector("#lbl-login-identifier");
+    var passLabel = root.querySelector("#lbl-login-password");
+    var cancelBtn = root.querySelector("#login-btn-cancel");
+    var submitBtn = root.querySelector("#login-submit");
 
-    var lblEmail = root.querySelector("#lbl-login-email");
-    var lblPassword = root.querySelector("#lbl-login-password");
-    var btnSubmit = root.querySelector("#login-submit");
+    if (titleEl) titleEl.textContent = t("title");
+    if (idLabel) idLabel.textContent = t("identifierLabel");
+    if (passLabel) passLabel.textContent = t("passwordLabel");
+    if (cancelBtn) cancelBtn.textContent = t("btnCancel");
+    if (submitBtn) submitBtn.textContent = t("submit");
+
+    var idInput = root.querySelector("#login-identifier");
+    var passInput = root.querySelector("#login-password");
+    if (idInput) idInput.setAttribute("placeholder", t("identifierPlaceholder"));
+    if (passInput) passInput.setAttribute("placeholder", t("passwordPlaceholder"));
+
     var hint = root.querySelector("#login-hint");
-
-    if (lblEmail) lblEmail.textContent = t("email");
-    if (lblPassword) lblPassword.textContent = t("password");
-    if (btnSubmit) btnSubmit.textContent = t("submit");
     if (hint) {
       hint.textContent = "";
       hint.classList.remove("error", "ok");
     }
   }
 
-  function showHint(el, text, variant) {
-    if (!el) return;
-    el.textContent = text || "";
-    el.classList.remove("error", "ok");
-    if (variant === "error") el.classList.add("error");
-    if (variant === "ok") el.classList.add("ok");
-  }
-
-  // Limpia el MAIN y muestra el mensaje de bienvenida
-  function showWelcomeInMain(syncMode) {
-    // En lugar de mostrar un mensaje en main, saltamos directo a navigator
-    if (window.Main && typeof window.Main.showView === "function") {
-      window.Main.showView("navigator");
-    }
-  }
-
   function wireLogic(root) {
     var form = root.querySelector("#form-login");
-    var emailEl = root.querySelector("#login-email");
+    var idEl = root.querySelector("#login-identifier");
     var passwordEl = root.querySelector("#login-password");
     var submitBtn = root.querySelector("#login-submit");
-    var hint = root.querySelector("#login-hint");
+    var cancelBtn = root.querySelector("#login-btn-cancel");
+    var idHint = root.querySelector("#login-identifier-hint");
+    var globalHint = root.querySelector("#login-hint");
 
-    function setBusy(isBusy) {
-      if (!submitBtn) return;
-      submitBtn.disabled = !!isBusy;
-      submitBtn.textContent = isBusy ? "…" : t("submit");
+    var state = {
+      identifier: "",
+      emailForAuth: null,
+      idStatus: "empty", // empty | checking | ok | notfound | error
+      password: "",
+      isBusy: false,
+    };
+
+    function setFieldError(fieldEl, hasError) {
+      if (!fieldEl) return;
+      if (hasError) fieldEl.classList.add("error");
+      else fieldEl.classList.remove("error");
     }
 
-    form.addEventListener("submit", async function (ev) {
-      ev.preventDefault();
-      if (!emailEl || !passwordEl) return;
+    function clearHints() {
+      if (idHint) {
+        idHint.textContent = "";
+        idHint.classList.remove("error", "ok");
+      }
+      if (globalHint) {
+        globalHint.textContent = "";
+        globalHint.classList.remove("error", "ok");
+      }
+    }
 
-      var email = (emailEl.value || "").trim();
-      var password = passwordEl.value || "";
+    function showHint(el, text, variant) {
+      if (!el) return;
+      el.textContent = text || "";
+      el.classList.remove("error", "ok");
+      if (variant === "error") el.classList.add("error");
+      if (variant === "ok") el.classList.add("ok");
+    }
 
-      if (!email || !password) {
-        showHint(hint, t("errorRequired"), "error");
+    function recomputeSubmitEnabled() {
+      if (!submitBtn) return;
+      var canSubmit =
+        !!state.identifier &&
+        !!state.password &&
+        state.idStatus === "ok" &&
+        !state.isBusy;
+      submitBtn.disabled = !canSubmit;
+    }
+
+    function setBusy(isBusy) {
+      state.isBusy = !!isBusy;
+      if (submitBtn) {
+        submitBtn.textContent = isBusy ? "…" : t("submit");
+      }
+      recomputeSubmitEnabled();
+    }
+
+    async function validateIdentifierIfNeeded() {
+      var value = (idEl && idEl.value ? idEl.value : "").trim();
+      state.identifier = value;
+      state.emailForAuth = null;
+
+      if (!value) {
+        state.idStatus = "empty";
+        setFieldError(idEl && idEl.closest(".reg-field"), false);
+        if (idHint) {
+          idHint.textContent = "";
+          idHint.classList.remove("error", "ok");
+        }
+        recomputeSubmitEnabled();
         return;
       }
 
-      setBusy(true);
-      showHint(hint, "", null);
+      state.idStatus = "checking";
+      if (idHint) {
+        showHint(idHint, t("identifierChecking"));
+      }
+      setFieldError(idEl && idEl.closest(".reg-field"), false);
+      recomputeSubmitEnabled();
 
-      try {
+      var current = value;
+      var lookup = await lookupProfileByIdentifier(current);
+      if ((idEl && (idEl.value || "").trim()) !== current) {
+        // usuario cambió el texto mientras se consultaba
+        return;
+      }
+
+      if (!lookup || lookup.exists === null) {
+        state.idStatus = "error";
+        state.emailForAuth = null;
+        setFieldError(idEl && idEl.closest(".reg-field"), true);
+        showHint(idHint, t("identifierError"), "error");
+      } else if (!lookup.exists) {
+        state.idStatus = "notfound";
+        state.emailForAuth = null;
+        setFieldError(idEl && idEl.closest(".reg-field"), true);
+        showHint(idHint, t("identifierNotFound"), "error");
+      } else {
+        state.idStatus = "ok";
+        state.emailForAuth =
+          lookup.email ||
+          (isEmailLike(current) ? current.toLowerCase() : null);
+        setFieldError(idEl && idEl.closest(".reg-field"), false);
+        if (idHint) {
+          idHint.textContent = "";
+          idHint.classList.remove("error", "ok");
+        }
+      }
+
+      recomputeSubmitEnabled();
+    }
+
+    if (idEl) {
+      idEl.addEventListener("input", function () {
+        state.identifier = (idEl.value || "").trim();
+        state.idStatus = state.identifier ? "dirty" : "empty";
+        state.emailForAuth = null;
+        setFieldError(idEl.closest(".reg-field"), false);
+        if (idHint) {
+          idHint.textContent = "";
+          idHint.classList.remove("error", "ok");
+        }
+        recomputeSubmitEnabled();
+      });
+
+      idEl.addEventListener("blur", function () {
+        validateIdentifierIfNeeded();
+      });
+    }
+
+    if (passwordEl) {
+      passwordEl.addEventListener("input", function () {
+        state.password = passwordEl.value || "";
+        recomputeSubmitEnabled();
+      });
+    }
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", function () {
+        if (window.Main && typeof window.Main.showView === "function") {
+          window.Main.showView("navigator");
+        }
+      });
+    }
+
+    if (form) {
+      form.addEventListener("submit", async function (ev) {
+        ev.preventDefault();
+        clearHints();
+
+        if (!idEl || !passwordEl) return;
+
+        state.identifier = (idEl.value || "").trim();
+        state.password = passwordEl.value || "";
+
+        if (!state.identifier) {
+          showHint(globalHint, t("errorIdentifierRequired"), "error");
+          return;
+        }
+        if (!state.password) {
+          showHint(globalHint, t("errorRequired"), "error");
+          return;
+        }
+
+        if (state.idStatus !== "ok" || !state.emailForAuth) {
+          await validateIdentifierIfNeeded();
+          if (state.idStatus !== "ok" || !state.emailForAuth) {
+            // si sigue sin ser válido, no continuamos
+            if (state.idStatus === "notfound") {
+              showHint(globalHint, t("identifierNotFound"), "error");
+            } else if (state.idStatus === "error") {
+              showHint(globalHint, t("identifierError"), "error");
+            } else {
+              showHint(globalHint, t("errorIdentifierRequired"), "error");
+            }
+            return;
+          }
+        }
+
+        var email = state.emailForAuth;
+        var password = state.password;
+
+        setBusy(true);
         if (window.SystemLoader && typeof window.SystemLoader.show === "function") {
           window.SystemLoader.show();
         }
 
-        if (
-          !window.BackendSupabase ||
-          !window.BackendSupabase.isConfigured ||
-          !window.BackendSupabase.isConfigured()
-        ) {
-          throw new Error("[Supabase] Not configured.");
-        }
-        if (typeof window.BackendSupabase.signIn !== "function") {
-          throw new Error("[Supabase] Backend not available.");
-        }
-
-        // 1) login contra Supabase
-        await window.BackendSupabase.signIn({
-          email: email,
-          password: password,
-        });
-
-        // 2) sincronizar preferencias perfil ↔ sitio
-        var syncResult = await syncPreferencesOnLogin();
-        var syncMode = (syncResult && syncResult.mode) || "none";
-
-        // 3) limpiar formulario
-        form.reset();
-
-        // 4) limpiar MAIN y mostrar bienvenida
-        showWelcomeInMain(syncMode);
-
-        // 5) avisar a otros componentes (header, etc.)
         try {
-          window.dispatchEvent(new CustomEvent("login:success", {}));
-        } catch (e) {}
-      } catch (e) {
-        console.error("[Login] signIn error", e);
-        var msg;
+          if (
+            !window.BackendSupabase ||
+            typeof window.BackendSupabase.signIn !== "function"
+          ) {
+            throw new Error("[Supabase] Backend not available.");
+          }
 
-        if (e && typeof e.message === "string") {
-          if (/invalid login credentials/i.test(e.message)) {
-            msg = t("errorInvalidCredentials");
+          await window.BackendSupabase.signIn({
+            email: email,
+            password: password,
+          });
+
+          var syncResult = await syncPreferencesOnLogin();
+          var syncMode = (syncResult && syncResult.mode) || "none";
+
+          if (form) form.reset();
+          state.identifier = "";
+          state.password = "";
+          state.idStatus = "empty";
+          state.emailForAuth = null;
+          clearHints();
+          recomputeSubmitEnabled();
+
+          showWelcomeInMain(syncMode);
+
+          try {
+            window.dispatchEvent(new CustomEvent("login:success", {}));
+          } catch (e) {}
+        } catch (e) {
+          console.error("[Login] signIn error", e);
+          var msg;
+          if (e && typeof e.message === "string") {
+            if (/invalid login credentials/i.test(e.message)) {
+              msg = t("errorInvalidCredentials");
+            } else {
+              msg = t("errorGeneric");
+            }
           } else {
             msg = t("errorGeneric");
           }
-        } else {
-          msg = t("errorGeneric");
+          showHint(globalHint, msg, "error");
+        } finally {
+          setBusy(false);
+          if (
+            window.SystemLoader &&
+            typeof window.SystemLoader.hide === "function"
+          ) {
+            window.SystemLoader.hide();
+          }
         }
+      });
+    }
 
-        showHint(hint, msg, "error");
-      } finally {
-        setBusy(false);
-        if (window.SystemLoader && typeof window.SystemLoader.hide === "function") {
-          window.SystemLoader.hide();
-        }
-      }
-    });
-
-    // Reaplicar textos si cambia idioma
     window.addEventListener("i18n:changed", function () {
       applyTexts(root);
     });
