@@ -176,7 +176,7 @@ window.MainAccount = (function () {
       null;
 
     var wrap = document.createElement("div");
-    wrap.className = "panel-single";
+    wrap.className = "panel panel-single register-panel";
     container.appendChild(wrap);
 
     if (!user) {
@@ -239,73 +239,102 @@ window.MainAccount = (function () {
 
   // ======================
   // Vista cuando SÍ hay usuario
-  function renderWithUser(root, user) {
+  
+  function setupAccountFloatingLabels(root) {
+    if (!root) return;
+    var nodes = root.querySelectorAll(
+      ".reg-field input, .reg-field textarea, .reg-field select"
+    );
+    for (var i = 0; i < nodes.length; i++) {
+      (function (el) {
+        function refresh() {
+          if (!el) return;
+          var wrap = el.closest(".reg-field");
+          if (!wrap) return;
+          var value = el.value;
+          if (value && String(value).trim() !== "") {
+            wrap.classList.add("has-value");
+          } else {
+            wrap.classList.remove("has-value");
+          }
+        }
+        el.addEventListener("input", refresh);
+        el.addEventListener("change", refresh);
+        el.addEventListener("blur", refresh);
+        refresh();
+      })(nodes[i]);
+    }
+  }
+
+function renderWithUser(root, user) {
     root.innerHTML = [
       '<div class="main-view-header">',
       '  <h1 class="main-view-title" id="acc-title"></h1>',
       '</div>',
       '<p class="account-subtitle" id="acc-subtitle"></p>',
       "",
-      '<form class="form-vert" id="form-account" novalidate>',
-      '  <div class="form-group">',
-      '    <label for="acc-username" id="lbl-username"></label>',
-      '    <input type="text" id="acc-username" autocomplete="username" />',
-      '    <p class="field-hint" id="acc-username-hint"></p>',
-      '  </div>',
-      '  <div class="form-group">',
-      '    <label for="acc-first-name" id="lbl-first-name"></label>',
-      '    <input type="text" id="acc-first-name" autocomplete="given-name" />',
-      "  </div>",
-      '  <div class="form-group">',
-      '    <label for="acc-last-name" id="lbl-last-name"></label>',
-      '    <input type="text" id="acc-last-name" autocomplete="family-name" />',
-      "  </div>",
-      '  <div class="form-group">',
-      '    <label for="acc-email" id="lbl-email"></label>',
-      '    <input type="email" id="acc-email" autocomplete="email" />',
-      "  </div>",
-      '  <div class="form-group">',
-      '    <label for="acc-phone" id="lbl-phone"></label>',
-      '    <input type="text" id="acc-phone" autocomplete="tel" />',
-      "  </div>",
-      '  <div class="form-group">',
-      '    <label for="acc-address" id="lbl-address"></label>',
-      '    <input type="text" id="acc-address" autocomplete="street-address" />',
-      "  </div>",
-      '  <div class="form-group">',
-      '    <label for="acc-state" id="lbl-state"></label>',
-      '    <input type="text" id="acc-state" autocomplete="address-level1" />',
-      "  </div>",
-      '  <div class="form-group">',
-      '    <label for="acc-zip" id="lbl-zip"></label>',
-      '    <input type="text" id="acc-zip" autocomplete="postal-code" />',
-      "  </div>",
-      '  <div class="form-group">',
-      '    <label for="acc-country" id="lbl-country"></label>',
-      '    <input type="text" id="acc-country" autocomplete="country" />',
-      "  </div>",
-      '  <div class="form-group">',
-      '    <label for="acc-birth" id="lbl-birth-date"></label>',
-      '    <input type="date" id="acc-birth" />',
-      "  </div>",
-      '  <div class="form-group">',
-      '    <label for="acc-gender" id="lbl-gender"></label>',
-      '    <select id="acc-gender">',
-      '      <option value="">' + "</option>",
-      "    </select>",
-      "  </div>",
-      "",
-      '  <div class="form-group">',
-      '    <label for="acc-open-preferences" id="lbl-prefs"></label>',
-      '    <div>',
-      '      <button type="button" class="chip ghost" id="acc-open-preferences"></button>',
-      "    </div>",
-      "  </div>",
-      "",
-      '  <div class="form-actions">',
-      '    <button type="submit" class="chip primary" id="acc-submit"></button>',
-      "  </div>",
-      "</form>",
+      '<div class="register-card">',
+      '  <form id="form-account" novalidate>',
+      '    <div class="register-step" id="acc-step-1">',
+      '      <div class="reg-field" data-field="username">',
+      '        <input type="text" id="acc-username" autocomplete="username" />',
+      '        <label for="acc-username" id="lbl-username"></label>',
+      '        <p class="field-hint" id="acc-username-hint"></p>',
+      '      </div>',
+      '      <div class="reg-field" data-field="first-name">',
+      '        <input type="text" id="acc-first-name" autocomplete="given-name" />',
+      '        <label for="acc-first-name" id="lbl-first-name"></label>',
+      '      </div>',
+      '      <div class="reg-field" data-field="last-name">',
+      '        <input type="text" id="acc-last-name" autocomplete="family-name" />',
+      '        <label for="acc-last-name" id="lbl-last-name"></label>',
+      '      </div>',
+      '      <div class="reg-field" data-field="email">',
+      '        <input type="email" id="acc-email" autocomplete="email" />',
+      '        <label for="acc-email" id="lbl-email"></label>',
+      '      </div>',
+      '      <div class="reg-field" data-field="phone">',
+      '        <input type="tel" id="acc-phone" autocomplete="tel" />',
+      '        <label for="acc-phone" id="lbl-phone"></label>',
+      '      </div>',
+      '      <div class="reg-field" data-field="address">',
+      '        <input type="text" id="acc-address" autocomplete="street-address" />',
+      '        <label for="acc-address" id="lbl-address"></label>',
+      '      </div>',
+      '      <div class="reg-field" data-field="state">',
+      '        <input type="text" id="acc-state" autocomplete="address-level1" />',
+      '        <label for="acc-state" id="lbl-state"></label>',
+      '      </div>',
+      '      <div class="reg-field" data-field="zip">',
+      '        <input type="text" id="acc-zip" autocomplete="postal-code" />',
+      '        <label for="acc-zip" id="lbl-zip"></label>',
+      '      </div>',
+      '      <div class="reg-field" data-field="country">',
+      '        <input type="text" id="acc-country" autocomplete="country" />',
+      '        <label for="acc-country" id="lbl-country"></label>',
+      '      </div>',
+      '      <div class="reg-field" data-field="birth">',
+      '        <input type="date" id="acc-birth" />',
+      '        <label for="acc-birth" id="lbl-birth-date"></label>',
+      '      </div>',
+      '      <div class="reg-field" data-field="gender">',
+      '        <select id="acc-gender">',
+      '          <option value="">' + "</option>",
+      '        </select>',
+      '        <label for="acc-gender" id="lbl-gender"></label>',
+      '      </div>',
+      '      <div class="form-group prefs-group">',
+      '        <label for="acc-open-preferences" id="lbl-prefs"></label>',
+      '        <div>',
+      '          <button type="button" class="chip ghost" id="acc-open-preferences"></button>',
+      '        </div>',
+      '      </div>',
+      '      <div class="register-actions single">',
+      '        <button type="submit" class="chip primary" id="acc-submit"></button>',
+      '      </div>',
+      '    </div>',
+      '  </form>',
+      '</div>',
       "",
       '<p class="field-hint" id="acc-hint"></p>',
     ].join("\n");
@@ -313,6 +342,7 @@ window.MainAccount = (function () {
     applyTextsWithUser(root);
     wireWithUser(root, user);
     loadProfileIntoForm(root, user);
+    setupAccountFloatingLabels(root);
   }
 
   function applyTextsWithUser(root) {

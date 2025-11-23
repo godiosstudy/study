@@ -1298,8 +1298,20 @@ select.prefs-select-loading option {
   color: var(--fg);
   font-size: 1rem;
 }
+.reg-field select {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 18px 12px 8px;
+  background: #ffffff;
+  color: var(--fg);
+  font-size: 1rem;
+}
 
-.reg-field input:focus {
+
+.reg-field input:focus,
+.reg-field select:focus {
   outline: none;
   border-color: var(--header-bg, var(--accent, #0ea5e9));
   box-shadow: 0 0 0 1px var(--header-bg, var(--accent, #0ea5e9));
@@ -1317,7 +1329,8 @@ select.prefs-select-loading option {
 }
 
 .reg-field.has-value label,
-.reg-field input:focus + label {
+.reg-field input:focus + label,
+.reg-field select:focus + label {
   top: 6px;
   font-size: 0.75rem;
 }

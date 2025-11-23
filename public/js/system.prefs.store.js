@@ -14,6 +14,10 @@
 
   const STORAGE_KEY = 'godios_prefs_v1';
 
+  // Prefs iniciales en memoria (antes de que Bootstrap las guarde en localStorage)
+  let bootstrapInitialPrefs = null;
+
+
   // =========================
   // 2. Helpers de almacenamiento
   // =========================
@@ -36,7 +40,13 @@
 
   function load() {
     const raw = loadRaw();
-    return Object.assign({}, DEFAULTS, raw || {});
+    if (raw) {
+      return Object.assign({}, DEFAULTS, raw || {});
+    }
+    if (bootstrapInitialPrefs) {
+      return Object.assign({}, DEFAULTS, bootstrapInitialPrefs || {});
+    }
+    return Object.assign({}, DEFAULTS);
   }
 
   function hasLocalPrefs() {
@@ -198,6 +208,7 @@
   let initial;
 
   if (existing) {
+    // Preferencias ya guardadas previamente
     initial = Object.assign({}, DEFAULTS, existing);
   } else {
     // Detectar idioma del equipo la PRIMERA vez
@@ -210,9 +221,14 @@
     } catch (e) {
       // si no hay info, queda 'en'
     }
+    // Prefs iniciales solo en memoria: el bootstrap decidirá
+    // collection/corpus por defecto y las guardará con save().
     initial = Object.assign({}, DEFAULTS, { language: lang });
-    save(initial);
   }
+
+  // Guardamos una copia en memoria para que load() pueda devolver
+  // algo coherente incluso antes de que exista localStorage.
+  bootstrapInitialPrefs = initial;
 
   apply(initial);
 

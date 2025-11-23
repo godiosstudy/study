@@ -114,6 +114,7 @@ window.MainPreferences = (function () {
       '  <h1 data-i18n="prefs.title" class="main-view-title">Preferencias</h1>',
       '</div>',
       '',
+      '<div class="register-card">',
       '<div class="prefs-grid">',
       '  <div class="prefs-fields">',
       '    <div class="prefs-field">',
@@ -173,6 +174,7 @@ window.MainPreferences = (function () {
       '  <button type="button" class="chip" id="pref-reset">Restablecer</button>',
       '  <button type="button" class="chip ghost" id="pref-cancel">Cancelar</button>',
       '  <button type="button" class="chip primary" id="pref-save">Guardar</button>',
+      "</div>",
       "</div>",
     ].join("\n");
 
