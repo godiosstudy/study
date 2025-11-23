@@ -5,7 +5,7 @@
   left: 0;
   right: 0;
   z-index: 800;
-  background: var(--toolbar-bg, #f9fafb);
+  background: var(--toolbar-bg);
   border-bottom: 1px solid var(--border);
 }
 

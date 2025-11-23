@@ -954,44 +954,21 @@ window.MainPreferences = (function () {
 
         // 3) Recargar contenido en memoria para las nuevas preferencias
         try {
-          var loaderMsg = (next.language === "en" ? "Loading content…" : "Cargando contenido…");
-          var fakeTimer = null;
-
+          // Loader igual que en el arranque inicial de la app
           if (window.SystemLoader && typeof window.SystemLoader.show === "function") {
             window.SystemLoader.show();
           }
           if (window.SystemLoader && typeof window.SystemLoader.setProgress === "function") {
-            window.SystemLoader.setProgress(0, loaderMsg);
-          }
-
-          // Fallback: si por algún motivo loadForPrefs tarda en reportar progreso,
-          // simulamos un avance suave hasta ~90% para evitar quedar clavados en 0%.
-          if (window.SystemLoader && typeof window.SystemLoader.setProgress === "function") {
-            var fakePct = 0;
-            fakeTimer = window.setInterval(function () {
-              try {
-                fakePct += 3;
-                if (fakePct > 90) fakePct = 90;
-                window.SystemLoader.setProgress(fakePct, loaderMsg);
-                if (fakePct >= 90) {
-                  window.clearInterval(fakeTimer);
-                  fakeTimer = null;
-                }
-              } catch (eInt) {
-                try {
-                  window.clearInterval(fakeTimer);
-                } catch (_) {}
-                fakeTimer = null;
-              }
-            }, 500);
+            // Dejamos que SystemLoader construya el texto base (Cargando / Loading + %)
+            window.SystemLoader.setProgress(0, "");
           }
 
           if (window.EntriesMemory && typeof window.EntriesMemory.loadForPrefs === "function") {
             await window.EntriesMemory.loadForPrefs(next, function (pct, text) {
               try {
                 if (window.SystemLoader && typeof window.SystemLoader.setProgress === "function") {
-                  var msg2 = text || loaderMsg;
-                  window.SystemLoader.setProgress(pct, msg2);
+                  // Igual que en bootstrap: pasamos texto vacío para que SystemLoader lo gestione
+                  window.SystemLoader.setProgress(pct, "");
                 }
               } catch (e) {}
             });
@@ -1006,11 +983,6 @@ window.MainPreferences = (function () {
         } catch (e) {
           console.warn("[Prefs] error recargando entries en memoria", e);
         } finally {
-          try {
-            if (typeof window !== "undefined" && window.clearInterval && fakeTimer) {
-              window.clearInterval(fakeTimer);
-            }
-          } catch (_) {}
           if (window.SystemLoader && typeof window.SystemLoader.hide === "function") {
             window.SystemLoader.hide();
           }

@@ -1,53 +1,158 @@
 /* Global theme variables */
 :root {
-  --bg: #ffffff;
+  /* Base colors */
+  --bg: #f6f6f8;
   --fg: #111827;
   --muted: #6b7280;
-  --accent: #2563eb;
+
+  /* Accent */
+  --accent: #3b82f6;
+  --accent-soft: rgba(59, 130, 246, 0.08);
+
+  /* Surfaces */
   --card: #ffffff;
   --border: #e5e7eb;
-  --accent-soft: color-mix(in srgb, var(--accent) 20%, var(--bg));
-  --toolbar-bg: var(--accent-soft);
-  --toolbar: #f8fafc;
+
+  /* Structural areas */
+  --header-bg: #000000;
+  --header-fg: #f9fafb;
+
+  --toolbar-bg: #f9fafb;
+  --toolbar-fg: #111827;
+
+  --main-bg: #f3f4f6;
+
+  --footer-bg: #000000;
+  --footer-fg: #9ca3af;
+  --footer-h: 36px;
+
+  /* Misc */
   --hover: #f3f4f6;
   --badge-bg: #eef2ff;
   --badge-border: #c7d2fe;
   --badge-fg: #1e3a8a;
-  --footer-h: 56px;
-
-  /* Tipografía y tamaño (controlados por preferencias) */
-  --base-pt: 12pt;
-  --app-font-fallback: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  --app-font: var(--app-font-fallback);
-
-  /* Colores derivados (se reescriben al aplicar preferencias) */
-  --header-bg: var(--card);
-  --footer-bg: var(--card);
-  --header-fg: var(--fg);
-  --footer-fg: var(--fg);
-  --main-bg: color-mix(in srgb, var(--accent) 3%, var(--bg));
 }
 
-html, body { min-height: 100%; }
+/* Reset básico */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
 body {
   margin: 0;
-  font: var(--base-pt)/1.5 var(--app-font);
+  padding: 0;
   background: var(--bg);
   color: var(--fg);
-  padding-bottom: var(--footer-h);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-.container { max-width: 100%; margin: 0 auto; padding: 0 16px; }
-.logo { font-weight: 700; letter-spacing: .3px; }
-.chip { padding: 6px 10px; border: 1px solid var(--border); background: transparent; color: var(--fg); border-radius: 10px; cursor: pointer; }
-.chip:hover { border-color: var(--accent); }
-.panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; min-height: 240px; }
-.panel h3 { margin: 4px 0 8px; font-size: 0.9em; color: var(--muted); }
-.list { list-style: none; padding: 0; margin: 0; }
-.list li { padding: 8px 10px; border-radius: 8px; cursor: pointer; }
-.list li:hover { background: var(--hover); }
-.badge { display: inline-block; font-size: 0.85em; padding: 2px 6px; border-radius: 6px; background: var(--badge-bg); border: 1px solid var(--badge-border); color: var(--badge-fg); }
-a { color: var(--accent); text-decoration: none; }
-/* === Overflow-X Guard === */
-html, body { max-width: 100%; overflow-x: hidden; }
-/* === /Overflow-X Guard === */
+/* Contenedor general para header / toolbar / footer */
+.container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* Marca principal en el header */
+.logo {
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+
+/* Chips / botones redondeados reutilizables */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.2;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease,
+    transform 0.12s ease;
+}
+
+.chip:hover {
+  background: var(--hover);
+  border-color: var(--accent);
+  transform: translateY(-0.5px);
+}
+
+.chip .icon {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+}
+
+/* Paneles de contenido (tarjetas) */
+.panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.panel h3 {
+  margin: 4px 0 8px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+/* Listas genéricas */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.list li {
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.list li:hover {
+  background: var(--hover);
+}
+
+/* Badges pequeños */
+.badge {
+  display: inline-block;
+  font-size: 0.8rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--badge-bg);
+  border: 1px solid var(--badge-border);
+  color: var(--badge-fg);
+}
+
+/* Links */
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Evitar scroll horizontal accidental */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}

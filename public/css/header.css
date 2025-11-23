@@ -299,8 +299,10 @@
 
 /* Dominio en el header (lado izquierdo) */
 .hdr-domain {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

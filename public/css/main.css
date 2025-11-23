@@ -7,7 +7,7 @@
 
   /* espacio para que el contenido NO se meta debajo de la solapa */
   /* espacio para que el contenido NO se meta debajo del título fijo */
-  padding-top: 24px;
+  padding-top: 64px;
 
   /* que nada quede detrás del footer fijo */
   padding-bottom: var(--footer-h);
@@ -938,16 +938,16 @@ select.prefs-select-loading option {
 /* Encabezados de vistas principales en el main (Navigator, Results, Focus, Prefs, etc.) */
 .main-view-header {
   position: fixed;
-  /* fijo justo debajo del header (60) + toolbar (44), con un pequeño aire */
-  top: calc(60px + 44px + 8px);
-  left: 3px;
-  right: 3px;
+  /* Fijo justo debajo del header (60) + toolbar (44), ocupando todo el ancho */
+  top: calc(60px + 44px);
+  left: 0;
+  right: 0;
   z-index: 40;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 16px;
-  border-radius: 999px; /* cerramiento redondeado */
+  padding: 10px 24px;
+  border-radius: 0; /* barra completa, sin bordes redondeados */
   background: color-mix(in srgb, var(--accent) 7%, var(--bg)); /* color del sistema al 7%, opaco */
 }
 
@@ -993,6 +993,11 @@ select.prefs-select-loading option {
 .results-summary {
   margin-bottom: 16px;
 }
+
+.results-summary.panel-single {
+  margin: 8px auto 16px;
+}
+
 
 /* Fila de 3 iconos de resumen (exactos / contemplados / aproximados) */
 .results-summary-chips {

@@ -15,6 +15,81 @@ window.MainFocus = (function () {
   }
 
 
+
+
+  function getSupabaseClient() {
+    try {
+      if (
+        window.BackendSupabase &&
+        typeof window.BackendSupabase.client === "function" &&
+        typeof window.BackendSupabase.isConfigured === "function" &&
+        window.BackendSupabase.isConfigured()
+      ) {
+        return window.BackendSupabase.client();
+      }
+    } catch (e) {
+      console.warn("[Focus] error obteniendo cliente Supabase", e);
+    }
+    return null;
+  }
+
+  async function syncLastView(ctx) {
+    // Solo usuarios autenticados
+    try {
+      if (
+        !window.AuthSession ||
+        !window.AuthSession.isLoggedIn ||
+        !window.AuthSession.isLoggedIn()
+      ) {
+        return;
+      }
+    } catch (e) {
+      return;
+    }
+
+    var client = getSupabaseClient();
+    if (!client) return;
+
+    var user = null;
+    try {
+      user =
+        window.AuthSession && typeof window.AuthSession.getUser === "function"
+          ? window.AuthSession.getUser()
+          : null;
+    } catch (e) {
+      console.warn("[Focus] error obteniendo usuario para last_view", e);
+      return;
+    }
+    if (!user || !user.id) return;
+
+    var payload = {
+      id: user.id,
+      last_view: {
+        language_code: ctx.language_code || ctx.language || "es",
+        level_1: ctx.level_1 || null,
+        level_2: ctx.level_2 || null,
+        level_3: ctx.level_3 || null,
+        level_4: ctx.level_4 || null,
+        level_5: ctx.level_5 || null,
+        level_6: ctx.level_6 || null,
+        level_7: ctx.level_7 || null,
+        view: ctx.view || "focus",
+      },
+    };
+
+    try {
+      var res = await client
+        .from("profiles")
+        .upsert(payload, { onConflict: "id" });
+
+      if (res && res.error) {
+        console.warn("[Focus] last_view upsert error", res.error);
+      }
+    } catch (e) {
+      console.warn("[Focus] last_view upsert exception", e);
+    }
+  }
+
   function render(container, options) {
     if (!container) return;
 
@@ -30,6 +105,25 @@ window.MainFocus = (function () {
     var l5 = opts.level_5 || "";
     var l6 = opts.level_6 || "";
     var l7 = opts.level_7 || "";
+
+
+    try {
+      // Guardar en el perfil (y opcionalmente otros lados) la última vista
+      syncLastView({
+        language_code: prefs.language || lang || "es",
+        level_1: l1,
+        level_2: l2,
+        level_3: l3,
+        level_4: l4,
+        level_5: l5,
+        level_6: l6,
+        level_7: l7,
+        view: "focus",
+      });
+    } catch (e) {
+      console.warn("[Focus] error disparando syncLastView", e);
+    }
+
 
     // 🔁 Preparar navegación anterior/siguiente dentro del mismo capítulo
     var prevRow = null;

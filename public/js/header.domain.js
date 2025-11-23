@@ -44,8 +44,7 @@ window.HeaderDomain = (function () {
   function applyVisibility() {
     var domainEl = document.getElementById("hdr-domain");
     if (!domainEl) return;
-    var hide = isMobile() && isLoggedIn();
-    domainEl.style.display = hide ? "none" : "";
+    domainEl.style.display = "";
   }
 
   function init() {
