@@ -2,12 +2,11 @@
 /* El main se muestra ENTRE toolbar y footer */
 #app-main {
   overflow-y: visible;
-  /* Header (60px) + Toolbar (44px) */
-  margin-top: calc(60px + 44px);
+  /* Offset dinámico = altura de header + toolbar (CSS var ajustada por JS) */
+  margin-top: var(--main-offset, 104px);
 
-  /* espacio para que el contenido NO se meta debajo de la solapa */
-  /* espacio para que el contenido NO se meta debajo del título fijo */
-  padding-top: 64px;
+  /* espacio para que el contenido arranque justo debajo del título fijo del main */
+  padding-top: var(--main-title-h, 56px);
 
   /* que nada quede detrás del footer fijo */
   padding-bottom: var(--footer-h);
@@ -15,8 +14,8 @@
   /* Fondo propio del main */
   background: var(--main-bg);
 
-  /* Altura mínima: ventana - header - toolbar - footer */
-  min-height: calc(100vh - (60px + 44px) - var(--footer-h));
+  /* Altura mínima: ventana - (header+toolbar) - footer */
+  min-height: calc(100vh - var(--main-offset, 104px) - var(--footer-h));
 
     /* 👉 Nuevo: padding lateral para que nada toque los bordes de la ventana */
   padding-left: 3px;
@@ -57,11 +56,11 @@
 .panel-single {
   overflow-y: visible;
   max-width: 720px;
-  margin: 24px auto 0;
+  margin: 0 auto 0;
   border: none;
   box-shadow: none;
   background: transparent;
-  padding: 12px 0;
+  padding: 0 0 12px 0;
 }
 
 /* === SOLAPA CENTRAL: título de la vista actual === */
@@ -586,7 +585,7 @@ select.prefs-select-loading option {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin-top: 16px;
+  margin-top: 0;
 }
 
 .nav-item-row {
@@ -937,19 +936,21 @@ select.prefs-select-loading option {
 
 /* Encabezados de vistas principales en el main (Navigator, Results, Focus, Prefs, etc.) */
 .main-view-header {
+  /* Barra de título propia del main, inmediatamente debajo del toolbar.
+     Fija (fixed) bajo header + toolbar mientras se hace scroll. */
   position: fixed;
-  /* Fijo justo debajo del header (60) + toolbar (44), ocupando todo el ancho */
-  top: calc(60px + 44px);
+  top: calc(var(--main-offset, 104px) - 1px);
   left: 0;
   right: 0;
-  z-index: 40;
+  z-index: 500;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 24px;
+  padding: 0 24px 10px;
   border-radius: 0; /* barra completa, sin bordes redondeados */
   background: color-mix(in srgb, var(--accent) 7%, var(--bg)); /* color del sistema al 7%, opaco */
 }
+
 
 .main-view-title {
   margin: 0;
@@ -995,7 +996,7 @@ select.prefs-select-loading option {
 }
 
 .results-summary.panel-single {
-  margin: 8px auto 16px;
+  margin: 0 auto 16px;
 }
 
 

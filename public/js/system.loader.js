@@ -56,6 +56,16 @@ window.SystemLoader = (function () {
 
     if (lblTxt) {
       lblTxt.textContent = finalLabel;
+      // Cambiamos el color del texto según cuánto haya subido el fondo:
+      // cuando la franja de color ya pasó por detrás del texto (aprox mitad),
+      // lo mostramos en blanco para que siga siendo legible.
+      try {
+        if (h >= 40) {
+          lblTxt.style.color = "#ffffff";
+        } else {
+          lblTxt.style.color = "#000000";
+        }
+      } catch (e) {}
     }
   }
   return {

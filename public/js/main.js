@@ -153,41 +153,54 @@ window.Main = (function () {
   }
 
   function adjustLayout() {
-  try {
-    var header = document.querySelector(".hdr-wrap");
-    var toolbar = document.querySelector(".toolbar-wrap");
-    var main = document.getElementById("app-main");
-    if (!main) return;
+    try {
+      var hdr = document.querySelector(".hdr-wrap");
+      var tbar = document.getElementById("app-toolbar");
+      var headerOffset = 0;
+      if (hdr && hdr.offsetHeight) headerOffset += hdr.offsetHeight;
+      if (tbar && tbar.offsetHeight) headerOffset += tbar.offsetHeight;
 
-    var headerH = header && header.offsetHeight ? header.offsetHeight : 0;
-    var toolbarH = toolbar && toolbar.offsetHeight ? toolbar.offsetHeight : 0;
-    var stackTop = headerH + toolbarH;
-
-    // Títulos fijos dentro del main (barra redonda)
-    var headerViews = document.querySelectorAll(".main-view-header");
-    var titleBlockH = 0;
-    if (headerViews && headerViews.length) {
-      for (var i = 0; i < headerViews.length; i++) {
-        headerViews[i].style.top = (stackTop + 8) + "px";
+      if (headerOffset <= 0) {
+        // Fallback al valor por defecto (60 + 44)
+        headerOffset = 104;
       }
-      var first = headerViews[0];
-      var tHeight = first.offsetHeight || 0;
-      titleBlockH = tHeight + 16; // altura del título + margen inferior
-    }
 
-    // El contenido del main comienza después de header + toolbar + títulos
-    if (stackTop + titleBlockH > 0) {
-      main.style.marginTop = (stackTop + titleBlockH) + "px";
+      var title = document.querySelector(".main-view-header");
+      var titleH = 0;
+      if (title && title.offsetHeight) {
+        titleH = title.offsetHeight;
+      }
+      if (titleH <= 0) {
+        // altura mínima razonable del título del main
+        titleH = 56;
+      }
+
+      if (document.documentElement && document.documentElement.style) {
+        var rootStyle = document.documentElement.style;
+        rootStyle.setProperty("--main-offset", headerOffset + "px");
+        rootStyle.setProperty("--main-title-h", titleH + "px");
+      }
+    } catch (e) {
+      console.warn("[Main] adjustLayout error", e);
     }
-  } catch (e) {
-    console.warn("[Main] error ajustando layout fijo:", e);
   }
-}
 
-function init() {
+
+  
+
+
+  function init() {
     // La vista inicial se decidirá después de que las preferencias y la base
     // se hayan cargado (system.bootstrap.prefs.js llamará a Main.showView).
     // Aquí no forzamos ninguna vista para permitir mostrar el mensaje de bienvenida.
+    try {
+      adjustLayout();
+      if (typeof window !== "undefined" && window.addEventListener) {
+        window.addEventListener("resize", adjustLayout);
+      }
+    } catch (e) {
+      console.warn("[Main] init/adjustLayout error", e);
+    }
   }
 
   if (document.readyState === "loading") {

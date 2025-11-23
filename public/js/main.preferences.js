@@ -954,21 +954,54 @@ window.MainPreferences = (function () {
 
         // 3) Recargar contenido en memoria para las nuevas preferencias
         try {
-          // Loader igual que en el arranque inicial de la app
+          var loaderMsg = getLang() === "en" ? "Loading" : "Cargando";
+          var fakeTimer = null;
+          var fakePct = 0;
+
+          // Overlay y texto inicial igual que en el arranque
           if (window.SystemLoader && typeof window.SystemLoader.show === "function") {
             window.SystemLoader.show();
           }
           if (window.SystemLoader && typeof window.SystemLoader.setProgress === "function") {
-            // Dejamos que SystemLoader construya el texto base (Cargando / Loading + %)
-            window.SystemLoader.setProgress(0, "");
+            window.SystemLoader.setProgress(0, loaderMsg);
+          }
+
+          // Progreso simulado suave hasta ~90% por si Supabase tarda
+          if (
+            window.SystemLoader &&
+            typeof window.SystemLoader.setProgress === "function" &&
+            typeof window.setInterval === "function"
+          ) {
+            fakeTimer = window.setInterval(function () {
+              try {
+                fakePct += 3;
+                if (fakePct > 90) fakePct = 90;
+                window.SystemLoader.setProgress(fakePct, loaderMsg);
+                if (fakePct >= 90) {
+                  window.clearInterval(fakeTimer);
+                  fakeTimer = null;
+                }
+              } catch (eInt) {
+                try {
+                  window.clearInterval(fakeTimer);
+                } catch (_) {}
+                fakeTimer = null;
+              }
+            }, 500);
           }
 
           if (window.EntriesMemory && typeof window.EntriesMemory.loadForPrefs === "function") {
             await window.EntriesMemory.loadForPrefs(next, function (pct, text) {
               try {
+                var label = (typeof text === "string" && text.trim())
+                  ? text
+                  : loaderMsg;
+                var shownPct = typeof pct === "number" ? pct : 0;
+                if (typeof fakePct === "number" && fakePct > shownPct) {
+                  shownPct = fakePct;
+                }
                 if (window.SystemLoader && typeof window.SystemLoader.setProgress === "function") {
-                  // Igual que en bootstrap: pasamos texto vacío para que SystemLoader lo gestione
-                  window.SystemLoader.setProgress(pct, "");
+                  window.SystemLoader.setProgress(shownPct, label);
                 }
               } catch (e) {}
             });
@@ -983,6 +1016,11 @@ window.MainPreferences = (function () {
         } catch (e) {
           console.warn("[Prefs] error recargando entries en memoria", e);
         } finally {
+          try {
+            if (typeof window !== "undefined" && window.clearInterval && fakeTimer) {
+              window.clearInterval(fakeTimer);
+            }
+          } catch (_) {}
           if (window.SystemLoader && typeof window.SystemLoader.hide === "function") {
             window.SystemLoader.hide();
           }
