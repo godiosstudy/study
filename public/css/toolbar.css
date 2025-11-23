@@ -50,7 +50,7 @@
 }
 
 .crumb-link:hover {
-  color: var(--accent, #2563eb);
+  color: #000000;
   text-decoration: underline;
 }
 
@@ -135,7 +135,7 @@ select.crumb-select-loading option {
   align-items: center;
   justify-content: center;
   pointer-events: none;
-  color: var(--accent, #2563eb);
+  color: #000000;
 }
 
 .search-icon .icon-search {
