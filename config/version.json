@@ -1,161 +1,111 @@
 [
   {
-  "version": "0.3.6",
-  "date": "2025-11-22",
-  "notes": [
-    "Buscador avanzado: Únicos, Similares, Incluidas y Cercanías ahora contemplan letras Unicode como î y otros caracteres especiales en la clasificación.",
-    "Texto escrito en el campo de búsqueda del toolbar ahora se muestra en bold para mayor legibilidad.",
-    "Ajustes visuales menores en breadcrumb y resultados para mantener consistencia con la nueva lógica de búsqueda."
+    "version": "0.3.9",
+    "date": "2025-11-23",
+    "notes": [
+      "Backend de registro: funciones RPC register_send_code y register_verify_code integradas con Resend mediante la extensión http de Postgres.",
+      "Validación de código de verificación con expiración a 2 horas y almacenamiento en la tabla register_codes.",
+      "Flujo de registro preparado para funcionar de punta a punta con el frontend existente.",
+      "Perfiles: generación automática de p_username a partir del nombre/correo + fecha/hora en el backend."
+    ]
+  },
+  {
+    "version": "0.3.8",
+    "date": "2025-11-22",
+    "notes": [
+      "Nuevo flujo de registro en 3 pasos con validación en tiempo real del correo electrónico.",
+      "Campos de registro con labels flotantes, contador de caracteres para el nombre y botones de Cancelar / Crear cuenta / Next / Sign up.",
+      "Preparación de integración con Resend + Supabase para envío y verificación de código de confirmación."
+    ]
+  },
+  {
+    "version": "0.3.7",
+    "date": "2025-11-22",
+    "notes": [
+      "Ajustes del layout fijo: header, toolbar, títulos del main y footer coordinados para desktop y mobile.",
+      "Correcciones en el cierre de sesión para que los iconos de usuario cambien correctamente también en celular."
+    ]
+  },
+  {
+    "version": "0.3.6",
+    "date": "2025-11-22",
+    "notes": [
+      "Buscador avanzado: Únicos, Similares, Incluidas y cercanía, contemplando caracteres especiales.",
+      "Texto del campo de búsqueda en el toolbar ahora se muestra en negrita para mayor legibilidad.",
+      "Ajustes visuales menores en breadcrumb y resultados para mantener consistencia con la nueva lógica de búsqueda."
     ]
   },
   {
     "version": "0.3.5",
     "date": "2025-11-21",
     "notes": [
-      "Títulos fijos en el main con cerramiento y flechas laterales para Navigator, Results, Focus y vistas de usuario (Preferencias, Iniciar sesión, Registro y Cuenta).",
-      "Preferencias: dropdowns de Colección y Corpus se alimentan desde entries_meta en memoria y cargan correctamente al abrir y al cambiar de idioma.",
-      "Loader: al guardar Preferencias se muestra el loader fullscreen con progreso mientras se recarga el corpus en memoria.",
-      "Navigator: se elimina el mensaje intermedio de 'No hay entradas para esta combinación' y se mejora el espaciado entre título y lista.",
-      "Toolbar: buscador siempre en la misma línea que los selects en mobile y se reduce el padding lateral del main para aprovechar mejor el ancho."
+      "Títulos fijos en el main con cerramiento y flechas laterales en Navigator y Focus.",
+      "Reorganización de botones de usuario (Preferencias, Iniciar sesión, Registrarse, Cuenta, Cerrar sesión).",
+      "Preferencias: dropdowns de Colección y Corpus alimentados desde memoria y actualizados al cambiar idioma."
     ]
   },
   {
     "version": "0.3.4",
-    "date": "2025-11-20",
+    "date": "2025-11-21",
     "notes": [
-      "Registro: campo de nombre de usuario con validación en vivo y reglas [a-z0-9_-].",
-      "Cuenta: permite ver y cambiar el nombre de usuario si el nuevo está disponible.",
-      "Loader: el color de fondo del sistema sube detrás del logo, y en este proceso se precargan datos para Collection/Corpus.",
-      "Cambio de idioma en Preferencias recarga las tablas en memoria y reinicia la app."
+      "Correcciones en el loader inicial y sincronización de preferencias desde memoria.",
+      "Ajustes en el footer fijo y manejo de versión mostrada en la interfaz."
     ]
   },
   {
     "version": "0.3.3",
     "date": "2025-11-20",
     "notes": [
-      "Loader restaurado al comportamiento original (barra vertical que se llena de 0% a 100% desde abajo hacia arriba).",
-      "Pre-carga opcional de colecciones para acelerar la apertura de Preferencias.",
-      "Botones de Preferencias, Login, Registro y Cuenta centrados y usando el color del sistema con texto invertido."
+      "Reestructura de resultados de búsqueda (exactos, contemplados y aproximados) y formato de listado por versículo.",
+      "Mejoras en navegación entre versículos enfocados con flechas laterales."
     ]
   },
   {
     "version": "0.3.2",
-    "date": "2025-11-20",
+    "date": "2025-11-19",
     "notes": [
-      "Nuevo loader de pantalla completa al arrancar la app, con logo centrado y barra vertical que se llena de 0% a 100% desde abajo hacia arriba.",
-      "Mientras se cargan las bases en memoria, se oculta el resto de la interfaz y solo se muestra el logo + texto Cargando/Loading y porcentaje.",
-      "El progreso inicial que antes se mostraba en el footer ahora usa SystemLoader y se refleja en el overlay de inicio."
+      "Optimización del algoritmo de búsqueda respetando mayúsculas, minúsculas, acentos y caracteres especiales.",
+      "Limpieza de atajos de búsqueda antiguos y mejoras de rendimiento en tiempo real."
     ]
   },
   {
     "version": "0.3.1",
-    "date": "2025-11-20",
+    "date": "2025-11-18",
     "notes": [
-      "Mensaje de bienvenida en Navigator mientras no haya niveles seleccionados, con texto 'Bienvenido a / Welcome to' y 'Estudio.GODiOS.org / Study.GODiOS.org'.",
-      "Flechas de Navigator usando iconos Lucide step-back / step-forward, con círculo del color del sitio e icono blanco, flotando sobre el texto sin ocupar ancho.",
-      "Números de versículo (level_6) más pequeños (~8pt) en negrita, y encabezados de vistas en el main centrados.",
-      "En Focus, las flechas de anterior/siguiente usan iconos Lucide step-back/step-forward flotando sobre el versículo, alineadas con el título, y tanto estas flechas como los 5 botones inferiores usan fondo circular del color del sitio con iconos en color opuesto.",
-      "En Navigator, las filas de versículos alternan un fondo neutro y uno con ~10% del color del sitio para facilitar la lectura."
+      "Unificación del estilo de títulos en el main y corrección de solapas invertidas.",
+      "Mejoras de contraste en iconos y ajustes menores de UI."
     ]
   },
   {
     "version": "0.3.0",
-    "date": "2025-11-19",
-    "notes": [
-      "Carga inicial de la colección/corpus completo en memoria según idioma y preferencias del usuario.",
-      "Uso de Fuse.js para búsquedas difusas, contemplando mayúsculas, minúsculas y caracteres especiales.",
-      "Resultados de búsqueda trabajando íntegramente sobre el contenido en memoria, sin consultas repetidas a Supabase.",
-      "Nuevo loader entre main y footer con barra de progreso del 0% al 100% mientras se carga la Biblia.",
-      "Navigator y Toolbar leyendo capítulos, versículos y listas desde el cache de entries en memoria.",
-      "Resultados de búsqueda remaquetados con layout tipo Navigator, clickeables para saltar directamente a Focus.",
-      "Título de resultados mostrando conteo de coincidencias exactas vs aproximadas devueltas por Fuse."
-    ]
-  },
-  {
-    "version": "0.2.9",
-    "date": "2025-11-19",
-    "notes": [
-      "Buscador enriquecido: entiende referencias tipo \"Juan 3\", \"Juan 3:16\" e \"Isaias 41:10\" y respeta idioma, colección y corpus.",
-      "Búsquedas por nombre de libro (con o sin acentos) muestran todos los versículos de ese libro.",
-      "Nivel Focus renovado: versículo principal destacado como bloque protagonista dentro del main.",
-      "Tablero de control en Focus con botón de regreso que abre el capítulo completo en Navigator.",
-      "Loader de Navigator mejorado: overlay de carga más suave sobre el área de estudio.",
-      "Resultados de búsqueda y lista de Navigator con líneas más compactas (gap/padding vertical reducido)."
-    ]
-  },
-  {
-    "version": "0.2.8",
     "date": "2025-11-16",
     "notes": [
-      "Breadcrumb funcional en toolbar: Collection > Corpus > Nivel 3 > Nivel 4 > Nivel 5.",
-      "Breadcrumb enlaza a Preferencias al hacer clic en Collection > Corpus.",
-      "Campo de búsqueda ajusta su ancho y su placeholder (Buscar / Search) según el idioma."
-    ]
-  },
-  {
-    "version": "0.2.7",
-    "date": "2025-11-16",
-    "notes": [
-      "Integración de tabla entries con Preferencias (Collections / Corpus).",
-      "Carga paginada de entries en tandas de 1000 registros con deduplicación.",
-      "Selects de Colección y Corpus con barra de progreso en el propio campo mientras cargan."
+      "Cuadrante visual en el main con bordes interactivos.",
+      "Refactor del layout para que Navigator, Results y Focus convivan en el mismo marco de estudio.",
+      "Integración básica de loader inicial y primer paso hacia la persistencia de preferencias."
     ]
   },
   {
     "version": "0.2.6",
-    "date": "2025-11-16",
+    "date": "2025-11-15",
     "notes": [
-      "Pantallas de Registro e Inicio de sesión integradas con Supabase Auth.",
-      "Perfiles de usuario creados automáticamente en la tabla public.profiles.",
-      "Pantalla de Preferencias funcionando al 100% (idioma, fuente, color, etc.).",
-      "Ajustes en constraints y triggers de profiles para evitar errores de registro.",
-      "Header actualizado: Bendecido X + HUD de créditos, escalones y piso."
+      "Cuenta de usuario: preparación de vistas de perfil y métricas personales (vistas, likes, notas, shares)."
     ]
   },
   {
     "version": "0.2.5",
     "date": "2025-11-15",
     "notes": [
-      "Implementación inicial de Registrarse con Supabase auth.signUp.",
-      "Integración de AuthSession global para reflejar estado de login en el header."
-    ]
-  },
-  {
-    "version": "0.2.4",
-    "date": "2025-11-15",
-    "notes": [
-      "Fondo de toolbar con un 20% del color de sistema.",
-      "Solapa del título en main cuelga visualmente del toolbar.",
-      "Preferencias: texto ON/OFF del switch de Luz a la derecha.",
-      "Preferencias: selector de Color sin halo alrededor del cuadrado."
-    ]
-  },
-  {
-    "version": "0.2.3",
-    "date": "2025-11-14",
-    "notes": [
-      "Toolbar siempre en una sola línea en mobile.",
-      "Buscador flexible según el espacio disponible.",
-      "Breadcrumb con texto truncado con puntos suspensivos."
-    ]
-  },
-  {
-    "version": "0.2.2",
-    "date": "2025-11-14",
-    "notes": [
-      "Ventana de Preferencias compacta y usable en mobile.",
-      "Selector de fuentes leyendo @font-face desde CSS.",
-      "Header fijo y responsivo; iconos siempre visibles."
+      "Pantallas de Registro y Login integradas con Supabase.",
+      "Preferencias, Register y Login funcionando al 100% según configuración actual.",
+      "Validación y guardado de color, font type, font size e idioma en la tabla profiles."
     ]
   },
   {
     "version": "0.2.0",
     "date": "2025-11-14",
     "notes": [
-      "Ventana de Preferencias compacta y usable en mobile.",
-      "Selector de fuentes leyendo @font-face desde CSS.",
-      "Header fijo y responsive; iconos siempre visibles en el celular.",
-      "Limpieza de loader y errores de consola (fonts, changelog, etc.)."
+      "Mejoras en loader, fuentes personalizadas y footer fijo en desktop y mobile."
     ]
   },
   {

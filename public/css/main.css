@@ -1,14 +1,27 @@
 
-/* El main se muestra ENTRE header/toolbar y footer, en flujo normal */
-/* El main se muestra entre header/toolbar y footer; offset por JS */
+/* El main se muestra ENTRE toolbar y footer */
 #app-main {
   overflow-y: visible;
+  /* Header (60px) + Toolbar (44px) */
+  margin-top: calc(60px + 44px);
+
+  /* espacio para que el contenido NO se meta debajo de la solapa */
+  /* espacio para que el contenido NO se meta debajo del título fijo */
+  padding-top: 24px;
+
+  /* que nada quede detrás del footer fijo */
   padding-bottom: var(--footer-h);
+
+  /* Fondo propio del main */
   background: var(--main-bg);
-  min-height: calc(100vh - var(--footer-h));
+
+  /* Altura mínima: ventana - header - toolbar - footer */
+  min-height: calc(100vh - (60px + 44px) - var(--footer-h));
+
+    /* 👉 Nuevo: padding lateral para que nada toque los bordes de la ventana */
+  padding-left: 3px;
+  padding-right: 3px;
 }
-
-
 
 /* Contenedor interno del main */
 .main-wrap {
@@ -53,9 +66,12 @@
 
 /* === SOLAPA CENTRAL: título de la vista actual === */
 #view-title.view-title-pill {
-  position: static;
-  margin: 8px auto 0;
-  display: none; /* se muestra solo cuando se use explícitamente */
+  position: fixed;
+  /* JUSTO donde termina el toolbar: header (60) + toolbar (44) */
+  top: calc(60px + 44px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 850;
 
   height: 32px;
   padding: 0 20px;
@@ -922,7 +938,8 @@ select.prefs-select-loading option {
 /* Encabezados de vistas principales en el main (Navigator, Results, Focus, Prefs, etc.) */
 .main-view-header {
   position: fixed;
-  /* el top real se calcula dinámicamente en JS según header + toolbar */
+  /* fijo justo debajo del header (60) + toolbar (44), con un pequeño aire */
+  top: calc(60px + 44px + 8px);
   left: 3px;
   right: 3px;
   z-index: 40;
@@ -974,7 +991,7 @@ select.prefs-select-loading option {
 /* Resumen de resultados con chips de iconos en Results */
 
 .results-summary {
-  margin-bottom: 8px;
+  margin-bottom: 16px;
 }
 
 /* Fila de 3 iconos de resumen (exactos / contemplados / aproximados) */
@@ -984,7 +1001,7 @@ select.prefs-select-loading option {
   justify-content: center;
   align-items: flex-start;
   gap: 16px;
-  margin-top: 4px;
+  margin-top: 0;
 }
 
 /* Botón redondo tipo estadística de resultados */
@@ -1091,6 +1108,30 @@ select.prefs-select-loading option {
   border-color: var(--accent, var(--header-bg));
 }
 
+
+/* Botón primario estándar para formularios (olvido de contraseña, etc.) */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+
+  background: var(--accent, var(--header-bg));
+  color: #ffffff;
+  border: 1px solid var(--accent, var(--header-bg));
+}
+
+.btn-primary[disabled],
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
+
 /* Resaltados de resultados por tipo */
 .results-text mark {
   padding: 0 1px;
@@ -1124,6 +1165,30 @@ select.prefs-select-loading option {
   color: #000;
 }
 
+
+
+/* Botón primario estándar para formularios (olvido de contraseña, etc.) */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+
+  background: var(--accent, var(--header-bg));
+  color: #ffffff;
+  border: 1px solid var(--accent, var(--header-bg));
+}
+
+.btn-primary[disabled],
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
 
 /* Resaltados de resultados por tipo */
 .results-text mark {
@@ -1191,4 +1256,145 @@ select.prefs-select-loading option {
   color: #000000;
 }
 
+/* ============================
+   Registro v0.3.8 – estilo tipo X
+   ============================ */
+.register-panel {
+  max-width: 520px;
+  margin: 0 auto;
+}
 
+.register-header {
+  /* la posición y top los maneja el layout general de main */
+}
+
+.register-card {
+  margin-top: 16px;
+  padding: 16px 16px 20px;
+  border-radius: 18px;
+  border: 1px solid var(--header-bg, var(--accent, #0ea5e9));
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.register-step {
+  margin-top: 4px;
+}
+
+.reg-field {
+  position: relative;
+  margin-bottom: 18px;
+}
+
+.reg-field input[type="text"],
+.reg-field input[type="email"],
+.reg-field input[type="password"] {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 18px 12px 8px;
+  background: #ffffff;
+  color: var(--fg);
+  font-size: 1rem;
+}
+
+.reg-field input:focus {
+  outline: none;
+  border-color: var(--header-bg, var(--accent, #0ea5e9));
+  box-shadow: 0 0 0 1px var(--header-bg, var(--accent, #0ea5e9));
+}
+
+.reg-field label {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.9rem;
+  color: var(--header-bg, var(--accent, #0ea5e9));
+  pointer-events: none;
+  transition: all 0.15s ease-out;
+}
+
+.reg-field.has-value label,
+.reg-field input:focus + label {
+  top: 6px;
+  font-size: 0.75rem;
+}
+
+.reg-counter {
+  position: absolute;
+  top: 6px;
+  right: 12px;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.reg-field.error input {
+  border-color: #dc2626;
+}
+
+.reg-field.error label {
+  color: #dc2626;
+}
+
+.register-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.register-actions.single {
+  justify-content: flex-end;
+}
+
+.register-actions .chip {
+  flex: 1 1 0;
+}
+
+.register-actions .chip.primary {
+  background: var(--accent, var(--header-bg));
+  color: #ffffff;
+  border-color: var(--accent, var(--header-bg));
+}
+
+.register-actions .chip.primary[disabled] {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
+
+.reg-legal {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: #4b5563;
+  line-height: 1.35;
+}
+
+.chip.link-like {
+  background: transparent;
+  border: none;
+  padding-left: 0;
+  padding-right: 0;
+  color: var(--header-bg, var(--accent, #0ea5e9));
+  box-shadow: none;
+  justify-content: flex-start;
+}
+
+.chip.link-like:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .register-panel {
+    max-width: 100%;
+  }
+
+  .register-card {
+    border-radius: 0;
+    box-shadow: none;
+    border-left: none;
+    border-right: none;
+  }
+}
