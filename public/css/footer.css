@@ -37,6 +37,7 @@
   cursor: pointer;
   font-size: 14px;
   line-height: 1;               /* para que no empuje la altura */
+  font-weight: 700;
 }
 
 /* Logo */
@@ -75,6 +76,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-weight: 700;
 }
 
 

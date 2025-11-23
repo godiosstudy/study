@@ -169,6 +169,9 @@
     docEl.style.setProperty('--footer-bg', accent);
     docEl.style.setProperty('--footer-fg', headFg);
 
+    // Color de contraste reutilizable para iconos sobre el color de sistema
+    docEl.style.setProperty('--accent-contrast', headFg);
+
     // Main tint 3% (fondo suave, NO relacionado con LUZ)
     try {
       const bg = getComputedStyle(docEl).getPropertyValue('--bg') || '#ffffff';

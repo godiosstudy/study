@@ -301,7 +301,6 @@
 .hdr-domain {
   font-weight: 700;
   font-size: 0.9rem;
-  text-transform: uppercase;
   letter-spacing: 0.14em;
   white-space: nowrap;
   overflow: hidden;
