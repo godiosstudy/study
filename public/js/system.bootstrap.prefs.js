@@ -322,32 +322,30 @@
       return prefs;
     }
 
-    // === Nuevo comportamiento por defecto basada en entries ===
-    // Tomamos el PRIMER registro de entries para el idioma detectado
-    // y de ahí sacamos collection (level_1) y corpus (level_2).
-    var collection = null;
-    var corpus = null;
+    // 1) Intentar obtener collection/corpus desde la PRIMERA fila de entries
+    var collection = prefs.collection || null;
+    var corpus = prefs.corpus || null;
 
-    try {
-      var firstRes = await client
-        .from("entries_meta")
-        .select("level_1, level_2")
-        .eq("language_code", lang)
-        .order("level_1", { ascending: true })
-        .order("level_2", { ascending: true })
-        .limit(1);
+    if (!collection || !corpus) {
+      try {
+        var firstRes = await client
+          .from("entries")
+          .select("level_1, level_2")
+          .eq("language_code", lang)
+          .order("entry_order", { ascending: true })
+          .limit(1);
 
-      if (!firstRes.error && firstRes.data && firstRes.data.length) {
-        var row0 = firstRes.data[0] || {};
-        collection = row0.level_1 || null;
-        corpus = row0.level_2 || null;
+        if (!firstRes.error && firstRes.data && firstRes.data.length) {
+          var row0 = firstRes.data[0] || {};
+          collection = collection || row0.level_1 || null;
+          corpus = corpus || row0.level_2 || null;
+        }
+      } catch (e) {
+        console.warn("[BootstrapPrefs] entries first row error", e);
       }
-    } catch (e) {
-      console.warn("[BootstrapPrefs] entries first row error", e);
     }
 
-    // Fallback suave: si por algún motivo no obtuvimos nada,
-    // mantenemos el comportamiento anterior (primer level_1 / level_2 válidos).
+    // 2) Fallback suave a entries_meta si sigue faltando algo
     if (!collection || !corpus) {
       try {
         var resL1 = await client
@@ -383,8 +381,38 @@
       }
     }
 
-    prefs.collection = prefs.collection || collection;
-    prefs.corpus = prefs.corpus || corpus;
+    prefs.collection = collection;
+    prefs.corpus = corpus;
+
+    // 3) Inicializar breadcrumb (ToolbarState) usando el primer versículo del corpus
+    if (client && collection && corpus) {
+      try {
+        var verseRes = await client
+          .from("entries")
+          .select("level_3, level_4, level_5, level_7, entry_order")
+          .eq("language_code", lang)
+          .eq("level_1", collection)
+          .eq("level_2", corpus)
+          .order("entry_order", { ascending: true })
+          .limit(1);
+
+        if (!verseRes.error && verseRes.data && verseRes.data.length) {
+          var v0 = verseRes.data[0] || {};
+          var l3 = v0.level_3 || null;
+          var l4 = v0.level_4 || null;
+          var l5 = v0.level_5 || v0.level_7 || null;
+
+          if (l3 && l4 && l5) {
+            window.ToolbarState = window.ToolbarState || {};
+            if (!window.ToolbarState.level_3) window.ToolbarState.level_3 = l3;
+            if (!window.ToolbarState.level_4) window.ToolbarState.level_4 = l4;
+            if (!window.ToolbarState.level_5) window.ToolbarState.level_5 = l5;
+          }
+        }
+      } catch (e) {
+        console.warn("[BootstrapPrefs] error inicializando breadcrumb por defecto", e);
+      }
+    }
 
     try {
       if (store && typeof store.save === "function") {
@@ -401,11 +429,6 @@
 
     return prefs;
   }
-
-
-
-
-  
   async function afterBibleLoaded(prefs) {
     // Pre-cargar colecciones/corpus para Preferencias durante el loader
     try {
@@ -458,15 +481,29 @@ function showInitialView() {
 
       if (hasLocal) {
         try {
-          prefs = store.load();
-          if (store && typeof store.apply === "function") {
-            store.apply(prefs);
-          }
-          ensureDomLang((prefs && prefs.language) || "es");
-          dispatchPrefsApplied(prefs);
+          prefs =
+            (store && typeof store.load === "function" && store.load()) || {};
         } catch (e) {
-          console.warn("[BootstrapPrefs] error aplicando prefs locales", e);
+          console.warn("[BootstrapPrefs] error leyendo prefs locales", e);
+          prefs = {};
         }
+
+        // Si las prefs locales no tienen collection/corpus, las completamos
+        // con la lógica basada en entries.
+        if (!prefs.collection || !prefs.corpus) {
+          prefs = await step3_DefaultFromEntries(store);
+        } else {
+          try {
+            if (store && typeof store.apply === "function") {
+              store.apply(prefs);
+            }
+            ensureDomLang((prefs && prefs.language) || "es");
+            dispatchPrefsApplied(prefs);
+          } catch (e) {
+            console.warn("[BootstrapPrefs] error aplicando prefs locales", e);
+          }
+        }
+
         await loadBibleCache(prefs);
         await afterBibleLoaded(prefs);
         showInitialView();
@@ -482,7 +519,6 @@ function showInitialView() {
       hideLoader();
     }
   }
-
   documentReady(function () {
     bootstrap();
   });
