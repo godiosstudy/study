@@ -447,6 +447,15 @@ window.MainLogin = (function () {
       else fieldEl.classList.remove("error");
     }
 
+    function markHasValue(inputEl) {
+      if (!inputEl) return;
+      var wrap = inputEl.closest(".reg-field");
+      if (!wrap) return;
+      var hasVal = !!inputEl.value;
+      if (hasVal) wrap.classList.add("has-value");
+      else wrap.classList.remove("has-value");
+    }
+
     function clearHints() {
       if (idHint) {
         idHint.textContent = "";
@@ -540,11 +549,13 @@ window.MainLogin = (function () {
     }
 
     if (idEl) {
+      markHasValue(idEl);
       idEl.addEventListener("input", function () {
         state.identifier = (idEl.value || "").trim();
         state.idStatus = state.identifier ? "dirty" : "empty";
         state.emailForAuth = null;
         setFieldError(idEl.closest(".reg-field"), false);
+        markHasValue(idEl);
         if (idHint) {
           idHint.textContent = "";
           idHint.classList.remove("error", "ok");
@@ -558,8 +569,10 @@ window.MainLogin = (function () {
     }
 
     if (passwordEl) {
+      markHasValue(passwordEl);
       passwordEl.addEventListener("input", function () {
         state.password = passwordEl.value || "";
+        markHasValue(passwordEl);
         recomputeSubmitEnabled();
       });
     }
