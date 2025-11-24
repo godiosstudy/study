@@ -21,7 +21,7 @@ window.MainForget = (function () {
       '      <p class="field-hint" id="forget-hint"></p>',
       "    </div>",
       '    <div class="register-actions single">',
-      '      <button type="submit" class="chip primary" id="forget-submit"></button>',
+      '      <button type="submit" class="chip primary" id="forget-submit" disabled></button>',
       "    </div>",
       "  </form>",
       "</div>",
@@ -96,19 +96,66 @@ window.MainForget = (function () {
     var emailInput = root.querySelector("#forget-email");
     var fieldHint = root.querySelector("#forget-hint");
     var globalHint = root.querySelector("#forget-global-hint");
+    var submitBtn = root.querySelector("#forget-submit");
 
     function showHint(el, msg, kind) {
       if (!el) return;
       el.textContent = msg || "";
-      el.className = "field-hint" + (kind ? " " + kind : "");
+      el.className = "field-hint";
+      if (kind === "error") el.classList.add("error");
+      if (kind === "ok") el.classList.add("ok");
+    }
+
+    function markHasValue(inputEl) {
+      if (!inputEl) return;
+      var wrap = inputEl.closest(".reg-field");
+      if (!wrap) return;
+      var hasVal = !!inputEl.value;
+      if (hasVal) wrap.classList.add("has-value");
+      else wrap.classList.remove("has-value");
+    }
+
+    function clearHints() {
+      showHint(fieldHint, "", null);
+      showHint(globalHint, "", null);
+    }
+
+    function recomputeSubmitEnabled() {
+      if (!submitBtn) return;
+      var value = (emailInput && emailInput.value || "").trim();
+      if (!value) {
+        submitBtn.disabled = true;
+        return;
+      }
+      submitBtn.disabled = !isValidEmail(value);
+    }
+
+    if (emailInput) {
+      // Estado inicial sin placeholder visual
+      emailInput.setAttribute("placeholder", "");
+      markHasValue(emailInput);
+      recomputeSubmitEnabled();
+
+      emailInput.addEventListener("input", function () {
+        markHasValue(emailInput);
+        clearHints();
+        recomputeSubmitEnabled();
+      });
+
+      emailInput.addEventListener("blur", function () {
+        markHasValue(emailInput);
+      });
     }
 
     if (form) {
       form.addEventListener("submit", function (ev) {
         ev.preventDefault();
+        clearHints();
+
         var email = (emailInput && emailInput.value || "").trim();
         if (!isValidEmail(email)) {
           showHint(fieldHint, t("emailRequired"), "error");
+          recomputeSubmitEnabled();
           return;
         }
 
@@ -120,8 +167,12 @@ window.MainForget = (function () {
 
     window.addEventListener("i18n:changed", function () {
       applyTexts(root);
+      // Reaplicar estados visuales si cambia el idioma
+      if (emailInput) {
+        markHasValue(emailInput);
+        recomputeSubmitEnabled();
+      }
     });
   }
-
   return { render: render };
 })();

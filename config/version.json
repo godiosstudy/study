@@ -1,5 +1,124 @@
 [
   {
+    "version": "0.4.19",
+    "date": "2025-11-23",
+    "notes": [
+      "En Login (y formularios basados en .reg-field) las etiquetas de los campos ahora se muestran en la línea superior, alineadas a la izquierda, usando un layout en columna (label, campo, hint).",
+      "El enlace '¿Olvidaste tu contraseña?' se centra debajo de los botones y se separa un poco más del formulario para mayor claridad."
+    ]
+  },
+  {
+    "version": "0.4.18",
+    "date": "2025-11-23",
+    "notes": [
+      "Las vistas de autenticación (login, registro, cuenta y recuperación) ahora usan un fondo basado en el 50% del color del sistema.",
+      "Todos los campos basados en .reg-field y .form-vert muestran la etiqueta arriba del campo con el mismo estilo unificado (texto gris suave y bordes redondeados).",
+      "En Login se añadió el enlace '¿Olvidaste tu contraseña? / Forgot your password?' debajo de los botones, que navega a la vista de recuperación (forget.js)."
+    ]
+  },
+  {
+    "version": "0.4.17",
+    "date": "2025-11-23",
+    "notes": [
+      "En la barra de búsqueda, el placeholder 'Buscar'/'Search' se muestra en gris claro y sin negrita, pero cuando el usuario escribe el texto pasa automáticamente a negrita y usa el mismo tamaño/tipo de letra que los dropdowns.",
+      "Tras un login exitoso, se recarga la memoria de entries con las preferencias sincronizadas del usuario y se reabre la vista de Navigator, mostrando directamente el último contexto usado según el breadcrumb."
+    ]
+  },
+  {
+    "version": "0.4.16",
+    "date": "2025-11-23",
+    "notes": [
+      "La barra fija de filtros en resultados ahora ocupa el 100% del ancho de la pantalla anulando el max-width heredado de .panel-single y centrando los cuatro filtros en el medio.",
+      "Para usuarios no logueados, los filtros solo se muestran en la primera búsqueda; desde la segunda en adelante la barra muestra únicamente el mensaje invitando a iniciar sesión. Los usuarios logueados siguen viendo los filtros siempre."
+    ]
+  },
+  {
+    "version": "0.4.15",
+    "date": "2025-11-23",
+    "notes": [
+      "Se corrigió el fondo general del main para que vuelva a usar var(--main-bg), evitando que todo el contenido quede teñido con el 25% del color del sitio.",
+      "La barra de filtros de resultados mantiene el fondo al 25% del color del sitio, pero ahora mezclado directamente con el fondo base (var(--bg)) en lugar de afectar el main completo.",
+      "Se reforzó el centrado horizontal de los filtros añadiendo márgenes automáticos en .results-summary-chips."
+    ]
+  },
+  {
+    "version": "0.4.14",
+    "date": "2025-11-23",
+    "notes": [
+      "El fondo de la barra fija de filtros en resultados ahora usa un mix al 25% del color del sitio con el fondo para mayor protagonismo visual.",
+      "El loader inicial ajusta el tamaño de fuente de 'Cargando' y el porcentaje a 13px y negrita, manteniendo la legibilidad.",
+      "Tanto el texto principal como el porcentaje del loader cambian automáticamente entre negro y blanco según la altura de la franja de color de fondo, para que sigan siendo visibles cuando el color pasa por detrás."
+    ]
+  },
+  {
+    "version": "0.4.13",
+    "date": "2025-11-23",
+    "notes": [
+      "Ajustado el margen superior de la lista de resultados para que el primer versículo comience justo debajo de la barra fija de filtros (título + filtros) y no se quede oculto.",
+      "Modificada la lógica de filtros para invitados: ahora los usuarios no logueados ven los filtros en la primera y segunda búsqueda, y a partir de la tercera se sustituyen por un mensaje invitando a iniciar sesión."
+    ]
+  },
+  {
+    "version": "0.4.12",
+    "date": "2025-11-23",
+    "notes": [
+      "Se oculta el chip de créditos en el header para usuarios logueados, manteniendo solo escalones y piso.",
+      "El fondo de la barra de título del main usa ahora un mix al 50% del color del sitio con el fondo, para un tono más suave.",
+      "El texto de la versión del changelog en el footer ya no está en negrita y usa un color derivado al 50% del color del sitio.",
+      "El campo de búsqueda muestra el texto normal (sin bold) en un gris suave, con placeholder traducido dinámicamente a 'Buscar' o 'Search'.",
+      "Los filtros de resultados se muestran en una barra fija debajo del título del main; para invitados, los filtros solo están disponibles en la primera búsqueda. A partir de la segunda, se muestra un mensaje invitando a iniciar sesión."
+    ]
+  },
+  {
+    "version": "0.4.12",
+    "date": "2025-11-23",
+    "notes": [
+      "El fondo de la barra de título del main ahora utiliza el 50% del color del sitio mezclado con el fondo para un tono más suave.",
+      "En la vista de resultados, la barra de filtros se fija justo debajo del título y el listado se desplaza por debajo de ella, manteniendo los filtros siempre visibles y centrados verticalmente.",
+      "En el loader principal, tanto el texto 'Cargando' como el porcentaje cambian de color (negro/blanco) en función de cuánto haya subido el color de fondo, garantizando legibilidad."
+    ]
+  },
+  {
+    "version": "0.4.11",
+    "date": "2025-11-23",
+    "notes": [
+      "Se confirma que el ícono de la lupa del campo de búsqueda usa color negro para máxima legibilidad.",
+      "El fondo de la barra de título del main se basa en el color de sistema atenuado (~70% accent, 30% fondo) y el texto usa color de contraste automático (negro o blanco) según la luminosidad.",
+      "Los filtros de resultados (chips) se centran mejor verticalmente en su contenedor mediante un padding simétrico en el panel de resumen."
+    ]
+  },
+  {
+    "version": "0.4.11",
+    "date": "2025-11-23",
+    "notes": [
+      "Icono de lupa del buscador ahora en negro para máxima legibilidad.",
+      "La barra de título del main usa un fondo derivado del color del sitio (70% accent + 30% fondo) y el texto utiliza automáticamente el color de contraste (negro si el color del sitio es claro, blanco si es oscuro).",
+      "Los botones de flechas del título comparten animación y halo de sombra similares a los iconos de autenticación: transición suave y sombra intensa en hover/focus.",
+      "En la vista de resultados, el panel de filtros queda centrado verticalmente y los chips de resumen se alinean al centro."
+    ]
+  },
+  {
+    "version": "0.4.10",
+    "date": "2025-11-23",
+    "notes": [
+      "El campo de búsqueda en la toolbar usa ahora un fondo más claro (mezcla de color de sistema al 5%) para ganar ligereza visual.",
+      "En pantallas pequeñas, los tres selects del breadcrumb ocupan todo el ancho disponible en la primera línea para mantener la simetría.",
+      "El texto de dominio en el header respeta la forma 'GODiOS' (con la 'i' en minúscula), sin forzar mayúsculas.",
+      "En el footer, el breadcrumb estático (colección y corpus) y la versión del changelog se muestran en negrita para destacarlos."
+    ]
+  },
+  {
+    "version": "0.4.0",
+    "date": "2025-11-23",
+    "notes": [
+      "UI del main unificada: barra de título fija pegada al toolbar a todo el ancho.",
+      "Área de scroll del main definida claramente entre el título y el footer fijo.",
+      "Eliminado el renglón vacío inicial en paneles de main (Results, Navigator, Focus y otros) ajustando márgenes de panel-single/results-summary.",
+      "Loader de preferencias ahora reutiliza el mismo SystemLoader del inicio de la app para estilo y velocidad coherentes.",
+      "Header: dominio fijo mostrado como GODiOS en todas las vistas e idiomas."
+    ]
+  },
+  {
     "version": "0.3.9",
     "date": "2025-11-23",
     "notes": [
@@ -113,6 +232,73 @@
     "date": "2025-11-13",
     "notes": [
       "Versión inicial de Study.GODiOS.org con header, toolbar, panels y preferencias básicas."
+    ]
+  },
+  {
+    "version": "0.4.2",
+    "date": "2025-11-23",
+    "notes": [
+      "Ajuste fino del layout de main: la barra de título fija ahora se solapa 1px con el toolbar para eliminar completamente el gap visible entre ambos.",
+      "Se mantiene el área de scroll entre el borde inferior de la barra de título y el borde superior del footer fijo."
+    ]
+  },
+  {
+    "version": "0.4.3",
+    "date": "2025-11-23",
+    "notes": [
+      "Ajuste del padding de la barra de títulos en main: se elimina el padding superior para que el rectángulo quede visualmente pegado al toolbar.",
+      "Mejora del loader inicial: cuando el fondo de color sube por detrás del texto 'Cargando', el color del texto cambia automáticamente a blanco para mantener la legibilidad."
+    ]
+  },
+  {
+    "version": "0.4.4",
+    "date": "2025-11-23",
+    "notes": [
+      "Corregido el loader al cambiar de corpus/colección en Preferencias: ahora muestra progreso del 0 al 100% con animación suave, igual que en el arranque.",
+      "Eliminado el margen superior en la lista de Navigator (.nav-items-list) para que el primer versículo quede pegado al encabezado de 'Génesis X' sin espacio vacío."
+    ]
+  },
+  {
+    "version": "0.4.5",
+    "date": "2025-11-23",
+    "notes": [
+      "Reescritura del layout de main: ahora el título y el contenido se organizan solo con CSS, sin cálculos dinámicos de JavaScript.",
+      "La barra de título (.main-view-header) se comporta como una franja propia del main, y el contenido comienza inmediatamente debajo, sin renglones en blanco.",
+      "Se simplificó adjustLayout() para dejar el control del espacio entre header, toolbar, título y contenido al CSS."
+    ]
+  },
+  {
+    "version": "0.4.6",
+    "date": "2025-11-23",
+    "notes": [
+      "Corregido main.js: la función adjustLayout y la función init vuelven a estar correctamente anidadas dentro del IIFE de window.Main, eliminando el error de sintaxis 'Unexpected token function'."
+    ]
+  },
+  {
+    "version": "0.4.7",
+    "date": "2025-11-23",
+    "notes": [
+      "La barra de título de main ahora es sticky: permanece fija debajo del header+toolbar mientras se hace scroll, también en ventanas angostas.",
+      "El offset entre header, toolbar y main se calcula dinámicamente en JavaScript (adjustLayout) midiendo las alturas reales y exponiéndolas como la variable CSS --main-offset.",
+      "Con este ajuste, el título ya no se mete debajo del toolbar cuando la barra se hace más alta en resoluciones pequeñas."
+    ]
+  },
+  {
+    "version": "0.4.8",
+    "date": "2025-11-23",
+    "notes": [
+      "La barra de título del main se mantiene con position: fixed bajo el header+toolbar, pero ahora el contenido se desplaza siempre por debajo gracias a un padding-top dinámico en #app-main.",
+      "adjustLayout calcula tanto la altura real de header+toolbar como la altura del título (.main-view-header) y las expone en las variables CSS --main-offset y --main-title-h.",
+      "Con esto, ya no se tapa el primer versículo ni el inicio del contenido en Navigator, Results o Focus, incluso en ventanas angostas."
+    ]
+  },
+  {
+    "version": "0.4.9",
+    "date": "2025-11-23",
+    "notes": [
+      "El título del main ahora tiene padding simétrico (centrado verticalmente dentro de la barra).",
+      "Los botones de navegación del título usan el color de sistema como fondo y un color de icono automático (negro o blanco) según el contraste calculado.",
+      "Se introdujo la variable CSS --accent-contrast para reutilizar el color de texto de alto contraste derivado del color de sistema."
     ]
   }
 ]

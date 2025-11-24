@@ -60,6 +60,7 @@ window.MainLogin = (function () {
     passwordPlaceholder: "Contraseña",
     btnCancel: "Cancelar",
     submit: "Iniciar sesión",
+    forgotLink: "¿Olvidaste tu contraseña?",
 
     errorIdentifierRequired: "Debes ingresar tu usuario o correo.",
     errorRequired: "Debes ingresar tu usuario/correo y contraseña.",
@@ -83,6 +84,7 @@ window.MainLogin = (function () {
     passwordPlaceholder: "Password",
     btnCancel: "Cancel",
     submit: "Sign in",
+    forgotLink: "Forgot your password?",
 
     errorIdentifierRequired: "You must enter your email or username.",
     errorRequired: "Please enter your email/username and password.",
@@ -386,6 +388,7 @@ window.MainLogin = (function () {
       '        <button type="button" class="chip" id="login-btn-cancel"></button>',
       '        <button type="submit" class="chip primary" id="login-submit" disabled></button>',
       "      </div>",
+      '      <p class="register-login-link"><button type="button" id="login-forgot-link" class="link-like"></button></p>',
       "    </div>",
       "  </form>",
       "</div>",
@@ -405,12 +408,14 @@ window.MainLogin = (function () {
     var passLabel = root.querySelector("#lbl-login-password");
     var cancelBtn = root.querySelector("#login-btn-cancel");
     var submitBtn = root.querySelector("#login-submit");
+    var forgotLink = root.querySelector("#login-forgot-link");
 
     if (titleEl) titleEl.textContent = t("title");
     if (idLabel) idLabel.textContent = t("identifierLabel");
     if (passLabel) passLabel.textContent = t("passwordLabel");
     if (cancelBtn) cancelBtn.textContent = t("btnCancel");
     if (submitBtn) submitBtn.textContent = t("submit");
+    if (forgotLink) forgotLink.textContent = t("forgotLink");
 
     var idInput = root.querySelector("#login-identifier");
     var passInput = root.querySelector("#login-password");
@@ -432,6 +437,7 @@ window.MainLogin = (function () {
     var cancelBtn = root.querySelector("#login-btn-cancel");
     var idHint = root.querySelector("#login-identifier-hint");
     var globalHint = root.querySelector("#login-hint");
+    var forgotLink = root.querySelector("#login-forgot-link");
 
     var state = {
       identifier: "",
@@ -581,6 +587,17 @@ window.MainLogin = (function () {
       cancelBtn.addEventListener("click", function () {
         if (window.Main && typeof window.Main.showView === "function") {
           window.Main.showView("navigator");
+        }
+      });
+    }
+
+    if (forgotLink) {
+      forgotLink.addEventListener("click", function () {
+        if (window.Router && typeof window.Router.go === "function") {
+          window.Router.go("forget");
+        } else if (window.MainForget && typeof window.MainForget.render === "function") {
+          var cont = document.getElementById("app-main");
+          window.MainForget.render(cont);
         }
       });
     }
