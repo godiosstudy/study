@@ -258,10 +258,7 @@ window.HeaderButtons = (function () {
       var blessed = createBlessedLabel();
       container.appendChild(blessed);
 
-      // stats
-      container.appendChild(
-        createStatChip("hdr-credits", "star", "creditsLabel")
-      );
+      // stats (steps + floor; créditos ocultos para usuarios logueados)
       container.appendChild(
         createStatChip("hdr-steps", "trending-up", "stepsLabel")
       );

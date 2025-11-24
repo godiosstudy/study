@@ -37,8 +37,10 @@
   cursor: pointer;
   font-size: 14px;
   line-height: 1;               /* para que no empuje la altura */
-  font-weight: 700;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--accent) 50%, var(--footer-fg));
 }
+
 
 /* Logo */
 #ftr-logo {

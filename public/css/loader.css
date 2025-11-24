@@ -41,8 +41,9 @@
 #app-loader .loader-text span {
   display: block;
   text-align: center;
-  font-size: 15px;
-  color: #000000; /* texto en negro */
+  font-size: 13px;
+  font-weight: 700;
+  color: #000000; /* color inicial, se ajusta dinámicamente en JS */
 }
 
 /* Mientras la app está cargando, se ocultan las demás secciones */

@@ -3,6 +3,8 @@ window.Main = (function () {
   var currentView = null;
   var currentOptions = null;
 
+  var AUTH_VIEWS = ['login', 'register', 'forget', 'account'];
+
   function getMainEl() {
     return document.getElementById("app-main");
   }
@@ -39,6 +41,17 @@ window.Main = (function () {
 
     currentView = name;
     currentOptions = options || {};
+
+    // Fondo especial para vistas de autenticación (login, register, forget, account)
+    try {
+      if (el && el.classList) {
+        if (AUTH_VIEWS.indexOf(name) >= 0) {
+          el.classList.add("auth-view");
+        } else {
+          el.classList.remove("auth-view");
+        }
+      }
+    } catch (e) {}
 
     // Título base según vista (las vistas pueden sobreescribirlo)
     setViewTitleFor(name);
@@ -103,6 +116,14 @@ window.Main = (function () {
     if (name === "login") {
       if (window.MainLogin && typeof window.MainLogin.render === "function") {
         window.MainLogin.render(el);
+      }
+      setTimeout(adjustLayout, 0);
+      return;
+    }
+
+    if (name === "forget") {
+      if (window.MainForget && typeof window.MainForget.render === "function") {
+        window.MainForget.render(el);
       }
       setTimeout(adjustLayout, 0);
       return;

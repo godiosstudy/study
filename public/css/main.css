@@ -633,7 +633,7 @@ select.prefs-select-loading option {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin-top: 16px;
+  margin-top: 80px; /* espacio para que el listado comience debajo de la barra fija de filtros (título + filtros) */
 }
 
 /* Layout: número a la izquierda + (ref + texto) a la derecha */
@@ -949,7 +949,7 @@ select.prefs-select-loading option {
   padding: 6px 24px 6px;
   border-radius: 0; /* barra completa, sin bordes redondeados */
   /* Fondo = color del sitio suavizado ~30% (mezcla 70% accent + 30% bg) */
-  background: color-mix(in srgb, var(--accent) 70%, var(--bg));
+  background: color-mix(in srgb, var(--accent) 50%, var(--bg));
   /* Texto del título: negro si el color del sitio es claro, blanco si es oscuro */
   color: var(--accent-contrast, #ffffff);
 }
@@ -1008,11 +1008,20 @@ select.prefs-select-loading option {
 }
 
 .results-summary.panel-single {
-  margin: 0 auto 16px;
+  position: fixed;
+  top: calc(var(--main-offset, 104px) + var(--main-title-h, 56px) - 1px);
+  left: 0;
+  right: 0;
+  z-index: 480;
+  width: 100%;
+  max-width: none;            /* anula el max-width de .panel-single para ocupar todo el ancho */
+  margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 4px 0; /* pequeño aire arriba y abajo para centrar visualmente los filtros */
+  background: color-mix(in srgb, var(--accent) 25%, var(--bg));
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 
@@ -1024,6 +1033,8 @@ select.prefs-select-loading option {
   align-items: center;
   gap: 16px;
   margin-top: 0;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Botón redondo tipo estadística de resultados */
@@ -1432,4 +1443,10 @@ select.prefs-select-loading option {
     border-left: none;
     border-right: none;
   }
+}
+
+
+/* Fondo especial para pantallas de autenticación (login, register, forget, account) */
+#app-main.auth-view {
+  background: color-mix(in srgb, var(--accent) 30%, var(--bg));
 }

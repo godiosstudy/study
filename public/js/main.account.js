@@ -37,10 +37,7 @@ window.MainAccount = (function () {
       genderMale: "Hombre",
       genderOther: "Otro",
 
-      // Preferencias
-      prefsLabel: "Preferencias del sistema",
-      openPreferences: "Editar preferencias",
-
+      // Preferencias (eliminadas de esta vista)
       // Acciones / mensajes
       submit: "Guardar cambios",
       hintLoading: "Cargando tu perfil...",
@@ -78,10 +75,7 @@ window.MainAccount = (function () {
       genderMale: "Male",
       genderOther: "Other",
 
-      // Preferences
-      prefsLabel: "System preferences",
-      openPreferences: "Edit preferences",
-
+      // Preferences (removed from this view)
       // Actions / messages
       submit: "Save changes",
       hintLoading: "Loading your profile...",
@@ -323,12 +317,6 @@ function renderWithUser(root, user) {
       '        </select>',
       '        <label for="acc-gender" id="lbl-gender"></label>',
       '      </div>',
-      '      <div class="form-group prefs-group">',
-      '        <label for="acc-open-preferences" id="lbl-prefs"></label>',
-      '        <div>',
-      '          <button type="button" class="chip ghost" id="acc-open-preferences"></button>',
-      '        </div>',
-      '      </div>',
       '      <div class="register-actions single">',
       '        <button type="submit" class="chip primary" id="acc-submit"></button>',
       '      </div>',
@@ -360,7 +348,6 @@ function renderWithUser(root, user) {
     var lblBirth = root.querySelector("#lbl-birth-date");
     var lblGender = root.querySelector("#lbl-gender");
     var lblPrefs = root.querySelector("#lbl-prefs");
-    var btnPrefs = root.querySelector("#acc-open-preferences");
     var btnSubmit = root.querySelector("#acc-submit");
     var genderSelect = root.querySelector("#acc-gender");
 
@@ -379,8 +366,6 @@ function renderWithUser(root, user) {
     if (lblBirth) lblBirth.textContent = t("birthDate");
     if (lblGender) lblGender.textContent = t("gender");
 
-    if (lblPrefs) lblPrefs.textContent = t("prefsLabel");
-    if (btnPrefs) btnPrefs.textContent = t("openPreferences");
     if (btnSubmit) btnSubmit.textContent = t("submit");
 
     if (genderSelect) {
@@ -397,7 +382,6 @@ function renderWithUser(root, user) {
 
   function wireWithUser(root, user) {
     var form = root.querySelector("#form-account");
-    var btnPrefs = root.querySelector("#acc-open-preferences");
     var hint = root.querySelector("#acc-hint");
     var usernameHint = root.querySelector("#acc-username-hint");
     var btnSubmit = root.querySelector("#acc-submit");

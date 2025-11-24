@@ -1,5 +1,8 @@
 // main.results.js – resultados de búsqueda en entries
 window.MainResults = (function () {
+  // Contador de búsquedas para invitados (sin login)
+  var guestSearchCount = 0;
+
   function getPrefs() {
     try {
       if (window.PrefsStore && typeof window.PrefsStore.load === "function") {
@@ -381,6 +384,14 @@ window.MainResults = (function () {
     var chipsRow = document.createElement("div");
     chipsRow.className = "results-summary-chips";
 
+    // Lógica de invitados para filtros
+    var isGuest = (typeof isLoggedIn === "function") ? !isLoggedIn() : false;
+    if (isGuest) {
+      guestSearchCount++;
+    }
+
+    var shouldShowFilters = !(isGuest && guestSearchCount > 1);
+
     var filterState = {
       unique: true,
       similar: true,
@@ -539,7 +550,15 @@ window.MainResults = (function () {
       });
     }
 
-    summary.appendChild(chipsRow);
+    if (shouldShowFilters) {
+      summary.appendChild(chipsRow);
+    } else {
+      var guestMsg = document.createElement("div");
+      guestMsg.className = "results-summary-guest";
+      var lang = (typeof getLang === "function") ? getLang() : "es";
+      guestMsg.textContent = lang === "en" ? "Sign in to use filters." : "Iniciar sesión para utilizar los filtros.";
+      summary.appendChild(guestMsg);
+    }
 
     // Insertar el resumen antes de la lista de resultados
     body.insertBefore(summary, list);

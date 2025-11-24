@@ -46,8 +46,17 @@ window.SystemLoader = (function () {
     if (fill) {
       fill.style.height = h + "%";
     }
+
+    // Color del texto según la altura de la franja de color:
+    // cuando el color de fondo ya pasó por detrás del texto (~mitad),
+    // usamos blanco; en caso contrario, negro.
+    var fg = (h >= 40) ? "#ffffff" : "#000000";
+
     if (lblPct) {
       lblPct.textContent = v + "%";
+      try {
+        lblPct.style.color = fg;
+      } catch (e) {}
     }
 
     var finalLabel = (typeof text === "string" && text.trim())
@@ -56,18 +65,12 @@ window.SystemLoader = (function () {
 
     if (lblTxt) {
       lblTxt.textContent = finalLabel;
-      // Cambiamos el color del texto según cuánto haya subido el fondo:
-      // cuando la franja de color ya pasó por detrás del texto (aprox mitad),
-      // lo mostramos en blanco para que siga siendo legible.
       try {
-        if (h >= 40) {
-          lblTxt.style.color = "#ffffff";
-        } else {
-          lblTxt.style.color = "#000000";
-        }
-      } catch (e) {}
+        lblTxt.style.color = fg;
+      } catch (e2) {}
     }
   }
+
   return {
     show: show,
     hide: hide,

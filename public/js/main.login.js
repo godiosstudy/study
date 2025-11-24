@@ -414,8 +414,8 @@ window.MainLogin = (function () {
 
     var idInput = root.querySelector("#login-identifier");
     var passInput = root.querySelector("#login-password");
-    if (idInput) idInput.setAttribute("placeholder", t("identifierPlaceholder"));
-    if (passInput) passInput.setAttribute("placeholder", t("passwordPlaceholder"));
+    if (idInput) idInput.setAttribute("placeholder", "");
+    if (passInput) passInput.setAttribute("placeholder", "");
 
     var hint = root.querySelector("#login-hint");
     if (hint) {
@@ -650,6 +650,30 @@ window.MainLogin = (function () {
           state.emailForAuth = null;
           clearHints();
           recomputeSubmitEnabled();
+
+          // Después de sincronizar las preferencias en el login,
+          // recargamos la base de entries para las prefs vigentes
+          // y volvemos a mostrar el navigator en ese contexto.
+          try {
+            var prefsAfter =
+              window.PrefsStore && typeof window.PrefsStore.load === "function"
+                ? window.PrefsStore.load() || {}
+                : null;
+
+            if (
+              prefsAfter &&
+              window.EntriesMemory &&
+              typeof window.EntriesMemory.loadForPrefs === "function"
+            ) {
+              await window.EntriesMemory.loadForPrefs(prefsAfter);
+            }
+
+            if (window.Main && typeof window.Main.showView === "function") {
+              window.Main.showView("navigator");
+            }
+          } catch (eReload) {
+            console.warn("[Login] reload entries / navigator after login failed", eReload);
+          }
 
           showWelcomeInMain(syncMode);
 

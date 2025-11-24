@@ -59,7 +59,8 @@ window.MainRegister = (function () {
 
       errorRequired: 'Debes completar los campos obligatorios.',
       errorGeneric: 'No fue posible completar el registro. Intenta nuevamente.',
-      successRegistered: 'Tu cuenta se ha creado correctamente. Ahora puedes iniciar sesión.'
+      successRegistered: 'Tu cuenta se ha creado correctamente. Ahora puedes iniciar sesión.',
+      haveAccount: '¿Ya tienes cuenta? Inicia sesión aquí.'
     },
     en: {
       titleStep1: 'Create your account',
@@ -108,7 +109,8 @@ window.MainRegister = (function () {
 
       errorRequired: 'You must fill the required fields.',
       errorGeneric: 'We could not complete your registration. Please try again.',
-      successRegistered: 'Your account has been created. You can sign in now.'
+      successRegistered: 'Your account has been created. You can sign in now.',
+      haveAccount: 'Already have an account? Sign in here.'
     }
   };
 
@@ -305,6 +307,11 @@ window.MainRegister = (function () {
     var emailInput = root.querySelector('#reg-email');
     var codeInput = root.querySelector('#reg-code');
     var passInput = root.querySelector('#reg-password');
+
+    var loginLink = root.querySelector('#reg-login-link');
+    if (loginLink && dict.haveAccount) {
+      loginLink.textContent = dict.haveAccount;
+    }
 }
 
   function render(container) {
@@ -367,7 +374,8 @@ window.MainRegister = (function () {
       '  </div>',
       '</div>',
       '',
-      '<p class="field-hint" id="reg-global-hint"></p>'
+      '<p class="field-hint" id="reg-global-hint"></p>',
+      '<p class="register-login-link"><button type="button" id="reg-login-link" class="link-like"></button></p>'
     ].join('\n');
 
     wrap.innerHTML = html;
@@ -396,6 +404,19 @@ window.MainRegister = (function () {
     var emailInput = root.querySelector('#reg-email');
     var codeInput = root.querySelector('#reg-code');
     var passInput = root.querySelector('#reg-password');
+
+
+    var loginLink = root.querySelector('#reg-login-link');
+    if (loginLink) {
+      loginLink.addEventListener('click', function () {
+        if (window.Router && typeof window.Router.go === 'function') {
+          window.Router.go('login');
+        } else if (window.MainLogin && typeof window.MainLogin.render === 'function') {
+          var cont = document.getElementById('app-main');
+          window.MainLogin.render(cont);
+        }
+      });
+    }
 
     var nameCounter = root.querySelector('#reg-name-counter');
     var nameHint = root.querySelector('#reg-name-hint');
