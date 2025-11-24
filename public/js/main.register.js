@@ -60,7 +60,7 @@ window.MainRegister = (function () {
       errorRequired: 'Debes completar los campos obligatorios.',
       errorGeneric: 'No fue posible completar el registro. Intenta nuevamente.',
       successRegistered: 'Tu cuenta se ha creado correctamente. Ahora puedes iniciar sesión.',
-      haveAccount: '¿Ya tienes cuenta? Inicia sesión aquí.'
+      haveAccount: '¿Tienes cuenta registrada? Inicia sesión !!!'
     },
     en: {
       titleStep1: 'Create your account',
@@ -344,6 +344,7 @@ window.MainRegister = (function () {
       '      <button type="button" class="chip" id="reg-btn-cancel"></button>',
       '      <button type="button" class="chip primary" id="reg-btn-create" disabled></button>',
       '    </div>',
+      '    <p class="register-login-link"><button type="button" id="reg-login-link" class="link-like"></button></p>',
       '  </div>',
       '',
       '  <!-- Paso 2: código de verificación -->',
@@ -374,8 +375,7 @@ window.MainRegister = (function () {
       '  </div>',
       '</div>',
       '',
-      '<p class="field-hint" id="reg-global-hint"></p>',
-      '<p class="register-login-link"><button type="button" id="reg-login-link" class="link-like"></button></p>'
+      '<p class="field-hint" id="reg-global-hint"></p>'
     ].join('\n');
 
     wrap.innerHTML = html;

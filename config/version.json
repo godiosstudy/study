@@ -1,5 +1,13 @@
 [
   {
+    "version": "0.4.20",
+    "date": "2025-11-23",
+    "notes": [
+      "En Login el texto 'Forgot your password? / ¿Olvidaste tu contraseña?' se centra debajo de los botones usando .register-login-link.",
+      "En Register se añadió un texto de enlace bajo el botón de registro ('Ya tienes cuenta, inicia sesión !') con el mismo estilo que el de Login, que lleva a la pantalla de inicio de sesión."
+    ]
+  },
+  {
     "version": "0.4.19",
     "date": "2025-11-23",
     "notes": [

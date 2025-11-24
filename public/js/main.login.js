@@ -388,7 +388,7 @@ window.MainLogin = (function () {
       '        <button type="button" class="chip" id="login-btn-cancel"></button>',
       '        <button type="submit" class="chip primary" id="login-submit" disabled></button>',
       "      </div>",
-      '      <p class="register-login-link"><button type="button" id="login-forgot-link" class="link-like"></button></p>',
+      '      <p class="register-login-link"><span id="login-forgot-link" class="link-like"></span></p>',
       "    </div>",
       "  </form>",
       "</div>",
