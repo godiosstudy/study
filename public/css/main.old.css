@@ -180,8 +180,8 @@
   margin-bottom: 6px;
   font-size: 14px;
   font-weight: 600;
-  color: var(--fg);
-  opacity: 0.9;
+  color: #000000; /* labels de formularios siempre en negro */
+  opacity: 1;
 }
 
 /* ============================
@@ -415,11 +415,6 @@
   min-height: 1.2em;
 }
 
-.register-card .field-hint:empty {
-  margin-top: 0;
-  min-height: 0;
-}
-
 .field-hint.error {
   color: #b91c1c;
 }
@@ -436,7 +431,7 @@
   min-height: 32px;
 
   background: var(--card);
-  color: var(--fg);
+  color: #000000; /* texto de botones secundarios de formularios en negro */
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 6px 14px;
@@ -1127,7 +1122,7 @@ select.prefs-select-loading option {
 .prefs-actions .chip.primary,
 .prefs-actions .chip.ghost {
   background: var(--accent, var(--header-bg));
-  color: #ffffff;
+  color: var(--accent-contrast, #000000);
   border-color: var(--accent, var(--header-bg));
 }
 
@@ -1159,7 +1154,7 @@ select.prefs-select-loading option {
   font-size: 14px;
 
   background: var(--accent, var(--header-bg));
-  color: #ffffff;
+  color: var(--accent-contrast, #000000);
   border: 1px solid var(--accent, var(--header-bg));
 }
 
@@ -1217,7 +1212,7 @@ select.prefs-select-loading option {
   font-size: 14px;
 
   background: var(--accent, var(--header-bg));
-  color: #ffffff;
+  color: var(--accent-contrast, #000000);
   border: 1px solid var(--accent, var(--header-bg));
 }
 
@@ -1321,14 +1316,12 @@ select.prefs-select-loading option {
 
 .reg-field {
   position: relative;
-  margin-bottom: 8px;
+  margin-bottom: 18px;
 }
 
 .reg-field input[type="text"],
 .reg-field input[type="email"],
-.reg-field input[type="password"],
-.reg-field input[type="tel"],
-.reg-field input[type="date"] {
+.reg-field input[type="password"] {
   width: 100%;
   box-sizing: border-box;
   border-radius: 12px;
@@ -1363,7 +1356,7 @@ select.prefs-select-loading option {
   top: 50%;
   transform: translateY(-50%);
   font-size: 0.9rem;
-  color: var(--header-bg, var(--accent, #0ea5e9));
+  color: #000000; /* labels de formularios siempre en negro */
   pointer-events: none;
   transition: all 0.15s ease-out;
 }
@@ -1408,7 +1401,7 @@ select.prefs-select-loading option {
 
 .register-actions .chip.primary {
   background: var(--accent, var(--header-bg));
-  color: #ffffff;
+  color: var(--accent-contrast, #000000);
   border-color: var(--accent, var(--header-bg));
 }
 
@@ -1425,12 +1418,19 @@ select.prefs-select-loading option {
   line-height: 1.35;
 }
 
-.chip.link-like {
+
+.register-login-link {
+  margin-top: 16px;  /* un renglón de espacio bajo los botones */
+  margin-bottom: 0;
+  text-align: center;
+  font-size: 0.9rem;
+}
+.register-login-link .link-like, .chip.link-like {
   background: transparent;
   border: none;
   padding-left: 0;
   padding-right: 0;
-  color: var(--header-bg, var(--accent, #0ea5e9));
+  color: #000000; /* links de formularios en negro */
   box-shadow: none;
   justify-content: flex-start;
 }
@@ -1456,4 +1456,11 @@ select.prefs-select-loading option {
 /* Fondo especial para pantallas de autenticación (login, register, forget, account) */
 #app-main.auth-view {
   background: color-mix(in srgb, var(--accent) 30%, var(--bg));
+}
+
+
+/* Quitar espacio extra cuando el hint de login está vacío */
+#login-hint:empty {
+  margin-top: 0;
+  min-height: 0;
 }

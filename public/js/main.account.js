@@ -16,7 +16,7 @@ window.MainAccount = (function () {
   var TEXTS = {
     es: {
       title: "Mi cuenta",
-      subtitle: "Datos de tu perfil en Study.GODiOS.org",
+      subtitle: "",
       subtitleNoUser: "Necesitas iniciar sesión para ver tu cuenta.",
       goLogin: "Ir a Iniciar sesión",
 
@@ -54,7 +54,7 @@ window.MainAccount = (function () {
     },
     en: {
       title: "My account",
-      subtitle: "Your profile data in Study.GODiOS.org",
+      subtitle: "",
       subtitleNoUser: "You need to sign in to see your account.",
       goLogin: "Go to Sign in",
 
@@ -395,14 +395,6 @@ function renderWithUser(root, user) {
       usernameHint.classList.remove("error", "ok");
     }
 
-    if (btnPrefs) {
-      btnPrefs.addEventListener("click", function () {
-        if (window.Main && typeof window.Main.showView === "function") {
-          window.Main.showView("preferences");
-        }
-      });
-    }
-
     if (form) {
       form.addEventListener("submit", function (ev) {
         ev.preventDefault();
@@ -542,6 +534,40 @@ function renderWithUser(root, user) {
         if (countryInput) countryInput.value = row.country || "";
         if (birthInput) birthInput.value = row.birth_date || "";
         if (genderInput) genderInput.value = row.gender || "";
+
+        // Forzar actualización de labels flotantes después de cargar datos
+        try {
+          var evtInput;
+          if (typeof Event === "function") {
+            evtInput = new Event("input", { bubbles: true });
+          }
+          var evtChange;
+          if (typeof Event === "function") {
+            evtChange = new Event("change", { bubbles: true });
+          }
+          var inputs = [
+            usernameInput,
+            firstInput,
+            lastInput,
+            emailInput,
+            phoneInput,
+            addrInput,
+            stateInput,
+            zipInput,
+            countryInput,
+            birthInput,
+            genderInput,
+          ];
+          for (var i = 0; i < inputs.length; i++) {
+            var el = inputs[i];
+            if (!el) continue;
+            if (evtInput) el.dispatchEvent(evtInput);
+            if (evtChange) el.dispatchEvent(evtChange);
+          }
+        } catch (e) {
+          // si falla el dispatchEvent, simplemente ignoramos y dejamos que el usuario
+          // fuerce el estado al editar
+        }
 
         if (hint) {
           hint.textContent = "";

@@ -107,9 +107,12 @@ Creditos
 Pisos
     1. Se arranca en la tierra Piso 0
     2. Piso 1 = 10000 escalones
-    3. Piso 2 = 100000 escalones
-    4. Piso 3 = 1000000 escalones
-    5. Piso 4 = 10000000 escalones
+    3. Piso 2 = 30000 escalones
+    4. Piso 3 = 90000 escalones
+    5. Piso 4 = 270000 escalones
+    6. Piso 5 = 810000 escalones
+    7. Piso 6 = 2430000 escalones
+    8. Piso 7 = 7290000 escalones
     asi sigue . . . 
 Escalones
     1. Por cada 1000 escalones se puede canjear por 1 Credito
@@ -117,12 +120,11 @@ Escalones
     3. Like un Versiculo = 1 Escalon
     4. Comentar un Versiculo = 1 Escalon
     5. Vinculo logrado a Versiculo = 1 Escalon
-    6. Vinculo logrado a Capitulo = 1 Escalon
-    7. Dar un Like a un Comentario = 1 Escalon
-    8. Recibir un like de un Comentario = 0.1 Escalon
-    9. Por cada invitado registrado = 2 Escalones
+    6. Dar un Like a un Comentario = 1 Escalon
+    7. Recibir un like de un Comentario = 1 Escalon
+    8. Por cada invitado registrado = 2 Escalones
     Grupos
-    10. Por cada Clases
+    9. Por cada Clases
 
 Menu izquierdo vertical
 (Se oculta y se abre con una flecha en la izquierda en el centro del main)
@@ -138,8 +140,29 @@ Pendientes
     Revisar cuando carga el sitio por primera ves y si no hay Collection ni Corpus debe leer uno y ponerlo en preferencias.
     Despues no debe leer mas bases salvo que cambies de idioma.
 
-
 Resend.com 
 API study-main
 re_LGx8qdbe_N8PYDb2vv78JMqZNKhc1qKVt
     
+Pendientes del sitio
+1. Los titulos de todos los campos deben ser todos de color negro 
+
+2. los campos Nombre de usuario y Cooreo deben ir de primero y deben tener un color de campo tipo 10% del color del sitio para destacarlos de los demas.
+
+3. si se modifican esos cada vez que se intenta salir de esos campos debe validarlos con la base de datos y debajo del campo debe decir en verde si esta ok o en rojo si no 
+
+4. el boton  Guardar cambios si hay un problema en nombre de usuario o correo debe desactivarse y no se va a activar hasta que no se validen los 2 campos.
+
+cuando se guarda si hay modificaciones en correo, este debe enviar un codigo al nuevo correo del usuario con un codigo como cuando se registra para validar el cambio del correo.
+
+5. Mostramos antes que nombre de usuario y dentro de la ventana 7 iconos mostrando lo siguiente:
+
+1.Creditos
+2.Escalones
+3.Pisos
+4.Roles
+5.Views
+6.Likes
+7.Notes
+8.Shares
+9.Avatar

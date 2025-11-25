@@ -72,7 +72,7 @@ window.MainForget = (function () {
 
   var TEXTS = {
     es: {
-      title: "Cambiar contraseña",
+      title: "Contraseña",
       emailLabel: "Usuario o correo",
       emailRequired: "Debes ingresar un usuario o correo válido.",
       submitStep1: "Enviar código",
@@ -89,7 +89,7 @@ window.MainForget = (function () {
       backToLogin: "Recordaste tu contraseña, inicia sesión !!!"
     },
     en: {
-      title: "Reset password",
+      title: "Password",
       emailLabel: "Username or email",
       emailRequired: "You must enter a valid username or email.",
       submitStep1: "Send code",
