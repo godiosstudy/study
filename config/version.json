@@ -1,5 +1,37 @@
 [
   {
+    "version": "0.5.13",
+    "date": "2025-11-27",
+    "notes": [
+      "Se añade un nuevo botón de menú en el header para usuarios autenticados.",
+      "El menú lateral usa el color del sistema del header y ajusta automáticamente el color de texto e iconos según el tema.",
+      "Las opciones Usuarios, Roles y Áreas tienen iconos de Lucide y se traducen según el idioma (es/en).",
+      "Se crean las vistas main.users.js, main.roles.js y main.areas.js que muestran el título del área y un texto HELLO."
+    ]
+  },
+  {
+    "version": "0.5.12",
+    "date": "2025-11-27",
+    "notes": [
+      "En Mi cuenta se elimina el subtítulo superior cuando el usuario está autenticado.",
+      "En Mi cuenta los campos Nombre de usuario y Correo se muestran primero y con un fondo derivado del color del sitio para destacarlos.",
+      "El mensaje de guardado correcto de Mi cuenta ahora se muestra en el header usando HeaderMessages en lugar de debajo del formulario.",
+      "Se añade header.messages.js como fachada sobre NotificationsUI para que cualquier vista pueda mostrar mensajes de sistema en el header.",
+      "Se ajustan los estilos de los campos principales de cuenta en main.css (clase account-primary-field)."
+    ]
+  },
+  {
+    "version": "0.5.11",
+    "date": "2025-11-25",
+    "notes": [
+      "En Mi cuenta se añaden textos específicos para los mensajes de validación de nombre de usuario y correo (disponible / no disponible).",
+      "Se valida en tiempo real el nombre de usuario en Mi cuenta: se comprueba formato y disponibilidad en la tabla profiles mientras se edita, mostrando mensajes en verde o rojo bajo el campo y desactivando el botón Guardar cambios cuando hay error.",
+      "Se valida en tiempo real el correo en Mi cuenta: se comprueba formato y disponibilidad usando la RPC email_exists, permitiendo el correo actual del usuario aunque exista, y mostrando mensajes en verde o rojo bajo el campo.",
+      "Se reordena el formulario de Mi cuenta para mostrar primero Nombre de usuario y Correo, luego una línea separadora centrada, y después el resto de los campos personales.",
+      "Se prepara la detección de cambio de correo (emailChanged) en el guardado de perfil, dejando listo el punto donde se disparará el flujo de envío de código de verificación en el próximo paso."
+    ]
+  },
+  {
     "version": "0.4.20",
     "date": "2025-11-23",
     "notes": [

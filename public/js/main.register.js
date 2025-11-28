@@ -156,6 +156,19 @@ window.MainRegister = (function () {
     el.classList.remove('error', 'ok');
     if (variant === 'error') el.classList.add('error');
     if (variant === 'ok') el.classList.add('ok');
+
+    // También mostramos los mensajes globales en el header
+    try {
+      if (
+        typeof globalHint !== 'undefined' &&
+        el === globalHint &&
+        text &&
+        window.HeaderMessages &&
+        typeof window.HeaderMessages.show === 'function'
+      ) {
+        window.HeaderMessages.show(text, { duration: 7000 });
+      }
+    } catch (e) {}
   }
 
   // ----- Supabase helpers -----
@@ -326,7 +339,7 @@ window.MainRegister = (function () {
       '  <h1 class="main-view-title" id="reg-title"></h1>',
       '</div>',
       '',
-      '<div class="register-card">',
+      '<form class="register-card" id="reg-form" novalidate>',
       '  <!-- Paso 1: nombre + correo -->',
       '  <div class="register-step" id="reg-step-1">',
       '    <div class="reg-field" data-field="name">',
@@ -344,7 +357,7 @@ window.MainRegister = (function () {
       '      <button type="button" class="chip" id="reg-btn-cancel"></button>',
       '      <button type="button" class="chip primary" id="reg-btn-create" disabled></button>',
       '    </div>',
-      '    <p class="register-login-link"><button type="button" id="reg-login-link" class="link-like"></button></p>',
+      '    <p class="register-login-link"><span id="reg-login-link" class="link-like"></span></p>',
       '  </div>',
       '',
       '  <!-- Paso 2: código de verificación -->',
@@ -373,7 +386,7 @@ window.MainRegister = (function () {
       '      <button type="button" class="chip primary" id="reg-btn-signup" disabled></button>',
       '    </div>',
       '  </div>',
-      '</div>',
+      '</form>',
       '',
       '<p class="field-hint" id="reg-global-hint"></p>'
     ].join('\n');

@@ -51,6 +51,21 @@ window.MainAccount = (function () {
         "Supabase no está configurado. Verifica las variables SUPABASE_URL y SUPABASE_ANON_KEY.",
       hintRequiredNames: "Nombre y apellido son obligatorios.",
       hintRequiredEmail: "El correo es obligatorio y debe ser válido.",
+      usernameInvalid: "Nombre de usuario inválido. Usa solo minúsculas, números, guion y guion bajo.",
+      usernameExists: "Nombre de usuario NO disponible para registro en GODiOS.",
+      usernameOk: "Nuevo nombre de usuario disponible para registro en GODiOS.",
+      emailExists: "Nuevo correo NO disponible para registro en GODiOS.",
+      emailOk: "Nuevo correo disponible para registro en GODiOS.",
+      statsCredits: "Créditos",
+      statsSteps: "Escalones",
+      statsFloors: "Pisos",
+      statsRoles: "Roles",
+      statsViews: "Vistas",
+      statsLikes: "Me gusta",
+      statsNotes: "Notas",
+      statsShares: "Compartidos",
+      statsNotifs: "Notificaciones",
+      statsHistory: "Historial",
     },
     en: {
       title: "My account",
@@ -89,6 +104,21 @@ window.MainAccount = (function () {
         "Supabase is not configured. Check SUPABASE_URL and SUPABASE_ANON_KEY.",
       hintRequiredNames: "First and last name are required.",
       hintRequiredEmail: "Email is required and must be valid.",
+      usernameInvalid: "Invalid username. Use only lowercase letters, numbers, dash and underscore.",
+      usernameExists: "Username is not available for registration in GODiOS.",
+      usernameOk: "New username available for registration in GODiOS.",
+      emailExists: "New email is not available for registration in GODiOS.",
+      emailOk: "New email available for registration in GODiOS.",
+      statsCredits: "Credits",
+      statsSteps: "Steps",
+      statsFloors: "Floors",
+      statsRoles: "Roles",
+      statsViews: "Views",
+      statsLikes: "Likes",
+      statsNotes: "Notes",
+      statsShares: "Shares",
+      statsNotifs: "Notifications",
+      statsHistory: "History",
     },
   };
 
@@ -265,15 +295,74 @@ function renderWithUser(root, user) {
       '<div class="main-view-header">',
       '  <h1 class="main-view-title" id="acc-title"></h1>',
       '</div>',
-      '<p class="account-subtitle" id="acc-subtitle"></p>',
+      "",
+      '<div class="account-stats" id="acc-stats">',
+      '  <div class="account-stats-chips">',
+      '    <div class="account-stat-chip account-stat-chip--credits">',
+      '      <div class="account-stat-count" id="acc-stat-credits">0</div>',
+      '      <div class="account-stat-icon"><i data-lucide="coins"></i></div>',
+      '      <div class="account-stat-label" id="acc-label-credits"></div>',
+      '    </div>',
+      '    <div class="account-stat-chip account-stat-chip--steps">',
+      '      <div class="account-stat-count" id="acc-stat-steps">0</div>',
+      '      <div class="account-stat-icon"><i data-lucide="trending-up"></i></div>',
+      '      <div class="account-stat-label" id="acc-label-steps"></div>',
+      '    </div>',
+      '    <div class="account-stat-chip account-stat-chip--floors">',
+      '      <div class="account-stat-count" id="acc-stat-floors">0</div>',
+      '      <div class="account-stat-icon"><i data-lucide="layers"></i></div>',
+      '      <div class="account-stat-label" id="acc-label-floors"></div>',
+      '    </div>',
+      '    <div class="account-stat-chip account-stat-chip--roles">',
+      '      <div class="account-stat-count" id="acc-stat-roles">0</div>',
+      '      <div class="account-stat-icon"><i data-lucide="users"></i></div>',
+      '      <div class="account-stat-label" id="acc-label-roles"></div>',
+      '    </div>',
+      '    <div class="account-stat-chip account-stat-chip--views">',
+      '      <div class="account-stat-count" id="acc-stat-views">0</div>',
+      '      <div class="account-stat-icon"><i data-lucide="eye"></i></div>',
+      '      <div class="account-stat-label" id="acc-label-views"></div>',
+      '    </div>',
+      '    <div class="account-stat-chip account-stat-chip--likes">',
+      '      <div class="account-stat-count" id="acc-stat-likes">0</div>',
+      '      <div class="account-stat-icon"><i data-lucide="heart"></i></div>',
+      '      <div class="account-stat-label" id="acc-label-likes"></div>',
+      '    </div>',
+      '    <div class="account-stat-chip account-stat-chip--notes">',
+      '      <div class="account-stat-count" id="acc-stat-notes">0</div>',
+      '      <div class="account-stat-icon"><i data-lucide="file-text"></i></div>',
+      '      <div class="account-stat-label" id="acc-label-notes"></div>',
+      '    </div>',
+      '    <div class="account-stat-chip account-stat-chip--shares">',
+      '      <div class="account-stat-count" id="acc-stat-shares">0</div>',
+      '      <div class="account-stat-icon"><i data-lucide="share-2"></i></div>',
+      '      <div class="account-stat-label" id="acc-label-shares"></div>',
+      '    </div>',
+      '    <div class="account-stat-chip account-stat-chip--notifications">',
+      '      <div class="account-stat-count" id="acc-stat-notifs">0</div>',
+      '      <div class="account-stat-icon"><i data-lucide="bell"></i></div>',
+      '      <div class="account-stat-label" id="acc-label-notifs"></div>',
+      '    </div>',
+      '    <div class="account-stat-chip account-stat-chip--history">',
+      '      <div class="account-stat-count" id="acc-stat-history">0</div>',
+      '      <div class="account-stat-icon"><i data-lucide="history"></i></div>',
+      '      <div class="account-stat-label" id="acc-label-history"></div>',
+      '    </div>',
+      '  </div>',
+      '</div>',
       "",
       '<div class="register-card">',
       '  <form id="form-account" novalidate>',
       '    <div class="register-step" id="acc-step-1">',
-      '      <div class="reg-field" data-field="username">',
+      '      <div class="reg-field account-primary-field" data-field="username">',
       '        <input type="text" id="acc-username" autocomplete="username" />',
       '        <label for="acc-username" id="lbl-username"></label>',
       '        <p class="field-hint" id="acc-username-hint"></p>',
+      '      </div>',
+      '      <div class="reg-field account-primary-field" data-field="email">',
+      '        <input type="email" id="acc-email" autocomplete="email" />',
+      '        <label for="acc-email" id="lbl-email"></label>',
+      '        <p class="field-hint" id="acc-email-hint"></p>',
       '      </div>',
       '      <div class="reg-field" data-field="first-name">',
       '        <input type="text" id="acc-first-name" autocomplete="given-name" />',
@@ -282,11 +371,7 @@ function renderWithUser(root, user) {
       '      <div class="reg-field" data-field="last-name">',
       '        <input type="text" id="acc-last-name" autocomplete="family-name" />',
       '        <label for="acc-last-name" id="lbl-last-name"></label>',
-      '      </div>',
-      '      <div class="reg-field" data-field="email">',
-      '        <input type="email" id="acc-email" autocomplete="email" />',
-      '        <label for="acc-email" id="lbl-email"></label>',
-      '      </div>',
+      '      </div>',      '      <div class="account-separator"></div>',
       '      <div class="reg-field" data-field="phone">',
       '        <input type="tel" id="acc-phone" autocomplete="tel" />',
       '        <label for="acc-phone" id="lbl-phone"></label>',
@@ -331,6 +416,13 @@ function renderWithUser(root, user) {
     wireWithUser(root, user);
     loadProfileIntoForm(root, user);
     setupAccountFloatingLabels(root);
+
+    // Activar iconos Lucide en las estadísticas de cuenta
+    try {
+      if (window.lucide && typeof window.lucide.createIcons === "function") {
+        window.lucide.createIcons();
+      }
+    } catch (eLucide) {}
   }
 
   function applyTextsWithUser(root) {
@@ -366,6 +458,29 @@ function renderWithUser(root, user) {
     if (lblBirth) lblBirth.textContent = t("birthDate");
     if (lblGender) lblGender.textContent = t("gender");
 
+    // Etiquetas de estadísticas de cuenta
+    var lblStatsCredits = root.querySelector("#acc-label-credits");
+    var lblStatsSteps = root.querySelector("#acc-label-steps");
+    var lblStatsFloors = root.querySelector("#acc-label-floors");
+    var lblStatsRoles = root.querySelector("#acc-label-roles");
+    var lblStatsViews = root.querySelector("#acc-label-views");
+    var lblStatsLikes = root.querySelector("#acc-label-likes");
+    var lblStatsNotes = root.querySelector("#acc-label-notes");
+    var lblStatsShares = root.querySelector("#acc-label-shares");
+    var lblStatsNotifs = root.querySelector("#acc-label-notifs");
+    var lblStatsHistory = root.querySelector("#acc-label-history");
+
+    if (lblStatsCredits) lblStatsCredits.textContent = t("statsCredits");
+    if (lblStatsSteps) lblStatsSteps.textContent = t("statsSteps");
+    if (lblStatsFloors) lblStatsFloors.textContent = t("statsFloors");
+    if (lblStatsRoles) lblStatsRoles.textContent = t("statsRoles");
+    if (lblStatsViews) lblStatsViews.textContent = t("statsViews");
+    if (lblStatsLikes) lblStatsLikes.textContent = t("statsLikes");
+    if (lblStatsNotes) lblStatsNotes.textContent = t("statsNotes");
+    if (lblStatsShares) lblStatsShares.textContent = t("statsShares");
+    if (lblStatsNotifs) lblStatsNotifs.textContent = t("statsNotifs");
+    if (lblStatsHistory) lblStatsHistory.textContent = t("statsHistory");
+
     if (btnSubmit) btnSubmit.textContent = t("submit");
 
     if (genderSelect) {
@@ -380,11 +495,15 @@ function renderWithUser(root, user) {
     }
   }
 
-  function wireWithUser(root, user) {
+  
+function wireWithUser(root, user) {
     var form = root.querySelector("#form-account");
     var hint = root.querySelector("#acc-hint");
     var usernameHint = root.querySelector("#acc-username-hint");
+    var emailHint = root.querySelector("#acc-email-hint");
     var btnSubmit = root.querySelector("#acc-submit");
+    var usernameInput = root.querySelector("#acc-username");
+    var emailInput = root.querySelector("#acc-email");
 
     if (hint) {
       hint.textContent = "";
@@ -393,6 +512,130 @@ function renderWithUser(root, user) {
     if (usernameHint) {
       usernameHint.textContent = "";
       usernameHint.classList.remove("error", "ok");
+    }
+    if (emailHint) {
+      emailHint.textContent = "";
+      emailHint.classList.remove("error", "ok");
+    }
+
+    function setUsernameHint(text, variant) {
+      if (!usernameHint) return;
+      usernameHint.textContent = text || "";
+      usernameHint.classList.remove("error", "ok");
+      if (variant === "error") usernameHint.classList.add("error");
+      if (variant === "ok") usernameHint.classList.add("ok");
+    }
+
+    function setEmailHint(text, variant) {
+      if (!emailHint) return;
+      emailHint.textContent = text || "";
+      emailHint.classList.remove("error", "ok");
+      if (variant === "error") emailHint.classList.add("error");
+      if (variant === "ok") emailHint.classList.add("ok");
+    }
+
+    var currentUsername = "";
+    var currentEmail = "";
+    try {
+      if (user && user.user_metadata && user.user_metadata.username) {
+        currentUsername = String(user.user_metadata.username || "").trim().toLowerCase();
+      }
+      if (user && user.email) {
+        currentEmail = String(user.email || "").trim().toLowerCase();
+      }
+    } catch (e) {}
+
+    var usernameValid = true;
+    var emailValid = true;
+
+    function updateSubmitState() {
+      if (!btnSubmit) return;
+      btnSubmit.disabled = !(usernameValid && emailValid);
+    }
+
+    async function validateUsernameLive() {
+      if (!usernameInput) return;
+      var value = (usernameInput.value || "").trim().toLowerCase();
+
+      // Si no cambió, no mostramos mensaje y es válido
+      if (value === currentUsername) {
+        usernameValid = true;
+        setUsernameHint("", null);
+        updateSubmitState();
+        return;
+      }
+
+      if (!value || !isUsernameFormatValid(value)) {
+        usernameValid = false;
+        setUsernameHint(t("usernameInvalid"), "error");
+        updateSubmitState();
+        return;
+      }
+
+      var exists = await checkUsernameExists(value, currentUsername);
+      if (exists === true) {
+        usernameValid = false;
+        setUsernameHint(t("usernameExists"), "error");
+      } else if (exists === false) {
+        usernameValid = true;
+        setUsernameHint(t("usernameOk"), "ok");
+      } else {
+        usernameValid = true;
+        setUsernameHint("", null);
+      }
+      updateSubmitState();
+    }
+
+    async function validateEmailLive() {
+      if (!emailInput) return;
+      var raw = (emailInput.value || "").trim();
+      var lower = raw.toLowerCase();
+
+      // Si no cambió, no mostramos mensaje y es válido
+      if (lower === currentEmail) {
+        emailValid = true;
+        setEmailHint("", null);
+        updateSubmitState();
+        return;
+      }
+
+      if (!raw || !isEmailFormatValid(raw)) {
+        emailValid = false;
+        setEmailHint(t("hintRequiredEmail"), "error");
+        updateSubmitState();
+        return;
+      }
+
+      var exists = await checkEmailExistsForAccount(raw, currentEmail);
+      if (exists === true) {
+        emailValid = false;
+        setEmailHint(t("emailExists"), "error");
+      } else if (exists === false) {
+        emailValid = true;
+        setEmailHint(t("emailOk"), "ok");
+      } else {
+        emailValid = true;
+        setEmailHint("", null);
+      }
+      updateSubmitState();
+    }
+
+    if (usernameInput) {
+      usernameInput.addEventListener("blur", function () {
+        validateUsernameLive();
+      });
+      usernameInput.addEventListener("change", function () {
+        validateUsernameLive();
+      });
+    }
+
+    if (emailInput) {
+      emailInput.addEventListener("blur", function () {
+        validateEmailLive();
+      });
+      emailInput.addEventListener("change", function () {
+        validateEmailLive();
+      });
     }
 
     if (form) {
@@ -406,8 +649,10 @@ function renderWithUser(root, user) {
       applyTextsWithUser(root);
     });
 
-    if (btnSubmit) btnSubmit.disabled = false;
+    updateSubmitState();
   }
+
+
 
   // ======================
   // Carga de datos desde Supabase
@@ -479,6 +724,17 @@ function renderWithUser(root, user) {
       "birth_date",
       "gender",
       "p_username",
+      "p_roles",
+      "p_credits",
+      "p_steps",
+      "p_floor",
+      "p_views",
+      "p_likes",
+      "p_notes",
+      "p_shares",
+      "p_notifications",
+      "p_history",
+      "last_view",
     ].join(",");
 
     var query = client.from("profiles").select(cols).eq("id", user.id).limit(1);
@@ -534,6 +790,45 @@ function renderWithUser(root, user) {
         if (countryInput) countryInput.value = row.country || "";
         if (birthInput) birthInput.value = row.birth_date || "";
         if (genderInput) genderInput.value = row.gender || "";
+
+        // Estadísticas de cuenta (tomadas del perfil)
+        var elStatCredits = root.querySelector("#acc-stat-credits");
+        var elStatSteps = root.querySelector("#acc-stat-steps");
+      
+        var elStatFloors = root.querySelector("#acc-stat-floors");
+        var elStatRoles = root.querySelector("#acc-stat-roles");
+        var elStatViews = root.querySelector("#acc-stat-views");
+        var elStatLikes = root.querySelector("#acc-stat-likes");
+        var elStatNotes = root.querySelector("#acc-stat-notes");
+        var elStatShares = root.querySelector("#acc-stat-shares");
+        var elStatNotifs = root.querySelector("#acc-stat-notifs");
+        var elStatHistory = root.querySelector("#acc-stat-history");
+
+        var credits = row.p_credits || 0;
+        var steps = row.p_steps || 0;
+        var floors = row.p_floor || 0;
+        var views = row.p_views || 0;
+        var likes = row.p_likes || 0;
+        var notes = row.p_notes || 0;
+        var shares = row.p_shares || 0;
+        var notifs = row.p_notifications || 0;
+        var rolesCount = row.p_roles || 0;
+        var historyCount = row.p_history || 0;
+
+        if (elStatCredits) elStatCredits.textContent = String(credits || 0);
+        if (elStatSteps) elStatSteps.textContent = String(steps || 0);
+        if (elStatFloors) elStatFloors.textContent = String(floors || 0);
+        if (elStatRoles) elStatRoles.textContent = String(rolesCount || 0);
+        if (elStatViews) elStatViews.textContent = String(views || 0);
+        if (elStatLikes) elStatLikes.textContent = String(likes || 0);
+        if (elStatNotes) elStatNotes.textContent = String(notes || 0);
+        if (elStatShares) elStatShares.textContent = String(shares || 0);
+        if (elStatNotifs) elStatNotifs.textContent = String(notifs || 0);
+        if (elStatHistory) elStatHistory.textContent = String(historyCount || 0);ent = String(likes || 0);
+        if (elStatNotes) elStatNotes.textContent = String(notes || 0);
+        if (elStatShares) elStatShares.textContent = String(shares || 0);
+        if (elStatNotifs) elStatNotifs.textContent = String(notifs || 0);
+        if (elStatHistory) elStatHistory.textContent = String(historyCount || 0);
 
         // Forzar actualización de labels flotantes después de cargar datos
         try {
@@ -677,6 +972,7 @@ function renderWithUser(root, user) {
       email: email || null,
       first_name: firstName || null,
       last_name: lastName || null,
+      p_username: username || null,
       phone: phoneInput ? phoneInput.value.trim() || null : null,
       address: addrInput ? addrInput.value.trim() || null : null,
       state: stateInput ? stateInput.value.trim() || null : null,
@@ -719,15 +1015,28 @@ function renderWithUser(root, user) {
         }
 
         // Actualizar metadatos de Auth (first_name / last_name)
+        // y, si el email cambió en el perfil, actualizar también el email en auth.users
         try {
           if (client.auth && typeof client.auth.updateUser === "function") {
+            var updatePayload = {
+              data: {
+                first_name: firstName,
+                last_name: lastName,
+              },
+            };
+            // Si el usuario tiene email de Auth y el nuevo email es distinto, lo actualizamos.
+            try {
+              var originalEmail = (user && user.email) || "";
+              if (
+                email &&
+                originalEmail &&
+                email.toLowerCase() !== originalEmail.toLowerCase()
+              ) {
+                updatePayload.email = email;
+              }
+            } catch (e) {}
             client.auth
-              .updateUser({
-                data: {
-                  first_name: firstName,
-                  last_name: lastName,
-                },
-              })
+              .updateUser(updatePayload)
               .catch(function (err) {
                 console.warn("[Account] updateUser metadata error", err);
               });
@@ -748,8 +1057,11 @@ function renderWithUser(root, user) {
         }
 
         if (hint) {
-          hint.textContent = t("hintSaved");
-          hint.className = "field-hint ok";
+          hint.textContent = "";
+          hint.className = "field-hint";
+        }
+        if (window.HeaderMessages && typeof window.HeaderMessages.show === "function") {
+          window.HeaderMessages.show(t("hintSaved"));
         }
         if (btnSubmit) btnSubmit.disabled = false;
       })
@@ -761,6 +1073,40 @@ function renderWithUser(root, user) {
         }
         if (btnSubmit) btnSubmit.disabled = false;
       });
+  }
+
+
+  async function checkEmailExistsForAccount(email, currentEmail) {
+    email = (email || "").trim().toLowerCase();
+    currentEmail = (currentEmail || "").trim().toLowerCase();
+    if (!email) return null;
+
+    // Si el correo es igual al actual, no hay conflicto
+    if (email === currentEmail) return false;
+
+    if (
+      !window.BackendSupabase ||
+      typeof window.BackendSupabase.client !== "function" ||
+      typeof window.BackendSupabase.isConfigured !== "function" ||
+      !window.BackendSupabase.isConfigured()
+    ) {
+      return null;
+    }
+
+    var client = window.BackendSupabase.client();
+    if (!client) return null;
+
+    try {
+      var res = await client.rpc("email_exists", { p_email: email });
+      if (res && res.error) {
+        console.warn("[Account] email_exists error", res.error);
+        return null;
+      }
+      return !!(res && res.data);
+    } catch (e) {
+      console.warn("[Account] email_exists exception", e);
+      return null;
+    }
   }
 
   return { render: render };

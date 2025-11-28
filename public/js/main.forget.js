@@ -28,7 +28,7 @@ window.MainForget = (function () {
       '',
       '    <div id="forget-step-2" style="display:none">',
       '      <div class="reg-field" data-field="code">',
-      '        <input type="text" id="forget-code" inputmode="numeric" pattern="[0-9]*" />',
+      '        <input type="text" id="forget-code" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" />',
       '        <label for="forget-code" id="lbl-forget-code"></label>',
       '      </div>',
       '      <div class="reg-field" data-field="password">',
@@ -85,6 +85,7 @@ window.MainForget = (function () {
       submitStep2: "Cambiar contraseña",
       successStep1: "Te enviamos un código de verificación a tu correo (si existe en el sistema).",
       successStep2: "Contraseña actualizada. Ahora puedes iniciar sesión con la nueva contraseña.",
+      codeInvalid: "El código ingresado no es válido o ya ha vencido.",
       error: "No se pudo procesar la solicitud. Intenta nuevamente más tarde.",
       backToLogin: "Recordaste tu contraseña, inicia sesión !!!"
     },
@@ -102,6 +103,7 @@ window.MainForget = (function () {
       submitStep2: "Change password",
       successStep1: "We sent a verification code to your email (if it exists in our system).",
       successStep2: "Password updated. You can now sign in with your new password.",
+      codeInvalid: "The verification code is invalid or has expired.",
       error: "We could not process your request. Please try again later.",
       backToLogin: "Remembered your password? Sign in !!!"
     }
@@ -156,12 +158,19 @@ window.MainForget = (function () {
     try {
       var payload = { p_email: email, p_code: code, p_new_password: newPassword };
       var res = await client.rpc("auth_reset_verify_code", payload);
+      // Si el RPC devuelve un error explícito, lo tratamos como fallo.
       if (res && res.error) {
         console.warn("[Forget] auth_reset_verify_code error", res.error);
         return { ok: false, error: res.error.message || "rpc_error" };
       }
-      var isValid = !!(res && res.data);
-      return { ok: isValid, error: isValid ? null : "invalid" };
+      // En versiones anteriores la función devolvía un valor en data (true/false).
+      // Si data está definido, lo usamos para determinar si el código es válido.
+      if (res && typeof res.data !== "undefined" && res.data !== null) {
+        var isValidFlag = !!res.data;
+        return { ok: isValidFlag, error: isValidFlag ? null : "invalid" };
+      }
+      // Si no hay error y tampoco hay data (función VOID), asumimos que todo fue bien.
+      return { ok: true, error: null };
     } catch (e) {
       console.warn("[Forget] confirmResetPassword exception", e);
       return { ok: false, error: "exception" };
@@ -222,6 +231,19 @@ window.MainForget = (function () {
       el.className = "field-hint";
       if (kind === "error") el.classList.add("error");
       if (kind === "ok") el.classList.add("ok");
+
+      // También mostramos los mensajes globales en el header
+      try {
+        if (
+          typeof globalHint !== "undefined" &&
+          el === globalHint &&
+          msg &&
+          window.HeaderMessages &&
+          typeof window.HeaderMessages.show === "function"
+        ) {
+          window.HeaderMessages.show(msg, { duration: 7000 });
+        }
+      } catch (e) {}
     }
 
     function markHasValue(inputEl) {
@@ -368,7 +390,12 @@ window.MainForget = (function () {
           btnStep2.disabled = true;
           var res2 = await confirmResetPassword(savedEmail, code, p1);
           if (!res2 || !res2.ok) {
-            showHint(globalHint, t("error"), "error");
+            if (res2 && res2.error === "invalid") {
+              // Código incorrecto o vencido
+              showHint(step2Hint, t("codeInvalid"), "error");
+            } else {
+              showHint(globalHint, t("error"), "error");
+            }
           } else {
             showHint(step2Hint, "", null);
             showHint(globalHint, t("successStep2"), "ok");

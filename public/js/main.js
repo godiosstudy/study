@@ -151,6 +151,17 @@ window.Main = (function () {
       return;
     }
 
+    if (name === "notifications") {
+      if (
+        window.MainNotifications &&
+        typeof window.MainNotifications.render === "function"
+      ) {
+        window.MainNotifications.render(el);
+      }
+      setTimeout(adjustLayout, 0);
+      return;
+    }
+
     if (name === "signout") {
       if (
         window.MainSignout &&
@@ -162,7 +173,32 @@ window.Main = (function () {
       return;
     }
 
-    console.warn("[Main] vista desconocida:", name);
+    
+    if (name === "users") {
+      if (window.MainUsers && typeof window.MainUsers.render === "function") {
+        window.MainUsers.render(el);
+      }
+      setTimeout(adjustLayout, 0);
+      return;
+    }
+
+    if (name === "roles") {
+      if (window.MainRoles && typeof window.MainRoles.render === "function") {
+        window.MainRoles.render(el);
+      }
+      setTimeout(adjustLayout, 0);
+      return;
+    }
+
+    if (name === "areas") {
+      if (window.MainAreas && typeof window.MainAreas.render === "function") {
+        window.MainAreas.render(el);
+      }
+      setTimeout(adjustLayout, 0);
+      return;
+    }
+
+console.warn("[Main] vista desconocida:", name);
   }
 
   function getCurrentView() {

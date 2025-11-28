@@ -479,14 +479,29 @@ window.MainLogin = (function () {
       el.classList.remove("error", "ok");
       if (variant === "error") el.classList.add("error");
       if (variant === "ok") el.classList.add("ok");
+
+      // También mostramos los mensajes globales en el header
+      try {
+        if (
+          typeof globalHint !== "undefined" &&
+          el === globalHint &&
+          text &&
+          window.HeaderMessages &&
+          typeof window.HeaderMessages.show === "function"
+        ) {
+          window.HeaderMessages.show(text, { duration: 7000 });
+        }
+      } catch (e) {}
     }
 
     function recomputeSubmitEnabled() {
       if (!submitBtn) return;
+      // Permitimos enviar cuando hay identificador y contraseña.
+      // La validación de identifier/email se hace en validateIdentifierIfNeeded()
+      // dentro del submit, antes de llamar a Supabase.
       var canSubmit =
         !!state.identifier &&
         !!state.password &&
-        state.idStatus === "ok" &&
         !state.isBusy;
       submitBtn.disabled = !canSubmit;
     }

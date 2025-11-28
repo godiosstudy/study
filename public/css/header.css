@@ -306,3 +306,91 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+
+/* Banner de notificación que ocupa el área del header */
+.hdr-notification-banner {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  background: #000000;
+  color: #ffd600;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.05em;
+  z-index: 1010;
+  pointer-events: none; /* no bloquea clicks en chips */
+}
+
+.hdr-notification-banner--visible {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  animation: hdrNotifFadeIn 0.2s ease-out, hdrNotifBlink 1s step-start infinite;
+}
+
+@keyframes hdrNotifFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* Admin/Menu lateral (Users / Roles / Areas / Preferences) */
+.hdr-admin-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  display: none;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.hdr-admin-menu-panel {
+  position: absolute;
+  top: var(--hdr-height, 56px);
+  right: 0;
+  width: min(280px, 85vw);
+  background: var(--header-bg);
+  color: var(--header-fg);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  padding: 24px 28px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.hdr-admin-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 1.05rem;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.hdr-admin-menu-item i[data-lucide] {
+  width: 24px;
+  height: 24px;
+}
+
+.hdr-admin-menu-label {
+  flex: 1;
+  text-align: left;
+}
+

@@ -180,7 +180,7 @@
   margin-bottom: 6px;
   font-size: 14px;
   font-weight: 600;
-  color: var(--fg);
+  color: #000000;
   opacity: 0.9;
 }
 
@@ -1098,6 +1098,62 @@ select.prefs-select-loading option {
   text-align: center;
 }
 
+
+/* Sección de estadísticas de cuenta en Mi cuenta */
+.account-stats {
+  margin-bottom: 16px;
+}
+
+.account-stats-chips {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  justify-items: center;
+  align-items: center;
+  column-gap: 16px;
+  row-gap: 16px;
+  margin-top: 8px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.account-stat-chip {
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.account-stat-count {
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.account-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-soft);
+  color: var(--header-bg);
+}
+
+.account-stat-icon i {
+  width: 20px;
+  height: 20px;
+}
+
+.account-stat-label {
+  font-size: 11px;
+  opacity: 0.85;
+  text-align: center;
+}
+
 /* compat: estilos antiguos de chip en otros paneles */
 .results-summary .chip.icon-only {
   min-height: 32px;
@@ -1349,6 +1405,11 @@ select.prefs-select-loading option {
   font-size: 1rem;
 }
 
+.reg-field.account-primary-field input[type="text"],
+.reg-field.account-primary-field input[type="email"] {
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg));
+}
+
 
 .reg-field input:focus,
 .reg-field select:focus {
@@ -1363,7 +1424,7 @@ select.prefs-select-loading option {
   top: 50%;
   transform: translateY(-50%);
   font-size: 0.9rem;
-  color: var(--header-bg, var(--accent, #0ea5e9));
+  color: #000000;
   pointer-events: none;
   transition: all 0.15s ease-out;
 }
@@ -1408,7 +1469,7 @@ select.prefs-select-loading option {
 
 .register-actions .chip.primary {
   background: var(--accent, var(--header-bg));
-  color: #ffffff;
+  color: var(--accent-contrast, #ffffff);
   border-color: var(--accent, var(--header-bg));
 }
 
@@ -1456,4 +1517,60 @@ select.prefs-select-loading option {
 /* Fondo especial para pantallas de autenticación (login, register, forget, account) */
 #app-main.auth-view {
   background: color-mix(in srgb, var(--accent) 30%, var(--bg));
+}
+
+
+/* Footer links below auth buttons (Login/Register/Forget) */
+.register-login-link {
+  margin-top: 12px;
+  text-align: center;
+}
+
+/* Contenedor para input de contraseña + botón ojo */
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Asegura espacio para el botón de ojo */
+.password-input-wrapper > input[type="password"],
+.password-input-wrapper > input[type="text"] {
+  flex: 1;
+  padding-right: 40px;
+}
+
+/* Botón de mostrar/ocultar contraseña */
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Icono de ojo */
+.password-toggle i {
+  width: 18px;
+  height: 18px;
+}
+
+/* === UNIFICACIÓN DE FONDO EN TODAS LAS VISTAS =======================
+   Usamos siempre el color base del sitio (--bg) como fondo general,
+   para que Login, Registro, Preferencias, Cuenta, Notificaciones,
+   Resultados, etc. se vean con el mismo fondo.                       */
+
+html,
+body {
+  background-color: var(--bg);
+}
+
+#app-main {
+  background-color: var(--bg);
 }

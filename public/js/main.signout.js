@@ -14,12 +14,12 @@ window.MainSignout = (function () {
     es: {
       title: 'Cerrar sesión',
       message:
-        'Tu sesión se ha cerrado con éxito. Vuelve en tu próximo uso para seguir disfrutando de los beneficios de Study.GODiOS.org.',
+        'Su sesión ha sido cerrada',
     },
     en: {
       title: 'Sign out',
       message:
-        'Your session has been closed successfully. Come back on your next visit to keep enjoying the benefits of Study.GODiOS.org.',
+      'Your session has been closed.',
     },
   };
 
@@ -102,6 +102,26 @@ window.MainSignout = (function () {
     }
   } catch (e) {
     console.warn('[Signout] header render error', e);
+  }
+
+  // 7) Mostrar mensaje global en el header y volver a Navigator
+  try {
+    if (
+      window.HeaderMessages &&
+      typeof window.HeaderMessages.show === 'function'
+    ) {
+      window.HeaderMessages.show(t('message'), { duration: 7000 });
+    }
+  } catch (e) {
+    console.warn('[Signout] header message error', e);
+  }
+
+  try {
+    if (window.Main && typeof window.Main.showView === 'function') {
+      window.Main.showView('navigator');
+    }
+  } catch (e) {
+    console.warn('[Signout] navigator redirect error', e);
   }
 }
 
