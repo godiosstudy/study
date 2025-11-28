@@ -15,11 +15,9 @@ window.MainRoles = (function () {
   var TEXTS = {
     es: {
       title: "Roles",
-      comingSoon: "Pronto vas a poder administrar roles desde aquí.",
     },
     en: {
       title: "Roles",
-      comingSoon: "Soon you will be able to manage roles here.",
     },
   };
 
@@ -29,29 +27,18 @@ window.MainRoles = (function () {
     return dict[key] || key;
   }
 
-  
   function render(container) {
     if (!container) return;
-
-    container.innerHTML = "";
-    container.className = "panel-single admin-panel";
-
-    var wrap = document.createElement("div");
-    wrap.className = "main-view";
-
-    wrap.innerHTML = [
+    container.innerHTML = [
       '<div class="main-view-header">',
       '  <h1 class="main-view-title">' + t("title") + "</h1>",
       "</div>",
-      '',
-      '<div class="panel-body">',
-      '  <p class="text-muted">' + t("comingSoon") + "</p>",
+      "",
+      '<div class="main-view-body">',
+      '  <p>HELLO</p>',
       "</div>"
     ].join("\n");
-
-    container.appendChild(wrap);
   }
 
   return { render: render };
-
 })();

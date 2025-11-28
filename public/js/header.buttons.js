@@ -412,11 +412,6 @@ window.HeaderButtons = (function () {
       var blessed = createBlessedLabel();
       container.appendChild(blessed);
 
-      // stats (steps; créditos ocultos para usuarios logueados)
-      container.appendChild(
-        createStatChip("hdr-steps", "trending-up", "stepsLabel")
-      );
-
       container.appendChild(
         createChip(
           "user",
@@ -462,16 +457,18 @@ window.HeaderButtons = (function () {
       );
     }
 
-    container.appendChild(
-      createChip(
-        "settings",
-        "preferences",
-        function () {
-          showView("preferences");
-        },
-        "hdr-preferences"
-      )
-    );
+    if (!isLoggedIn()) {
+      container.appendChild(
+        createChip(
+          "settings",
+          "preferences",
+          function () {
+            showView("preferences");
+          },
+          "hdr-preferences"
+        )
+      );
+    }
 
     if (isLoggedIn()) {
       container.appendChild(createNotificationsChip());
@@ -488,7 +485,16 @@ window.HeaderButtons = (function () {
     }
 
     if (window.lucide && typeof window.lucide.createIcons === "function") {
-      window.lucide.createIcons();
+      
+    // Seguridad extra: nunca mostrar el botón de preferencias si hay usuario logueado
+    if (isLoggedIn()) {
+      var prefBtn = document.getElementById("hdr-preferences");
+      if (prefBtn && prefBtn.parentNode) {
+        prefBtn.parentNode.removeChild(prefBtn);
+      }
+    }
+
+window.lucide.createIcons();
     }
   }
 

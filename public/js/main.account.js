@@ -52,6 +52,7 @@ window.MainAccount = (function () {
       hintRequiredNames: "Nombre y apellido son obligatorios.",
       hintRequiredEmail: "El correo es obligatorio y debe ser válido.",
       usernameInvalid: "Nombre de usuario inválido. Usa solo minúsculas, números, guion y guion bajo.",
+      usernameAllowed: "Caracteres permitidos: letras minúsculas, números, guion (-) y guion bajo (_).",
       usernameExists: "Nombre de usuario NO disponible para registro en GODiOS.",
       usernameOk: "Nuevo nombre de usuario disponible para registro en GODiOS.",
       emailExists: "Nuevo correo NO disponible para registro en GODiOS.",
@@ -105,6 +106,7 @@ window.MainAccount = (function () {
       hintRequiredNames: "First and last name are required.",
       hintRequiredEmail: "Email is required and must be valid.",
       usernameInvalid: "Invalid username. Use only lowercase letters, numbers, dash and underscore.",
+      usernameAllowed: "Allowed characters: lowercase letters, numbers, dash (-) and underscore (_).",
       usernameExists: "Username is not available for registration in GODiOS.",
       usernameOk: "New username available for registration in GODiOS.",
       emailExists: "New email is not available for registration in GODiOS.",
@@ -143,11 +145,12 @@ window.MainAccount = (function () {
     return re.test(v);
   }
 
-  async function checkUsernameExists(username, currentUsername) {
-    username = (username || '').trim().toLowerCase();
-    currentUsername = (currentUsername || '').trim().toLowerCase();
+  async function checkUsernameExists(username, currentUsername, userId) {
+    username = (username || "").trim().toLowerCase();
+    currentUsername = (currentUsername || "").trim().toLowerCase();
     if (!username) return null;
-    // si es el mismo que ya tiene el perfil, se considera aceptable
+
+    // Si es el mismo nombre que ya tiene el perfil, no hay conflicto
     if (username === currentUsername) return false;
 
     if (
@@ -163,7 +166,18 @@ window.MainAccount = (function () {
     if (!client) return null;
 
     try {
-      var query = client.from("profiles").select("p_username").eq("p_username", username).limit(1);
+      var query = client
+        .from("profiles")
+        .select("id, p_username")
+        .eq("p_username", username);
+
+      // Excluir el propio usuario de la búsqueda para permitir su username actual
+      if (userId) {
+        query = query.neq("id", userId);
+      }
+
+      query = query.limit(1);
+
       var res;
       if (query && typeof query.maybeSingle === "function") {
         res = await query.maybeSingle();
@@ -510,28 +524,55 @@ function wireWithUser(root, user) {
       hint.className = "field-hint";
     }
     if (usernameHint) {
-      usernameHint.textContent = "";
-      usernameHint.classList.remove("error", "ok");
+      usernameHint.textContent = t("usernameAllowed");
+      usernameHint.className = "field-hint";
     }
     if (emailHint) {
       emailHint.textContent = "";
-      emailHint.classList.remove("error", "ok");
+      emailHint.className = "field-hint";
+    }
+
+    // Limpiamos cualquier mensaje previo en el header al cargar la vista
+    if (
+      window.HeaderMessages &&
+      typeof window.HeaderMessages.hide === "function"
+    ) {
+      window.HeaderMessages.hide();
+    }
+
+    function sendHeaderFieldMessage(text, variant) {
+      // Muestra los mensajes de validación en el header, no debajo del campo
+      if (!text) {
+        if (
+          window.HeaderMessages &&
+          typeof window.HeaderMessages.hide === "function"
+        ) {
+          window.HeaderMessages.hide();
+        }
+        return;
+      }
+
+      if (
+        window.HeaderMessages &&
+        typeof window.HeaderMessages.show === "function"
+      ) {
+        var options = {};
+        if (variant === "error") options.type = "error";
+        if (variant === "ok") options.type = "success";
+        window.HeaderMessages.show(text, options);
+      } else {
+        try {
+          console.warn("[Account]", text);
+        } catch (e) {}
+      }
     }
 
     function setUsernameHint(text, variant) {
-      if (!usernameHint) return;
-      usernameHint.textContent = text || "";
-      usernameHint.classList.remove("error", "ok");
-      if (variant === "error") usernameHint.classList.add("error");
-      if (variant === "ok") usernameHint.classList.add("ok");
+      sendHeaderFieldMessage(text, variant);
     }
 
     function setEmailHint(text, variant) {
-      if (!emailHint) return;
-      emailHint.textContent = text || "";
-      emailHint.classList.remove("error", "ok");
-      if (variant === "error") emailHint.classList.add("error");
-      if (variant === "ok") emailHint.classList.add("ok");
+      sendHeaderFieldMessage(text, variant);
     }
 
     var currentUsername = "";
@@ -572,7 +613,7 @@ function wireWithUser(root, user) {
         return;
       }
 
-      var exists = await checkUsernameExists(value, currentUsername);
+      var exists = await checkUsernameExists(value, currentUsername, user && user.id);
       if (exists === true) {
         usernameValid = false;
         setUsernameHint(t("usernameExists"), "error");
@@ -898,23 +939,46 @@ function wireWithUser(root, user) {
     var birthInput = root.querySelector("#acc-birth");
     var genderInput = root.querySelector("#acc-gender");
 
+    function showHeaderValidationMessage(textKey, variant) {
+      var text = textKey ? t(textKey) : "";
+      if (!text) return;
+      if (
+        window.HeaderMessages &&
+        typeof window.HeaderMessages.show === "function"
+      ) {
+        var options = {};
+        if (variant === "error") options.type = "error";
+        if (variant === "ok") options.type = "success";
+        window.HeaderMessages.show(text, options);
+      } else {
+        try {
+          console.warn("[Account]", text);
+        } catch (e) {}
+      }
+    }
+
+
     var username = usernameInput ? (usernameInput.value || "").trim().toLowerCase() : "";
     var firstName = firstInput ? firstInput.value.trim() : "";
     var lastName = lastInput ? lastInput.value.trim() : "";
     var email = emailInput ? emailInput.value.trim() : "";
 
     if (!username) {
+      // Username requerido: mensaje en header, no debajo del campo
+      showHeaderValidationMessage("usernameInvalid", "error");
       if (hint) {
-        hint.textContent = t("usernameInvalid");
-        hint.className = "field-hint error";
+        hint.textContent = "";
+        hint.className = "field-hint";
       }
       return;
     }
 
     if (!isUsernameFormatValid(username)) {
+      // Formato de username inválido: mensaje en header
+      showHeaderValidationMessage("usernameInvalid", "error");
       if (hint) {
-        hint.textContent = t("usernameInvalid");
-        hint.className = "field-hint error";
+        hint.textContent = "";
+        hint.className = "field-hint";
       }
       return;
     }
@@ -928,9 +992,11 @@ function wireWithUser(root, user) {
     }
 
     if (!isEmailFormatValid(email)) {
+      // Email inválido: mensaje en header
+      showHeaderValidationMessage("hintRequiredEmail", "error");
       if (hint) {
-        hint.textContent = t("hintRequiredEmail");
-        hint.className = "field-hint error";
+        hint.textContent = "";
+        hint.className = "field-hint";
       }
       return;
     }
@@ -958,12 +1024,15 @@ function wireWithUser(root, user) {
       }
     } catch (e) {}
 
-    var exists = await checkUsernameExists(username, currentUsername);
+    var exists = await checkUsernameExists(username, currentUsername, user && user.id);
     if (exists === true) {
+      // Username en uso por otro usuario: mensaje en header
+      showHeaderValidationMessage("usernameExists", "error");
       if (hint) {
-        hint.textContent = t("usernameExists");
-        hint.className = "field-hint error";
+        hint.textContent = "";
+        hint.className = "field-hint";
       }
+      if (btnSubmit) btnSubmit.disabled = false;
       return;
     }
 

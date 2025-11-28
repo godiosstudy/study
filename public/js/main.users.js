@@ -15,11 +15,9 @@ window.MainUsers = (function () {
   var TEXTS = {
     es: {
       title: "Usuarios",
-      comingSoon: "Pronto vas a poder administrar usuarios desde aquí.",
     },
     en: {
       title: "Users",
-      comingSoon: "Soon you will be able to manage users here.",
     },
   };
 
@@ -29,29 +27,18 @@ window.MainUsers = (function () {
     return dict[key] || key;
   }
 
-  
   function render(container) {
     if (!container) return;
-
-    container.innerHTML = "";
-    container.className = "panel-single admin-panel";
-
-    var wrap = document.createElement("div");
-    wrap.className = "main-view";
-
-    wrap.innerHTML = [
+    container.innerHTML = [
       '<div class="main-view-header">',
       '  <h1 class="main-view-title">' + t("title") + "</h1>",
       "</div>",
-      '',
-      '<div class="panel-body">',
-      '  <p class="text-muted">' + t("comingSoon") + "</p>",
+      "",
+      '<div class="main-view-body">',
+      '  <p>HELLO</p>',
       "</div>"
     ].join("\n");
-
-    container.appendChild(wrap);
   }
 
   return { render: render };
-
 })();
