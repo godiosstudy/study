@@ -336,6 +336,21 @@
   animation: hdrNotifFadeIn 0.2s ease-out, hdrNotifBlink 1s step-start infinite;
 }
 
+.header-message--error {
+  background-color: #dc2626;
+  color: #fef08a;
+}
+
+.header-message--success {
+  background-color: #22c55e;
+  color: #000000;
+}
+
+.header-message--warning {
+  background-color: #facc15;
+  color: #000000;
+}
+
 @keyframes hdrNotifFadeIn {
   from {
     opacity: 0;
@@ -344,6 +359,15 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes hdrNotifBlink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
   }
 }
 
@@ -393,4 +417,3 @@
   flex: 1;
   text-align: left;
 }
-

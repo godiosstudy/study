@@ -130,6 +130,8 @@ Menu izquierdo vertical
 (Se oculta y se abre con una flecha en la izquierda en el centro del main)
 Personas
 Grupos
+Eventos
+Cursos
 Creditos
 Permisos    
 Roles
@@ -146,55 +148,8 @@ re_LGx8qdbe_N8PYDb2vv78JMqZNKhc1qKVt
     
 Pendientes del sitio
 
-te comparti todo la repo de la app que estamos construyendo y las tablas de profiles y entries.
+te comparti todo la repo de la app que estamos construyendo y las estructuras de las tablas en supabase
 por cada actualizacion que hagas me devuelves en un .zip solo los files actualizados
 Debes priorizar no dañar cosas que vamos creando paso a paso.
 Si necesitas algo pidemelo pero no inventes ni sobreentiendas nada.
 
-1. Notifications
-Vamos a instalar el mejor icono desde lucide.com de una campana a la derecha de preferencias en el header y que tenga un numero encima tambien como los de steps y floors y que este muestre cuando el usuario tenga notificaciones no leidas y la cantidad.
-Cuando le demos clic al icono boton mostrara en el Main todos los mensajes en orden del ultimo al primero en tandas de 50 paginados, 1 por linea. (Usaremos un nuevo js llamado main.notifications.js)
-Para esto necesitamos una tabla nueva de Notifications que llamaresmos notifications 
-Quiero Que toda notificacion al usuario se muestre en un popup que ocupe el espacio del header mostrando la nueva notificacion por 3 segundos y luego se desvanezga y quede en el icono de campana un numero.
-
-IMPORTANTE Todos los mensaje del sistema se mostraran asi
-
-Definamos la tabla notifications
-creo que deberiamos tener los siguientes campos
-
-1. id int
-2. user id
-3. notification text
-4. created date/time
-5. readed_y_n (yes/no) original (NO)
-6. readed_time date/time
-7. created_by (id) (0 = system | others = users)
-
-1. cuando se guarden los datos de mi cuenta si el nombre de usuario y correo no fueron cambiados, debe guardar el resto. Al momento de cambiar el nombre de usuario en tiempo real en ese campo debe verificar que el nuevo nombre de usuario sea del tipo aceptado por el app y que no exista en la base, si esta ok, debe decirlo debajo de su campo en verde, Nuevo nombre de usuario aceptado. Si ya existe o esta mal entonces tambien debe decirlo debajo del mismo campo en Rojo. En cuanto al cambio de correo, lo mismo, debe verificar en tiempo real en la tabla profiles que el nuevo correo no exista y debe decirlo al pie del campo en verde, Nuevo correo aceptado. Si esta ocupado o mal escrito el correo , debe decirlo debajo del campo en ROJO, Correo existete o no es un correo. Si se cambia el coreo entonces al guardar debe pasar a una proxima pantalla que debe enviar un codigo al nuevo correo para que lo introduzca el usuario y se permita actualizar su cuenta con el nuevo correo solititado
-
-2. los campos Nombre de usuario y Cooreo deben ir de primero y deben tener un color de campo tipo 10% del color del sitio para destacarlos de los demas.
-
-3. si se modifican esos cada vez que se intenta salir de esos campos debe validarlos con la base de datos y debajo del campo debe decir en verde si esta ok o en rojo si no 
-
-4. el boton  Guardar cambios si hay un problema en nombre de usuario o correo debe desactivarse y no se va a activar hasta que no se validen los 2 campos.
-
-cuando se guarda si hay modificaciones en correo, este debe enviar un codigo al nuevo correo del usuario con un codigo como cuando se registra para validar el cambio del correo.
-
-5. Mostramos antes que nombre de usuario y dentro de la ventana  iconos mostrando lo siguiente:
-
-1.Creditos
-2.Escalones
-3.Pisos
-4.Roles
-5.Views
-6.Likes
-7.Notes
-8.Shares
-9.Notifications
-10.History
-
-quedo bien el mensaje pero no se aprecia mucho, por lo que vamos a hacer lo siguiente, vamos a hacer que se muestre en fondo negro y texto amarillo en bold y un poco mas grande siempre que entre todo en el area. Al guardar en Mi cuenta despues del mensaje debe saltar a navigator Cuando cerramos sesion, no debe mostrar este texto, (Pantalla adjunta) debemos mostrar este mensaje en el area de mensajes del header y mostrar navegator como al inicio. Por favor vamos a hacer que Login, Register, Forget, Preferences, etc. empiecen a usar HeaderMessages.show(...) para todos sus mensajes de éxito / error importantes.
-
-
-Debajo de MI Cuenta Debemos construir un area como la que tenemos debajo de Results para mostrar 10 iconos mostrando lo siguiente: 1.Creditos 2.Escalones 3.Pisos 4.Roles 5.Views 6.Likes 7.Notes 8.Shares 9.Notificacions, 10 History 
-Los 10 iconos deben ser seleccionados en LUCIDE.com y utilizados de la misma forma que en header, mostrando sus cantidades arriba (Esta informacion la tomamos del perfil del participante)

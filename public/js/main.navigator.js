@@ -481,15 +481,18 @@ var prefs = getPrefs();
       row.dataset.level6 = item.level_6 || "";
       row.dataset.level7 = item.level_7 || "";
 
+      var textSpan = document.createElement("span");
+      textSpan.className = "nav-item-text";
+
       var numSpan = document.createElement("span");
       numSpan.className = "nav-item-num";
       numSpan.textContent = item.level_6 || "";
 
-      var textSpan = document.createElement("span");
-      textSpan.className = "nav-item-text";
-      textSpan.textContent = item.level_7 || "";
+      textSpan.appendChild(numSpan);
+      if (item.level_7) {
+        textSpan.appendChild(document.createTextNode(" " + item.level_7));
+      }
 
-      row.appendChild(numSpan);
       row.appendChild(textSpan);
 
       row.addEventListener("click", function () {

@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.5.14",
+    "date": "2025-11-28",
+    "notes": [
+      "Align username helper text in account page and improve account welcome UI."
+    ]
+  },
+  {
     "version": "0.5.13",
     "date": "2025-11-27",
     "notes": [

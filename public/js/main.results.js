@@ -519,7 +519,7 @@ window.MainResults = (function () {
         if (verse) refText += ":" + verse;
         refDiv.textContent = refText || verse || "";
 
-        // Fila 2: texto del versículo
+        // Fila 2: texto del versículo (solo texto, sin número level_6 porque ya está en la referencia)
         var textDiv = document.createElement("div");
         textDiv.className = "results-text";
         textDiv.innerHTML = entry.html;

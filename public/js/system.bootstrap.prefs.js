@@ -434,6 +434,33 @@
 
 
   
+
+  async function loadSystemTranslationsForLangs(langs) {
+    try {
+      if (
+        window.SystemTranslations &&
+        typeof window.SystemTranslations.ensureLoaded === "function"
+      ) {
+        await window.SystemTranslations.ensureLoaded(langs);
+      }
+    } catch (e) {
+      console.warn("[BootstrapPrefs] SystemTranslations load error", e);
+    }
+  }
+
+
+  
+  async function loadSystemPermissionsIfNeeded() {
+    try {
+      if (window.UserPermissions && typeof window.UserPermissions.load === "function") {
+        await window.UserPermissions.load();
+      }
+    } catch (e) {
+      console.warn("[BootstrapPrefs] UserPermissions load error", e);
+    }
+  }
+
+
   async function afterBibleLoaded(prefs) {
     // Pre-cargar colecciones/corpus para Preferencias durante el loader
     try {
@@ -465,9 +492,19 @@ function showInitialView() {
     showLoader();
 
     try {
+      var langList = ["en", "es"];
+      try {
+        var tmpPrefs = store && typeof store.load === "function" ? store.load() : null;
+        if (tmpPrefs && tmpPrefs.language && langList.indexOf(tmpPrefs.language) === -1) {
+          langList.push(tmpPrefs.language);
+        }
+      } catch (eLang) {}
+      await loadSystemTranslationsForLangs(langList);
+      await loadSystemPermissionsIfNeeded();
+
       var prefs = null;
 
-      // 1) Usuario logueado → perfil
+      // 1) Usuario logueado -> perfil
       prefs = await step1_UserProfile(store);
       if (prefs) {
         await loadBibleCache(prefs);

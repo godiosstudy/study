@@ -266,6 +266,17 @@ window.HeaderButtons = (function () {
 
   var adminMenuOverlay = null;
 
+  var ADMIN_MENU_ITEMS = [
+    { id: "admin.users", module: "users", icon: "users", key: "menu.admin.users", fallbackKey: "users", view: "users" },
+    { id: "admin.roles", module: "roles", icon: "shield", key: "menu.admin.roles", fallbackKey: "roles", view: "roles" },
+    { id: "admin.areas", module: "areas", icon: "map", key: "menu.admin.areas", fallbackKey: "areas", view: "areas" },
+    { id: "admin.entries", module: "entries", icon: "files", key: "menu.admin.entries", fallbackKey: "preferences", view: "preferences" },
+    { id: "admin.seo", module: "entries_seo", icon: "globe-2", key: "menu.admin.entries_seo", fallbackKey: "preferences", view: "preferences" },
+    { id: "admin.steps", module: "steps", icon: "trending-up", key: "menu.admin.steps", fallbackKey: "stepsLabel", view: "preferences" },
+    { id: "admin.light", module: "light", icon: "sun", key: "menu.admin.light", fallbackKey: "preferences", view: "preferences" },
+    { id: "admin.reports", module: "reports", icon: "bar-chart-3", key: "menu.admin.reports", fallbackKey: "preferences", view: "preferences" },
+  ];
+
   function getAdminMenuOverlay() {
     if (adminMenuOverlay) return adminMenuOverlay;
 
@@ -277,7 +288,7 @@ window.HeaderButtons = (function () {
     panel.className = "hdr-admin-menu-panel";
     overlay.appendChild(panel);
 
-    function addItem(icon, textKey, viewName) {
+    function addItem(icon, textKey, viewName, translationKey) {
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "hdr-admin-menu-item";
@@ -288,7 +299,27 @@ window.HeaderButtons = (function () {
 
       var labelEl = document.createElement("span");
       labelEl.className = "hdr-admin-menu-label";
-      labelEl.textContent = t(textKey);
+      var lang = getLang();
+      var fallbackLabel = t(textKey);
+      try {
+        if (
+          window.SystemTranslations &&
+          typeof window.SystemTranslations.get === "function"
+        ) {
+          var txt = window.SystemTranslations.get(
+            "ui",
+            translationKey || textKey,
+            "text",
+            lang,
+            fallbackLabel
+          );
+          labelEl.textContent = txt || fallbackLabel;
+        } else {
+          labelEl.textContent = fallbackLabel;
+        }
+      } catch (eTxt) {
+        labelEl.textContent = fallbackLabel;
+      }
       btn.appendChild(labelEl);
 
       btn.addEventListener("click", function (ev) {
@@ -310,10 +341,17 @@ window.HeaderButtons = (function () {
     }
 
     // Items del menú lateral
-    addItem("users", "users", "users");
-    addItem("shield", "roles", "roles");
-    addItem("map", "areas", "areas");
-    addItem("settings", "preferences", "preferences");
+    ADMIN_MENU_ITEMS.forEach(function (item) {
+      if (item.module && window.UserPermissions && typeof window.UserPermissions.can === "function") {
+        if (!window.UserPermissions.can(item.module, "view")) {
+          return;
+        }
+      } else if (item.module) {
+        // Sin permisos cargados, los módulos restringidos no se muestran.
+        return;
+      }
+      addItem(item.icon, item.fallbackKey || item.key, item.view, item.key);
+    });
 
     overlay.addEventListener("click", function (ev) {
       if (ev.target === overlay) {

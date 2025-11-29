@@ -1,4 +1,4 @@
-// main.account.js – vista de cuenta de usuario (perfil)
+﻿// main.account.js ΓÇô vista de cuenta de usuario (perfil)
 window.MainAccount = (function () {
   // ======================
   // Helpers de idioma
@@ -17,8 +17,8 @@ window.MainAccount = (function () {
     es: {
       title: "Mi cuenta",
       subtitle: "",
-      subtitleNoUser: "Necesitas iniciar sesión para ver tu cuenta.",
-      goLogin: "Ir a Iniciar sesión",
+      subtitleNoUser: "Necesitas iniciar sesi├│n para ver tu cuenta.",
+      goLogin: "Ir a Iniciar sesi├│n",
 
       // Campos
       username: "Nombre de usuario",
@@ -43,21 +43,21 @@ window.MainAccount = (function () {
       hintLoading: "Cargando tu perfil...",
       hintSaved: "Tu perfil fue actualizado correctamente.",
       hintErrorLoad:
-        "No se pudo cargar tu perfil. Puedes intentar recargar la página.",
+        "No se pudo cargar tu perfil. Puedes intentar recargar la p├ígina.",
       hintErrorSave:
-        "No se pudieron guardar los cambios. Inténtalo de nuevo.",
+        "No se pudieron guardar los cambios. Int├⌐ntalo de nuevo.",
       hintNoUser: "No hay un usuario autenticado en este momento.",
       hintNoSupabase:
-        "Supabase no está configurado. Verifica las variables SUPABASE_URL y SUPABASE_ANON_KEY.",
+        "Supabase no est├í configurado. Verifica las variables SUPABASE_URL y SUPABASE_ANON_KEY.",
       hintRequiredNames: "Nombre y apellido son obligatorios.",
-      hintRequiredEmail: "El correo es obligatorio y debe ser válido.",
-      usernameInvalid: "Nombre de usuario inválido. Usa solo minúsculas, números, guion y guion bajo.",
+      hintRequiredEmail: "El correo es obligatorio y debe ser v├ílido.",
+      usernameInvalid: "Nombre de usuario inv├ílido. Usa solo min├║sculas, n├║meros, guion y guion bajo.",
       usernameAllowed: "Caracteres permitidos: letras minúsculas, números, guion (-) y guion bajo (_).",
       usernameExists: "Nombre de usuario NO disponible para registro en GODiOS.",
       usernameOk: "Nuevo nombre de usuario disponible para registro en GODiOS.",
       emailExists: "Nuevo correo NO disponible para registro en GODiOS.",
       emailOk: "Nuevo correo disponible para registro en GODiOS.",
-      statsCredits: "Créditos",
+      statsCredits: "Cr├⌐ditos",
       statsSteps: "Escalones",
       statsFloors: "Pisos",
       statsRoles: "Roles",
@@ -141,7 +141,7 @@ window.MainAccount = (function () {
   function isUsernameFormatValid(username) {
     if (!username) return false;
     var v = String(username).trim();
-    var re = /^[a-z0-9_-]+$/; // minúsculas, números, guion, guion bajo
+    var re = /^[a-z0-9_-]+$/; // min├║sculas, n├║meros, guion, guion bajo
     return re.test(v);
   }
 
@@ -171,7 +171,7 @@ window.MainAccount = (function () {
         .select("id, p_username")
         .eq("p_username", username);
 
-      // Excluir el propio usuario de la búsqueda para permitir su username actual
+      // Excluir el propio usuario de la b├║squeda para permitir su username actual
       if (userId) {
         query = query.neq("id", userId);
       }
@@ -276,7 +276,7 @@ window.MainAccount = (function () {
   }
 
   // ======================
-  // Vista cuando SÍ hay usuario
+  // Vista cuando S├ì hay usuario
   
   function setupAccountFloatingLabels(root) {
     if (!root) return;
@@ -371,7 +371,7 @@ function renderWithUser(root, user) {
       '      <div class="reg-field account-primary-field" data-field="username">',
       '        <input type="text" id="acc-username" autocomplete="username" />',
       '        <label for="acc-username" id="lbl-username"></label>',
-      '        <p class="field-hint" id="acc-username-hint"></p>',
+      '        <p class="field-hint field-helper-text" id="acc-username-hint"></p>',
       '      </div>',
       '      <div class="reg-field account-primary-field" data-field="email">',
       '        <input type="email" id="acc-email" autocomplete="email" />',
@@ -431,7 +431,7 @@ function renderWithUser(root, user) {
     loadProfileIntoForm(root, user);
     setupAccountFloatingLabels(root);
 
-    // Activar iconos Lucide en las estadísticas de cuenta
+    // Activar iconos Lucide en las estad├¡sticas de cuenta
     try {
       if (window.lucide && typeof window.lucide.createIcons === "function") {
         window.lucide.createIcons();
@@ -472,7 +472,7 @@ function renderWithUser(root, user) {
     if (lblBirth) lblBirth.textContent = t("birthDate");
     if (lblGender) lblGender.textContent = t("gender");
 
-    // Etiquetas de estadísticas de cuenta
+    // Etiquetas de estad├¡sticas de cuenta
     var lblStatsCredits = root.querySelector("#acc-label-credits");
     var lblStatsSteps = root.querySelector("#acc-label-steps");
     var lblStatsFloors = root.querySelector("#acc-label-floors");
@@ -541,7 +541,7 @@ function wireWithUser(root, user) {
     }
 
     function sendHeaderFieldMessage(text, variant) {
-      // Muestra los mensajes de validación en el header, no debajo del campo
+      // Muestra los mensajes de validaci├│n en el header, no debajo del campo
       if (!text) {
         if (
           window.HeaderMessages &&
@@ -558,7 +558,8 @@ function wireWithUser(root, user) {
       ) {
         var options = {};
         if (variant === "error") options.type = "error";
-        if (variant === "ok") options.type = "success";
+        else if (variant === "warning") options.type = "warning";
+        else if (variant === "success" || variant === "ok") options.type = "success";
         window.HeaderMessages.show(text, options);
       } else {
         try {
@@ -574,6 +575,14 @@ function wireWithUser(root, user) {
     function setEmailHint(text, variant) {
       sendHeaderFieldMessage(text, variant);
     }
+
+    var originalUsername = "";
+    function syncOriginalUsernameFromDataset() {
+      if (root && root.dataset && typeof root.dataset.accOriginalUsername === "string") {
+        originalUsername = root.dataset.accOriginalUsername;
+      }
+    }
+
 
     var currentUsername = "";
     var currentEmail = "";
@@ -596,10 +605,11 @@ function wireWithUser(root, user) {
 
     async function validateUsernameLive() {
       if (!usernameInput) return;
+      syncOriginalUsernameFromDataset();
       var value = (usernameInput.value || "").trim().toLowerCase();
 
-      // Si no cambió, no mostramos mensaje y es válido
-      if (value === currentUsername) {
+      // Si no cambio, no mostramos mensaje y es valido
+      if (value === originalUsername || value === currentUsername) {
         usernameValid = true;
         setUsernameHint("", null);
         updateSubmitState();
@@ -613,26 +623,26 @@ function wireWithUser(root, user) {
         return;
       }
 
-      var exists = await checkUsernameExists(value, currentUsername, user && user.id);
+      var compareAgainst = originalUsername || currentUsername;
+      var exists = await checkUsernameExists(value, compareAgainst, user && user.id);
       if (exists === true) {
         usernameValid = false;
         setUsernameHint(t("usernameExists"), "error");
       } else if (exists === false) {
         usernameValid = true;
-        setUsernameHint(t("usernameOk"), "ok");
+        setUsernameHint(t("usernameOk"), "success");
       } else {
         usernameValid = true;
         setUsernameHint("", null);
       }
       updateSubmitState();
     }
-
     async function validateEmailLive() {
       if (!emailInput) return;
       var raw = (emailInput.value || "").trim();
       var lower = raw.toLowerCase();
 
-      // Si no cambió, no mostramos mensaje y es válido
+      // Si no cambi├│, no mostramos mensaje y es v├ílido
       if (lower === currentEmail) {
         emailValid = true;
         setEmailHint("", null);
@@ -653,7 +663,7 @@ function wireWithUser(root, user) {
         setEmailHint(t("emailExists"), "error");
       } else if (exists === false) {
         emailValid = true;
-        setEmailHint(t("emailOk"), "ok");
+        setEmailHint(t("emailOk"), "success");
       } else {
         emailValid = true;
         setEmailHint("", null);
@@ -728,6 +738,14 @@ function wireWithUser(root, user) {
     var countryInput = root.querySelector("#acc-country");
     var birthInput = root.querySelector("#acc-birth");
     var genderInput = root.querySelector("#acc-gender");
+    function storeOriginalUsernameFromInput() {
+      if (root && root.dataset) {
+        root.dataset.accOriginalUsername =
+          usernameInput && usernameInput.value
+            ? usernameInput.value.trim().toLowerCase()
+            : "";
+      }
+    }
 
     if (hint) {
       hint.textContent = t("hintLoading");
@@ -749,6 +767,7 @@ function wireWithUser(root, user) {
       if (emailInput && user.email) {
         emailInput.value = user.email;
       }
+      storeOriginalUsernameFromInput();
       return;
     }
 
@@ -821,6 +840,7 @@ function wireWithUser(root, user) {
         }
 
         if (usernameInput) usernameInput.value = row.p_username || (meta && meta.username) || "";
+        storeOriginalUsernameFromInput();
         if (firstInput) firstInput.value = row.first_name || meta.first_name || "";
         if (lastInput) lastInput.value = row.last_name || meta.last_name || "";
         if (emailInput) emailInput.value = row.email || user.email || "";
@@ -832,7 +852,7 @@ function wireWithUser(root, user) {
         if (birthInput) birthInput.value = row.birth_date || "";
         if (genderInput) genderInput.value = row.gender || "";
 
-        // Estadísticas de cuenta (tomadas del perfil)
+        // Estad├¡sticas de cuenta (tomadas del perfil)
         var elStatCredits = root.querySelector("#acc-stat-credits");
         var elStatSteps = root.querySelector("#acc-stat-steps");
       
@@ -871,7 +891,7 @@ function wireWithUser(root, user) {
         if (elStatNotifs) elStatNotifs.textContent = String(notifs || 0);
         if (elStatHistory) elStatHistory.textContent = String(historyCount || 0);
 
-        // Forzar actualización de labels flotantes después de cargar datos
+        // Forzar actualizaci├│n de labels flotantes despu├⌐s de cargar datos
         try {
           var evtInput;
           if (typeof Event === "function") {
@@ -948,7 +968,8 @@ function wireWithUser(root, user) {
       ) {
         var options = {};
         if (variant === "error") options.type = "error";
-        if (variant === "ok") options.type = "success";
+        else if (variant === "warning") options.type = "warning";
+        else if (variant === "success" || variant === "ok") options.type = "success";
         window.HeaderMessages.show(text, options);
       } else {
         try {
@@ -956,7 +977,6 @@ function wireWithUser(root, user) {
         } catch (e) {}
       }
     }
-
 
     var username = usernameInput ? (usernameInput.value || "").trim().toLowerCase() : "";
     var firstName = firstInput ? firstInput.value.trim() : "";
@@ -974,7 +994,7 @@ function wireWithUser(root, user) {
     }
 
     if (!isUsernameFormatValid(username)) {
-      // Formato de username inválido: mensaje en header
+      // Formato de username inv├ílido: mensaje en header
       showHeaderValidationMessage("usernameInvalid", "error");
       if (hint) {
         hint.textContent = "";
@@ -992,7 +1012,7 @@ function wireWithUser(root, user) {
     }
 
     if (!isEmailFormatValid(email)) {
-      // Email inválido: mensaje en header
+      // Email inv├ílido: mensaje en header
       showHeaderValidationMessage("hintRequiredEmail", "error");
       if (hint) {
         hint.textContent = "";
@@ -1017,23 +1037,29 @@ function wireWithUser(root, user) {
     }
 
 
-    var currentUsername = "";
+    var originalUsername = "";
+    if (root && root.dataset && typeof root.dataset.accOriginalUsername === "string") {
+      originalUsername = (root.dataset.accOriginalUsername || "").trim().toLowerCase();
+    }
+    var currentUsername = originalUsername;
     try {
-      if (user && user.user_metadata && user.user_metadata.username) {
-        currentUsername = user.user_metadata.username;
+      if (!currentUsername && user && user.user_metadata && user.user_metadata.username) {
+        currentUsername = (user.user_metadata.username || "").trim().toLowerCase();
       }
     } catch (e) {}
 
-    var exists = await checkUsernameExists(username, currentUsername, user && user.id);
-    if (exists === true) {
-      // Username en uso por otro usuario: mensaje en header
-      showHeaderValidationMessage("usernameExists", "error");
-      if (hint) {
-        hint.textContent = "";
-        hint.className = "field-hint";
+    if (username !== originalUsername) {
+      var exists = await checkUsernameExists(username, currentUsername, user && user.id);
+      if (exists === true) {
+        // Username en uso por otro usuario: mensaje en header
+        showHeaderValidationMessage("usernameExists", "error");
+        if (hint) {
+          hint.textContent = "";
+          hint.className = "field-hint";
+        }
+        if (btnSubmit) btnSubmit.disabled = false;
+        return;
       }
-      if (btnSubmit) btnSubmit.disabled = false;
-      return;
     }
 
     var payload = {
@@ -1084,7 +1110,7 @@ function wireWithUser(root, user) {
         }
 
         // Actualizar metadatos de Auth (first_name / last_name)
-        // y, si el email cambió en el perfil, actualizar también el email en auth.users
+        // y, si el email cambi├│ en el perfil, actualizar tambi├⌐n el email en auth.users
         try {
           if (client.auth && typeof client.auth.updateUser === "function") {
             var updatePayload = {
@@ -1131,6 +1157,9 @@ function wireWithUser(root, user) {
         }
         if (window.HeaderMessages && typeof window.HeaderMessages.show === "function") {
           window.HeaderMessages.show(t("hintSaved"));
+        }
+        if (window.Main && typeof window.Main.showView === "function") {
+          window.Main.showView("navigator");
         }
         if (btnSubmit) btnSubmit.disabled = false;
       })

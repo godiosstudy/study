@@ -10,6 +10,15 @@ window.MainLogin = (function () {
         if (prefs && prefs.language) return prefs.language;
       }
     } catch (e) {}
+    try {
+      if (
+        window.SystemLanguage &&
+        typeof window.SystemLanguage.getCurrent === "function"
+      ) {
+        var sysLang = window.SystemLanguage.getCurrent();
+        if (sysLang) return sysLang;
+      }
+    } catch (e2) {}
     return "es";
   }
 
@@ -65,7 +74,7 @@ window.MainLogin = (function () {
     errorIdentifierRequired: "Debes ingresar tu usuario o correo.",
     errorRequired: "Debes ingresar tu usuario/correo y contraseña.",
     errorGeneric: "No fue posible iniciar sesión. Verifica tus datos.",
-    errorInvalidCredentials: "Usuario/correo o contraseña incorrectos.",
+    errorInvalidCredentials: "Datos incorrectos.",
     identifierChecking: "Buscando usuario…",
     identifierNotFound: "No encontramos este usuario.",
     identifierError: "No pudimos comprobar el usuario. Inténtalo de nuevo.",
@@ -89,7 +98,7 @@ window.MainLogin = (function () {
     errorIdentifierRequired: "You must enter your email or username.",
     errorRequired: "Please enter your email/username and password.",
     errorGeneric: "Could not sign you in. Please check your details.",
-    errorInvalidCredentials: "Invalid email/username or password.",
+    errorInvalidCredentials: "Incorrect data.",
     identifierChecking: "Looking for your account…",
     identifierNotFound: "We couldn't find this user.",
     identifierError: "We couldn't verify this account. Please try again.",
@@ -113,20 +122,52 @@ window.MainLogin = (function () {
         var u = window.AuthSession.getUser();
         if (!u) return "";
         var meta = u.user_metadata || {};
-        if (meta.first_name) return meta.first_name;
-        if (meta.last_name) return meta.last_name;
-        if (u.email) return u.email.split("@")[0];
+        var fullName =
+          meta.full_name ||
+          meta.fullName ||
+          meta.name ||
+          meta.display_name ||
+          meta.displayName ||
+          "";
+        if (fullName && String(fullName).trim()) return String(fullName).trim();
+
+        var first =
+          meta.first_name ||
+          meta.firstname ||
+          meta.given_name ||
+          meta.givenName ||
+          "";
+        var last =
+          meta.last_name ||
+          meta.lastname ||
+          meta.family_name ||
+          meta.familyName ||
+          "";
+        var firstTrim = String(first).trim();
+        var lastTrim = String(last).trim();
+        if (firstTrim && lastTrim) return firstTrim + " " + lastTrim;
+        if (firstTrim) return firstTrim;
+        if (lastTrim) return lastTrim;
+
+        if (meta.username && String(meta.username).trim()) {
+          return String(meta.username).trim();
+        }
+        if (u.email) return String(u.email).trim();
       }
     } catch (e) {}
     return "";
   }
 
-  function buildWelcomeMessage(name, syncMode) {
-    var mode = (syncMode && syncMode.mode) || syncMode || "none";
-    var msg = t("welcomePrefix") + (name || "");
-    if (mode === "siteFromUser") msg += t("prefsFromUser");
-    else if (mode === "userFromSite") msg += t("prefsFromSite");
-    return msg;
+  function getWelcomeMessage(language, name) {
+    var lang = (language || "").toLowerCase() === "en" ? "en" : "es";
+    var target = (name || "").trim();
+    var prefix = lang === "en" ? "Welcome" : "Bienvenido";
+    return target ? prefix + " " + target : prefix;
+  }
+
+  function buildWelcomeMessage(name) {
+    var lang = getLang();
+    return getWelcomeMessage ? getWelcomeMessage(lang, name) : t("welcomePrefix") + (name || "");
   }
 
   // Sincroniza preferencias entre sitio (PrefsStore) y perfil Supabase
@@ -354,6 +395,26 @@ window.MainLogin = (function () {
 
   // Limpia el MAIN y muestra el mensaje de bienvenida (saltamos directo a navigator)
   function showWelcomeInMain(syncMode) {
+    var name = getCurrentUserName && typeof getCurrentUserName === "function"
+      ? getCurrentUserName()
+      : "";
+    try {
+      var msg = buildWelcomeMessage
+        ? buildWelcomeMessage(name, syncMode)
+        : (t("welcomePrefix") + (name || ""));
+      if (
+        msg &&
+        window.HeaderMessages &&
+        typeof window.HeaderMessages.show === "function"
+      ) {
+        window.HeaderMessages.show(msg, { type: "success", duration: 7000 });
+      }
+    } catch (e) {
+      try {
+        console.warn("[Login] welcome message error", e);
+      } catch (e2) {}
+    }
+
     if (window.Main && typeof window.Main.showView === "function") {
       window.Main.showView("navigator");
     }
@@ -489,7 +550,10 @@ window.MainLogin = (function () {
           window.HeaderMessages &&
           typeof window.HeaderMessages.show === "function"
         ) {
-          window.HeaderMessages.show(text, { duration: 7000 });
+          var opts = { duration: 7000 };
+          if (variant === "error") opts.type = "error";
+          else if (variant === "ok") opts.type = "success";
+          window.HeaderMessages.show(text, opts);
         }
       } catch (e) {}
     }

@@ -8,6 +8,24 @@ window.NotificationsUI = (function () {
     return document.getElementById(BANNER_ID);
   }
 
+  function applyBannerType(el, type) {
+    if (!el || !el.classList) return;
+    el.classList.remove(
+      "header-message--error",
+      "header-message--success",
+      "header-message--warning"
+    );
+
+    var t = String(type || "").toLowerCase();
+    if (t === "error") {
+      el.classList.add("header-message--error");
+    } else if (t === "warning") {
+      el.classList.add("header-message--warning");
+    } else {
+      el.classList.add("header-message--success");
+    }
+  }
+
   function show(message, options) {
     options = options || {};
     var el = getBannerEl();
@@ -17,6 +35,7 @@ window.NotificationsUI = (function () {
     if (!text) return;
 
     el.textContent = text;
+    applyBannerType(el, options.type || options.variant || options.status || null);
 
     try {
       el.classList.add("hdr-notification-banner--visible");

@@ -415,6 +415,13 @@
   min-height: 1.2em;
 }
 
+.field-helper-text {
+  display: block;
+  margin-left: 12px; /* alinea con el padding del input/label */
+  color: #9ca3af;   /* gris claro, reutilizable como texto tenue */
+  font-size: 0.9rem; /* un poco menor que el texto del input (1rem) */
+}
+
 .register-card .field-hint:empty {
   margin-top: 0;
   min-height: 0;
@@ -598,8 +605,8 @@ select.prefs-select-loading option {
   border-radius: 6px;
   cursor: pointer;
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 2px;
 }
 
 /* Alternancia de fondo 3% / 0% */
@@ -616,11 +623,15 @@ select.prefs-select-loading option {
   background: rgba(15, 23, 42, 0.20);
 }
 
-.nav-item-num {
+.nav-item-num,
+.results-verse-num {
   font-weight: 700;
   font-size: 0.75em;
-  min-width: 2ch;
-  text-align: right;
+  line-height: 1;
+  display: inline-block;
+  position: relative;
+  top: -0.35em;
+  margin-right: 0;
 }
 
 .nav-item-text {

@@ -241,7 +241,10 @@ window.MainForget = (function () {
           window.HeaderMessages &&
           typeof window.HeaderMessages.show === "function"
         ) {
-          window.HeaderMessages.show(msg, { duration: 7000 });
+          var opts = { duration: 7000 };
+          if (kind === "error") opts.type = "error";
+          else if (kind === "ok") opts.type = "success";
+          window.HeaderMessages.show(msg, opts);
         }
       } catch (e) {}
     }

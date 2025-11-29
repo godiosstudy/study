@@ -166,7 +166,10 @@ window.MainRegister = (function () {
         window.HeaderMessages &&
         typeof window.HeaderMessages.show === 'function'
       ) {
-        window.HeaderMessages.show(text, { duration: 7000 });
+        var opts = { duration: 7000 };
+        if (variant === 'error') opts.type = 'error';
+        else if (variant === 'ok') opts.type = 'success';
+        window.HeaderMessages.show(text, opts);
       }
     } catch (e) {}
   }
