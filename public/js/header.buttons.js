@@ -1,4 +1,4 @@
-// header.buttons.js – gestiona los botones de usuario (lado derecho del header)
+﻿// header.buttons.js ΓÇô gestiona los botones de usuario (lado derecho del header)
 // y muestra "Bendecido X" / "Blessed X" + stats (credits/steps/floor) con badge.
 window.HeaderButtons = (function () {
   var CONTAINER_ID = "hdr-actions";
@@ -26,7 +26,24 @@ window.HeaderButtons = (function () {
     return "es";
   }
 
-  function t(key) {
+    function t(key) {
+    var keyMap = {
+      login: "menu.login",
+      register: "menu.register",
+      account: "menu.account",
+      signout: "menu.signout",
+      preferences: "menu.preferences",
+      notifications: "menu.notifications",
+      menu: "menu.menu",
+      users: "menu.users",
+      roles: "menu.roles",
+      areas: "menu.areas",
+      languages: "menu.languages",
+      blessedPrefix: "header.blessedPrefix",
+      creditsLabel: "account.stats.credits",
+      stepsLabel: "account.stats.steps",
+      floorLabel: "header.floorLabel"
+    };
     var lang = getLang();
     var ES = {
       login: "Iniciar sesión",
@@ -43,6 +60,7 @@ window.HeaderButtons = (function () {
       creditsLabel: "Créditos",
       stepsLabel: "Escalones",   // <- antes "Pasos"
       floorLabel: "Piso",        // <- antes "Piso / Nivel"
+      languages: "Languages"
     };
     var EN = {
       login: "Sign in",
@@ -54,20 +72,58 @@ window.HeaderButtons = (function () {
       menu: "Menu",
       users: "Users",
       roles: "Roles",
-      areas: "Areas",
+      areas: "Áreas",
       blessedPrefix: "Blessed ",
       creditsLabel: "Credits",
       stepsLabel: "Steps",
       floorLabel: "Floor",
+      languages: "Languages"
     };
     var dict = lang === "en" ? EN : ES;
-    return dict[key] || key;
-  }
+    var fallback = dict[key] || key;
+    var wKey = keyMap[key];
+    if (wKey && window.SystemWords && typeof window.SystemWords.t === "function") {
+      return window.SystemWords.t(wKey, fallback);
+    }
+    return fallback;
+  }// =========================
+  // Estado de sesi├│n
+  // =========================
+function isAdminLikeUser() {
+  var roles = [];
+  try {
+    if (window.AuthSession && typeof window.AuthSession.getRoles === "function") {
+      roles = roles.concat(window.AuthSession.getRoles() || []);
+    }
+    if (window.UserPermissions && Array.isArray(window.UserPermissions.roles)) {
+      roles = roles.concat(window.UserPermissions.roles);
+    }
+    var u = getCurrentUser();
+    if (u && u.user_metadata && Array.isArray(u.user_metadata.roles)) {
+      roles = roles.concat(u.user_metadata.roles);
+    }
+  } catch (e) {}
 
-  // =========================
-  // Estado de sesión
-  // =========================
-  function isLoggedIn() {
+  return roles.some(function (r) {
+    if (r == null) return false;
+    if (typeof r === "number") {
+      return r === 1 || r === 2;
+    }
+    if (typeof r === "string") {
+      var code = r.toLowerCase();
+      return code === "i" || code === "admin" || code === "superadmin";
+    }
+    if (typeof r === "object") {
+      var id = r.role_id != null ? r.role_id : r.id;
+      var codeObj = (r.code || "").toLowerCase();
+      if (id === 1 || id === 2) return true;
+      if (codeObj === "i" || codeObj === "admin" || codeObj === "superadmin") return true;
+    }
+    return false;
+  });
+}
+
+function isLoggedIn() {
     if (
       window.AuthSession &&
       typeof window.AuthSession.isLoggedIn === "function"
@@ -106,7 +162,7 @@ window.HeaderButtons = (function () {
   }
 
   // =========================
-  // Navegación
+  // Navegaci├│n
   // =========================
   function showView(name) {
     if (window.Main && typeof window.Main.showView === "function") {
@@ -140,7 +196,8 @@ window.HeaderButtons = (function () {
     var user = getCurrentUser();
     if (!user || !user.id) return;
 
-    var cols = "p_steps, p_credits, p_notifications";
+    // Nuevas columnas de perfil: steps_balance / credits_balance
+    var cols = "steps_balance, credits_balance, p_notifications";
     var query = client
       .from("profiles")
       .select(cols)
@@ -169,8 +226,8 @@ window.HeaderButtons = (function () {
         }
         var row = res.data || {};
 
-        var steps = row.p_steps || "0";
-        var credits = row.p_credits || "0";
+        var steps = row.steps_balance || "0";
+        var credits = row.credits_balance || "0";
         var notifs = row.p_notifications || 0;
 
         var elCredits = document.getElementById("hdr-credits");
@@ -179,7 +236,7 @@ window.HeaderButtons = (function () {
         var elNotifBtn = document.getElementById("hdr-notifications-btn");
 
         // Helper para ocultar badge cuando el valor es 0.
-        // Para notifications además ocultamos/mostramos la campana completa.
+        // Para notifications adem├ís ocultamos/mostramos la campana completa.
         function updateBadge(el, value, options) {
           if (!el) return;
           var num = Number(value) || 0;
@@ -196,7 +253,7 @@ window.HeaderButtons = (function () {
 
         updateBadge(elCredits, credits);
         updateBadge(elSteps, steps);
-        // Para notifs, si el contador es 0, ocultamos también el botón.
+        // Para notifs, si el contador es 0, ocultamos tambi├⌐n el bot├│n.
         updateBadge(elNotif, notifs, { parentBtn: elNotifBtn });
       })
       .catch(function (err) {
@@ -237,7 +294,7 @@ window.HeaderButtons = (function () {
     btn.className = "chip icon-only hdr-stat-chip hdr-notif-chip";
     btn.id = "hdr-notifications-btn";
     // La campana solo debe mostrarse cuando haya notificaciones pendientes.
-    // Por defecto dejamos el botón oculto hasta conocer el contador real.
+    // Por defecto dejamos el bot├│n oculto hasta conocer el contador real.
     btn.style.display = "none";
 
     var iconEl = document.createElement("i");
@@ -265,17 +322,6 @@ window.HeaderButtons = (function () {
 
 
   var adminMenuOverlay = null;
-
-  var ADMIN_MENU_ITEMS = [
-    { id: "admin.users", module: "users", icon: "users", key: "menu.admin.users", fallbackKey: "users", view: "users" },
-    { id: "admin.roles", module: "roles", icon: "shield", key: "menu.admin.roles", fallbackKey: "roles", view: "roles" },
-    { id: "admin.areas", module: "areas", icon: "map", key: "menu.admin.areas", fallbackKey: "areas", view: "areas" },
-    { id: "admin.entries", module: "entries", icon: "files", key: "menu.admin.entries", fallbackKey: "preferences", view: "preferences" },
-    { id: "admin.seo", module: "entries_seo", icon: "globe-2", key: "menu.admin.entries_seo", fallbackKey: "preferences", view: "preferences" },
-    { id: "admin.steps", module: "steps", icon: "trending-up", key: "menu.admin.steps", fallbackKey: "stepsLabel", view: "preferences" },
-    { id: "admin.light", module: "light", icon: "sun", key: "menu.admin.light", fallbackKey: "preferences", view: "preferences" },
-    { id: "admin.reports", module: "reports", icon: "bar-chart-3", key: "menu.admin.reports", fallbackKey: "preferences", view: "preferences" },
-  ];
 
   function getAdminMenuOverlay() {
     if (adminMenuOverlay) return adminMenuOverlay;
@@ -325,6 +371,19 @@ window.HeaderButtons = (function () {
       btn.addEventListener("click", function (ev) {
         ev.preventDefault();
         closeAdminMenu();
+        if ((viewName === "users" || viewName === "roles" || viewName === "areas") && !isAdminLikeUser()) {
+          try {
+            if (window.HeaderMessages && typeof window.HeaderMessages.show === "function") {
+              window.HeaderMessages.show(t("menu"), { type: "error", duration: 6000 });
+            }
+          } catch (eMsg) {}
+          try {
+            if (window.Main && typeof window.Main.showView === "function") {
+              window.Main.showView("navigator");
+            }
+          } catch (eNav) {}
+          return;
+        }
         try {
           if (typeof showView === "function") {
             showView(viewName);
@@ -340,17 +399,60 @@ window.HeaderButtons = (function () {
       panel.appendChild(btn);
     }
 
-    // Items del menú lateral
-    ADMIN_MENU_ITEMS.forEach(function (item) {
-      if (item.module && window.UserPermissions && typeof window.UserPermissions.can === "function") {
-        if (!window.UserPermissions.can(item.module, "view")) {
-          return;
+    // Menú dinámico según roles
+    var lang = getLang();
+    var fallback = {
+      users: t("users"),
+      roles: t("roles"),
+      areas: t("areas"),
+      preferences: t("preferences"),
+    };
+
+    function tr(key, fb) {
+      try {
+        if (window.SystemTranslations && typeof window.SystemTranslations.get === "function") {
+          return window.SystemTranslations.get("ui", key, "text", lang, fb) || fb;
         }
-      } else if (item.module) {
-        // Sin permisos cargados, los módulos restringidos no se muestran.
-        return;
-      }
-      addItem(item.icon, item.fallbackKey || item.key, item.view, item.key);
+      } catch (e) {}
+      return fb;
+    }
+
+    var menuItems = [];
+    if (isAdminLikeUser()) {
+      menuItems.push({
+        id: "users",
+        view: "users",
+        icon: "users",
+        label: tr("menu.users", fallback.users),
+      });
+      menuItems.push({
+        id: "roles",
+        view: "roles",
+        icon: "shield",
+        label: tr("menu.roles", fallback.roles),
+      });
+      menuItems.push({
+        id: "languages",
+        view: "languages",
+        icon: "languages",
+        label: tr("menu.languages", tr("languages.title", "Languages")),
+      });
+    }
+    menuItems.push({
+      id: "areas",
+      view: "areas",
+      icon: "map",
+      label: tr("menu.areas", fallback.areas),
+    });
+    menuItems.push({
+      id: "preferences",
+      view: "preferences",
+      icon: "settings",
+      label: tr("menu.preferences", fallback.preferences),
+    });
+
+    menuItems.forEach(function (item) {
+      addItem(item.icon, item.label, item.view, item.label);
     });
 
     overlay.addEventListener("click", function (ev) {
@@ -522,8 +624,6 @@ window.HeaderButtons = (function () {
       );
     }
 
-    if (window.lucide && typeof window.lucide.createIcons === "function") {
-      
     // Seguridad extra: nunca mostrar el botón de preferencias si hay usuario logueado
     if (isLoggedIn()) {
       var prefBtn = document.getElementById("hdr-preferences");
@@ -532,7 +632,8 @@ window.HeaderButtons = (function () {
       }
     }
 
-window.lucide.createIcons();
+    if (window.lucide && typeof window.lucide.createIcons === "function") {
+      window.lucide.createIcons();
     }
   }
 
@@ -553,7 +654,7 @@ documentReady(init);
   bus.addEventListener("prefs:applied", function () {
     var container = document.getElementById(CONTAINER_ID);
     if (container) render(container);
-    // Si cambia preferencias (incluye idioma), forzar reconstrucción del menú admin
+    // Si cambia preferencias (incluye idioma), forzar reconstrucci├│n del men├║ admin
     if (adminMenuOverlay && adminMenuOverlay.parentNode) {
       adminMenuOverlay.parentNode.removeChild(adminMenuOverlay);
     }
@@ -563,7 +664,7 @@ documentReady(init);
   bus.addEventListener("i18n:changed", function () {
     var container = document.getElementById(CONTAINER_ID);
     if (container) render(container);
-    // Cambio explícito de idioma: reconstruir menú admin para actualizar textos
+    // Cambio expl├¡cito de idioma: reconstruir men├║ admin para actualizar textos
     if (adminMenuOverlay && adminMenuOverlay.parentNode) {
       adminMenuOverlay.parentNode.removeChild(adminMenuOverlay);
     }
@@ -580,3 +681,4 @@ documentReady(init);
     render: render,
   };
 })();
+

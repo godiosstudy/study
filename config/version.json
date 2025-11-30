@@ -1,5 +1,72 @@
 [
   {
+    "version": "0.5.15",
+    "released_at": "2025-11-29",
+    "title": "Roles, permisos y métricas de usuario (steps / XP / light)",
+    "changes": {
+      "database": [
+        "Tabla roles ajustada para uso real en producción: clave única en code, secuencia para id (roles_id_seq) y flag is_default_for_new_users con default false.",
+        "Creación (o confirmación) de la columna created_by en roles referenciando auth.users(id).",
+        "Sincronización de la secuencia roles_id_seq con el máximo id existente para evitar errores de clave primaria duplicada.",
+        "Definición de roles base: id=1 (code=i, SuperAdmin), id=2 (code=admin), id=3 (code=participant).",
+        "Ajuste de user_roles y trigger sync_profile_roles_count para que no use la columna eliminada p_roles y mantenga correctamente el contador de roles en profiles.",
+        "Refuerzo del esquema de perfiles para métricas: steps_balance, credits_balance, xp_total, xp_level, light_score, light_level_id, vistas, likes, notes, shares e historial (según columnas creadas previamente).",
+        "Uso de system_translations como tabla central de traducciones para roles (entity_type='role', entity_id=role.id, fields name/description en 'en' y 'es').",
+        "Políticas RLS iniciales sobre roles: SELECT para todos los autenticados y permisos de INSERT/UPDATE/DELETE restringidos a usuarios con role_id 1 (i) o 2 (admin) a través de user_roles."
+      ],
+      "auth_and_profiles": [
+        "Corrección del flujo de registro (signUp) que fallaba con 'Database error saving new user' asegurando que el trigger y la estructura de profiles sean compatibles con los nuevos campos.",
+        "Creación de perfiles al registrarse y asignación automática del rol por defecto (participant) mediante los triggers on_auth_user_created y assign_default_role_to_new_user.",
+        "Sincronización del login con profiles: el usuario ya se puede registrar, iniciar sesión y tener un registro válido en profiles enlazado a auth.users."
+      ],
+      "permissions_and_roles": [
+        "Implementación de carga real de roles del usuario vía public.user_roles desde system.backend.supabase.adapter.js (getUserRoles / loadUserRoles).",
+        "Normalización de los roles en sesión: se construye un array plano con ids numéricos y codes (i, admin, participant) para facilitar checks de permisos.",
+        "Función isAdminLikeUser consolidada (reutilizable) que considera id=1/2 y code 'i'/'admin'/'superadmin' para habilitar vistas de administración.",
+        "Configuración de que sólo usuarios con rol i o admin vean y usen los módulos de administración: Usuarios y Roles."
+      ],
+      "frontend_header_and_messages": [
+        "Unificación del área de mensajes: los errores y avisos importantes (login, registro, cuenta, etc.) ahora se muestran en el header de mensajes y no debajo de los formularios.",
+        "Ajuste del copy de mensajes de login: se eliminaron textos redundantes como 'Datos incorrectos' en el pie del formulario de inicio de sesión.",
+        "Sistema de mensajes en header con estilos de colores actualizados para Error / Bien / Advertencia según la regla de colores acordada."
+      ],
+      "frontend_account_and_stats": [
+        "Eliminación completa del concepto de floors en el frontend: variables, labels y lógica asociada han sido removidas o renombradas a steps / XP / light.",
+        "Actualización de main.account.js y vistas de Mi cuenta para mostrar correctamente: Steps, XP y Light, junto con sus labels correspondientes dependiendo del idioma.",
+        "Corrección de referencias rotas en main.account.js (ej. lblStatsFloors) y adaptación a los nuevos nombres de campos de estadísticas.",
+        "Mejoras en la UX de campos especiales (fecha de nacimiento y género): los labels quedan siempre arriba, evitando superposición con el valor del campo."
+      ],
+      "frontend_menu_and_navigation": [
+        "Actualización del menú principal: ahora muestra Usuarios, Roles, Áreas y Preferencias, pero Usuarios y Roles solo son visibles para usuarios con rol i o admin.",
+        "Integración con AuthSession y los nuevos roles cargados desde user_roles para decidir qué items mostrar en el menú.",
+        "Mantenimiento de la navegación existente para Áreas y Preferencias sin romper flujos previos."
+      ],
+      "frontend_users_module": [
+        "Definición conceptual del módulo de administración de usuarios: listado paginado, búsqueda y visión de métricas (Credits, Steps, XP, Light, Roles, Views, Likes, Notes, Shares, Notifications, History).",
+        "Preparación de la estructura para que el módulo de Usuarios cargue perfiles desde Supabase y respete los permisos de i/admin (implementación parcial, en curso)."
+      ],
+      "frontend_roles_module": [
+        "Creación del módulo main.roles.js con vista de listado de roles y formulario de creación/edición.",
+        "Listado de roles con columnas: #, ID, Código, Nombre (según idioma), Rol superior, Activo, Default para nuevos usuarios y Acciones.",
+        "Formulario de rol con soporte para: código (code), nombre y descripción base en inglés, nombre y descripción en español (vía system_translations), rol superior (parent_role_id), estado (activo) y flag 'default para nuevos usuarios'.",
+        "Lógica de guardado robusta en main.roles.js: uso de insert([payload]).select().single() y update(...).select().single(), mapeo controlado de payload y logs claros en consola cuando ocurre un error.",
+        "Reglas especiales para el rol base i (id=1): no se permite desactivarlo, no se permite asignarle rol superior y se evita cambiar su code.",
+        "Sincronización de is_default_for_new_users: al marcar un rol como default se desmarcan los demás; al crear o editar se actualizan también las traducciones en system_translations.",
+        "Control de permisos en el frontend: si el usuario actual no es admin-like, se bloquea el acceso a la vista de roles y se muestra un mensaje informando que no tiene permisos."
+      ],
+      "bugfixes_and_cleanup": [
+        "Corrección de múltiples errores 400 relacionados con roles (tanto por secuencia des-sincronizada como por columnas inexistentes) hasta estabilizar la tabla y el adapter.",
+        "Ajustes en triggers y funciones que dependían de columnas antiguas (como p_roles) para evitar fallos de ejecución en eventos de inserción/actualización.",
+        "Depuración de textos rotos y problemas potenciales de codificación en algunas vistas de cuenta, alineándolos con el nuevo modelo de traducciones por system_translations."
+      ]
+    },
+    "notes": [
+      "Esta versión marca el inicio formal del sistema de administración de roles y permisos basado en user_roles y roles jerárquicos con parent_role_id.",
+      "Se consolidan métricas de usuario en tres ejes principales: Steps, XP y Light, reemplazando por completo el concepto anterior de floors.",
+      "Se preparan las bases para módulos posteriores (Áreas, Grupos, Eventos, SEO, Steps/XP/Light rules) que aprovecharán la jerarquía de roles y el sistema de traducciones global."
+    ]
+  },
+  {
     "version": "0.5.14",
     "date": "2025-11-28",
     "notes": [

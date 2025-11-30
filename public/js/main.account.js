@@ -59,7 +59,6 @@ window.MainAccount = (function () {
       emailOk: "Nuevo correo disponible para registro en GODiOS.",
       statsCredits: "Cr├⌐ditos",
       statsSteps: "Escalones",
-      statsFloors: "Pisos",
       statsRoles: "Roles",
       statsViews: "Vistas",
       statsLikes: "Me gusta",
@@ -125,9 +124,54 @@ window.MainAccount = (function () {
   };
 
   function t(key) {
+    var keyMap = {
+      title: "account.title",
+      subtitle: "account.subtitle",
+      subtitleNoUser: "account.subtitleNoUser",
+      goLogin: "account.goLogin",
+      username: "account.labels.username",
+      usernameHint: "account.helper.username",
+      usernameInvalidFormat: "account.usernameInvalidFormat",
+      usernameRequired: "account.usernameRequired",
+      usernameExists: "account.usernameExists",
+      usernameAvailable: "account.usernameAvailable",
+      firstName: "account.labels.firstName",
+      lastName: "account.labels.lastName",
+      email: "account.labels.email",
+      emailInvalid: "account.emailInvalid",
+      phone: "account.labels.phone",
+      address: "account.labels.address",
+      state: "account.labels.state",
+      zip: "account.labels.zip",
+      country: "account.labels.country",
+      birthDate: "account.labels.birthDate",
+      gender: "account.labels.gender",
+      genderUnknown: "account.gender.unknown",
+      genderFemale: "account.gender.female",
+      genderMale: "account.gender.male",
+      genderOther: "account.gender.other",
+      prefs: "preferences.title",
+      submit: "common.save",
+      userNotLogged: "account.userNotLogged",
+      subtitleNoProfile: "account.subtitleNoProfile",
+      statsCredits: "account.stats.credits",
+      statsSteps: "account.stats.steps",
+      statsRoles: "account.stats.roles",
+      statsViews: "account.stats.views",
+      statsLikes: "account.stats.likes",
+      statsNotes: "account.stats.notes",
+      statsShares: "account.stats.shares",
+      statsNotifs: "account.stats.notifications",
+      statsHistory: "account.stats.history",
+    };
     var lang = getLang();
     var dict = TEXTS[lang] || TEXTS.es;
-    return dict[key] || key;
+    var fallback = dict[key] || key;
+    var wKey = keyMap[key];
+    if (wKey && window.SystemWords && typeof window.SystemWords.t === "function") {
+      return window.SystemWords.t(wKey, fallback);
+    }
+    return fallback;
   }
 
   // Email simple
@@ -322,11 +366,6 @@ function renderWithUser(root, user) {
       '      <div class="account-stat-icon"><i data-lucide="trending-up"></i></div>',
       '      <div class="account-stat-label" id="acc-label-steps"></div>',
       '    </div>',
-      '    <div class="account-stat-chip account-stat-chip--floors">',
-      '      <div class="account-stat-count" id="acc-stat-floors">0</div>',
-      '      <div class="account-stat-icon"><i data-lucide="layers"></i></div>',
-      '      <div class="account-stat-label" id="acc-label-floors"></div>',
-      '    </div>',
       '    <div class="account-stat-chip account-stat-chip--roles">',
       '      <div class="account-stat-count" id="acc-stat-roles">0</div>',
       '      <div class="account-stat-icon"><i data-lucide="users"></i></div>',
@@ -406,11 +445,11 @@ function renderWithUser(root, user) {
       '        <input type="text" id="acc-country" autocomplete="country" />',
       '        <label for="acc-country" id="lbl-country"></label>',
       '      </div>',
-      '      <div class="reg-field" data-field="birth">',
+      '      <div class="reg-field form-group--static-label" data-field="birth">',
       '        <input type="date" id="acc-birth" />',
       '        <label for="acc-birth" id="lbl-birth-date"></label>',
       '      </div>',
-      '      <div class="reg-field" data-field="gender">',
+      '      <div class="reg-field form-group--static-label" data-field="gender">',
       '        <select id="acc-gender">',
       '          <option value="">' + "</option>",
       '        </select>',
@@ -475,7 +514,6 @@ function renderWithUser(root, user) {
     // Etiquetas de estad├¡sticas de cuenta
     var lblStatsCredits = root.querySelector("#acc-label-credits");
     var lblStatsSteps = root.querySelector("#acc-label-steps");
-    var lblStatsFloors = root.querySelector("#acc-label-floors");
     var lblStatsRoles = root.querySelector("#acc-label-roles");
     var lblStatsViews = root.querySelector("#acc-label-views");
     var lblStatsLikes = root.querySelector("#acc-label-likes");
@@ -486,7 +524,6 @@ function renderWithUser(root, user) {
 
     if (lblStatsCredits) lblStatsCredits.textContent = t("statsCredits");
     if (lblStatsSteps) lblStatsSteps.textContent = t("statsSteps");
-    if (lblStatsFloors) lblStatsFloors.textContent = t("statsFloors");
     if (lblStatsRoles) lblStatsRoles.textContent = t("statsRoles");
     if (lblStatsViews) lblStatsViews.textContent = t("statsViews");
     if (lblStatsLikes) lblStatsLikes.textContent = t("statsLikes");
@@ -785,9 +822,9 @@ function wireWithUser(root, user) {
       "gender",
       "p_username",
       "p_roles",
-      "p_credits",
-      "p_steps",
-      "p_floor",
+      "credits_balance",
+      "steps_balance",
+      // "p_floor" obsoleto -> usar xp_total/xp_level_id en el futuro si aplica
       "p_views",
       "p_likes",
       "p_notes",
@@ -795,6 +832,10 @@ function wireWithUser(root, user) {
       "p_notifications",
       "p_history",
       "last_view",
+      "xp_total",
+      "xp_level_id",
+      "light_score",
+      "light_level_id",
     ].join(",");
 
     var query = client.from("profiles").select(cols).eq("id", user.id).limit(1);
@@ -853,43 +894,87 @@ function wireWithUser(root, user) {
         if (genderInput) genderInput.value = row.gender || "";
 
         // Estad├¡sticas de cuenta (tomadas del perfil)
-        var elStatCredits = root.querySelector("#acc-stat-credits");
-        var elStatSteps = root.querySelector("#acc-stat-steps");
-      
-        var elStatFloors = root.querySelector("#acc-stat-floors");
-        var elStatRoles = root.querySelector("#acc-stat-roles");
-        var elStatViews = root.querySelector("#acc-stat-views");
-        var elStatLikes = root.querySelector("#acc-stat-likes");
-        var elStatNotes = root.querySelector("#acc-stat-notes");
-        var elStatShares = root.querySelector("#acc-stat-shares");
-        var elStatNotifs = root.querySelector("#acc-stat-notifs");
-        var elStatHistory = root.querySelector("#acc-stat-history");
-
-        var credits = row.p_credits || 0;
-        var steps = row.p_steps || 0;
-        var floors = row.p_floor || 0;
+        var credits = row.credits_balance || row.p_credits || 0;
+        var steps = row.steps_balance || row.p_steps || 0;
+        var xp = row.xp_total || 0;
+        var light = row.light_score || 0;
+        var rolesCount = row.p_roles || 0;
         var views = row.p_views || 0;
         var likes = row.p_likes || 0;
         var notes = row.p_notes || 0;
         var shares = row.p_shares || 0;
         var notifs = row.p_notifications || 0;
-        var rolesCount = row.p_roles || 0;
         var historyCount = row.p_history || 0;
 
-        if (elStatCredits) elStatCredits.textContent = String(credits || 0);
-        if (elStatSteps) elStatSteps.textContent = String(steps || 0);
-        if (elStatFloors) elStatFloors.textContent = String(floors || 0);
-        if (elStatRoles) elStatRoles.textContent = String(rolesCount || 0);
-        if (elStatViews) elStatViews.textContent = String(views || 0);
-        if (elStatLikes) elStatLikes.textContent = String(likes || 0);
-        if (elStatNotes) elStatNotes.textContent = String(notes || 0);
-        if (elStatShares) elStatShares.textContent = String(shares || 0);
-        if (elStatNotifs) elStatNotifs.textContent = String(notifs || 0);
-        if (elStatHistory) elStatHistory.textContent = String(historyCount || 0);ent = String(likes || 0);
-        if (elStatNotes) elStatNotes.textContent = String(notes || 0);
-        if (elStatShares) elStatShares.textContent = String(shares || 0);
-        if (elStatNotifs) elStatNotifs.textContent = String(notifs || 0);
-        if (elStatHistory) elStatHistory.textContent = String(historyCount || 0);
+        // Etiquetas traducidas
+        var lang = "en";
+        try {
+          lang =
+            (window.SystemLanguage && typeof window.SystemLanguage.getCurrent === "function"
+              ? window.SystemLanguage.getCurrent()
+              : "en") || "en";
+        } catch (eLang) {}
+
+        function tr(key, fallback) {
+          try {
+            if (window.SystemTranslations && typeof window.SystemTranslations.get === "function") {
+              return (
+                window.SystemTranslations.get("ui", key, "text", lang, fallback) ||
+                fallback
+              );
+            }
+          } catch (e) {}
+          return fallback;
+        }
+
+        var stats = [
+          { key: "credits", value: credits, label: tr("account.stats.credits", "Credits"), icon: "coins" },
+          { key: "steps", value: steps, label: tr("account.stats.steps", "Steps"), icon: "trending-up" },
+          { key: "xp", value: xp, label: tr("account.stats.xp", "XP"), icon: "star" },
+          { key: "light", value: light, label: tr("account.stats.light", "Light"), icon: "sun" },
+          { key: "roles", value: rolesCount, label: tr("account.stats.roles", "Roles"), icon: "users" },
+          { key: "views", value: views, label: tr("account.stats.views", "Views"), icon: "eye" },
+          { key: "likes", value: likes, label: tr("account.stats.likes", "Likes"), icon: "heart" },
+          { key: "notes", value: notes, label: tr("account.stats.notes", "Notes"), icon: "file-text" },
+          { key: "shares", value: shares, label: tr("account.stats.shares", "Shares"), icon: "share-2" },
+          { key: "notifications", value: notifs, label: tr("account.stats.notifications", "Notifications"), icon: "bell" },
+          { key: "history", value: historyCount, label: tr("account.stats.history", "History"), icon: "history" },
+        ];
+
+        // Render dinámico de stats
+        var statsWrap = root.querySelector(".account-stats-chips");
+        if (statsWrap) {
+          statsWrap.innerHTML = "";
+          stats.forEach(function (item) {
+            var chip = document.createElement("div");
+            chip.className = "account-stat-chip account-stat-chip--" + item.key;
+
+            var count = document.createElement("div");
+            count.className = "account-stat-count";
+            count.textContent = String(item.value || 0);
+            chip.appendChild(count);
+
+            var icon = document.createElement("div");
+            icon.className = "account-stat-icon";
+            var iEl = document.createElement("i");
+            iEl.setAttribute("data-lucide", item.icon);
+            icon.appendChild(iEl);
+            chip.appendChild(icon);
+
+            var label = document.createElement("div");
+            label.className = "account-stat-label";
+            label.textContent = item.label;
+            chip.appendChild(label);
+
+            statsWrap.appendChild(chip);
+          });
+
+          try {
+            if (window.lucide && typeof window.lucide.createIcons === "function") {
+              window.lucide.createIcons();
+            }
+          } catch (eLucide) {}
+        }
 
         // Forzar actualizaci├│n de labels flotantes despu├⌐s de cargar datos
         try {

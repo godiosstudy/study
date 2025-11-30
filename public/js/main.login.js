@@ -209,7 +209,7 @@ window.MainLogin = (function () {
         var res = await client
           .from("profiles")
           .select(
-            "id, email, first_name, last_name, p_color, p_font_type, p_font_size, p_light, p_language, p_level_1, p_level_2"
+            "id, email, first_name, last_name, p_color, p_font_type, p_font_size, p_light, p_language"
           )
           .eq("id", user.id);
 
@@ -227,8 +227,6 @@ window.MainLogin = (function () {
             profileRow.p_font_type ||
             profileRow.p_font_size ||
             profileRow.p_language ||
-            profileRow.p_level_1 ||
-            profileRow.p_level_2 ||
             typeof profileRow.p_light === "boolean")
         );
 
@@ -258,8 +256,7 @@ window.MainLogin = (function () {
           }
         }
 
-        if (profileRow.p_level_1) merged.collection = profileRow.p_level_1;
-        if (profileRow.p_level_2) merged.corpus = profileRow.p_level_2;
+        // Preferencias de colección/corpus ya no se leen de perfiles
 
         sitePrefs = merged;
 
@@ -290,8 +287,7 @@ window.MainLogin = (function () {
           p_font_type: pFontType,
           p_font_size: pFontSize,
           p_light: sitePrefs.light === "on",
-          p_level_1: sitePrefs.collection || null,
-          p_level_2: sitePrefs.corpus || null,
+          // p_level_1 / p_level_2 obsoletos
         };
 
         try {
@@ -612,12 +608,20 @@ window.MainLogin = (function () {
         state.idStatus = "error";
         state.emailForAuth = null;
         setFieldError(idEl && idEl.closest(".reg-field"), true);
-        showHint(idHint, t("identifierError"), "error");
+        // Solo header: no mostrar error en el hint del campo
+        showHint(idHint, "", null);
+        if (window.HeaderMessages && typeof window.HeaderMessages.show === "function") {
+          window.HeaderMessages.show(t("identifierError"), { type: "error", duration: 7000 });
+        }
       } else if (!lookup.exists) {
         state.idStatus = "notfound";
         state.emailForAuth = null;
         setFieldError(idEl && idEl.closest(".reg-field"), true);
-        showHint(idHint, t("identifierNotFound"), "error");
+        // Solo header: no mostrar error en el hint del campo
+        showHint(idHint, "", null);
+        if (window.HeaderMessages && typeof window.HeaderMessages.show === "function") {
+          window.HeaderMessages.show(t("identifierNotFound"), { type: "error", duration: 7000 });
+        }
       } else {
         state.idStatus = "ok";
         state.emailForAuth =
@@ -704,12 +708,18 @@ window.MainLogin = (function () {
           await validateIdentifierIfNeeded();
           if (state.idStatus !== "ok" || !state.emailForAuth) {
             // si sigue sin ser válido, no continuamos
-            if (state.idStatus === "notfound") {
-              showHint(globalHint, t("identifierNotFound"), "error");
-            } else if (state.idStatus === "error") {
-              showHint(globalHint, t("identifierError"), "error");
-            } else {
-              showHint(globalHint, t("errorIdentifierRequired"), "error");
+            var errMsg =
+              state.idStatus === "notfound"
+                ? t("identifierNotFound")
+                : state.idStatus === "error"
+                ? t("identifierError")
+                : t("errorIdentifierRequired");
+            showHint(globalHint, "", null);
+            if (
+              window.HeaderMessages &&
+              typeof window.HeaderMessages.show === "function"
+            ) {
+              window.HeaderMessages.show(errMsg, { type: "error", duration: 7000 });
             }
             return;
           }
@@ -735,6 +745,14 @@ window.MainLogin = (function () {
             email: email,
             password: password,
           });
+
+          try {
+            if (window.UserPermissions && typeof window.UserPermissions.load === "function") {
+              await window.UserPermissions.load();
+            }
+          } catch (ePerm) {
+            console.warn("[Login] error cargando permisos tras login", ePerm);
+          }
 
           var syncResult = await syncPreferencesOnLogin();
           var syncMode = (syncResult && syncResult.mode) || "none";
@@ -788,7 +806,16 @@ window.MainLogin = (function () {
           } else {
             msg = t("errorGeneric");
           }
-          showHint(globalHint, msg, "error");
+          // Solo mostrar en el header (global); no escribir el error en el formulario
+          showHint(globalHint, "", null);
+          try {
+            if (
+              window.HeaderMessages &&
+              typeof window.HeaderMessages.show === "function"
+            ) {
+              window.HeaderMessages.show(msg, { type: "error", duration: 7000 });
+            }
+          } catch (eMsg) {}
         } finally {
           setBusy(false);
           if (

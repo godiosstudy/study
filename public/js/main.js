@@ -3,7 +3,7 @@ window.Main = (function () {
   var currentView = null;
   var currentOptions = null;
 
-  var AUTH_VIEWS = ['login', 'register', 'forget', 'account'];
+  var AUTH_VIEWS = ['login', 'register', 'forget', 'account', 'preferences'];
 
   function getMainEl() {
     return document.getElementById("app-main");
@@ -190,6 +190,14 @@ window.Main = (function () {
       return;
     }
 
+    if (name === "languages") {
+      if (window.SystemLanguages && typeof window.SystemLanguages.show === "function") {
+        window.SystemLanguages.show();
+      }
+      setTimeout(adjustLayout, 0);
+      return;
+    }
+
     if (name === "areas") {
       if (window.MainAreas && typeof window.MainAreas.render === "function") {
         window.MainAreas.render(el);
@@ -199,6 +207,12 @@ window.Main = (function () {
     }
 
 console.warn("[Main] vista desconocida:", name);
+  }
+
+  function refreshCurrentView() {
+    if (currentView) {
+      showView(currentView, currentOptions);
+    }
   }
 
   function getCurrentView() {
@@ -270,5 +284,6 @@ console.warn("[Main] vista desconocida:", name);
     showView: showView,
     getCurrentView: getCurrentView,
     getCurrentOptions: getCurrentOptions,
+    refreshCurrentView: refreshCurrentView,
   };
 })();

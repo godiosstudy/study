@@ -22,6 +22,28 @@ window.Toolbar = (function () {
     return prefs.language || "es";
   }
 
+  function getCorpusLanguage(collection, corpus, fallback) {
+    var lang = fallback || getLang();
+    try {
+      if (
+        window.EntriesMemory &&
+        typeof window.EntriesMemory.getRows === "function"
+      ) {
+        var rows = window.EntriesMemory.getRows() || [];
+        for (var i = 0; i < rows.length; i++) {
+          var r = rows[i];
+          if (!r) continue;
+          if (r.level_1 === collection && r.level_2 === corpus) {
+            if (r.language_code) return r.language_code;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("[Toolbar] getCorpusLanguage error", e);
+    }
+    return lang;
+  }
+
   function getSupabaseClient() {
     try {
       if (
@@ -368,7 +390,7 @@ async function initBreadcrumb() {
     var prevL5 = window.ToolbarState.level_5 || "";
 
     var baseFilters = {
-      language_code: prefs.language || "es",
+      language_code: getCorpusLanguage(collection, corpus, prefs.language || "es"),
       level_1: collection,
       level_2: corpus,
     };

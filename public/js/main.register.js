@@ -152,10 +152,15 @@ window.MainRegister = (function () {
 
   function showGlobalHint(el, text, variant) {
     if (!el) return;
-    el.textContent = text || '';
-    el.classList.remove('error', 'ok');
-    if (variant === 'error') el.classList.add('error');
-    if (variant === 'ok') el.classList.add('ok');
+    // Para errores, solo usar header; no mostrar texto en el formulario
+    if (variant === 'error') {
+      el.textContent = '';
+      el.classList.remove('error', 'ok');
+    } else {
+      el.textContent = text || '';
+      el.classList.remove('error', 'ok');
+      if (variant === 'ok') el.classList.add('ok');
+    }
 
     // También mostramos los mensajes globales en el header
     try {
@@ -733,7 +738,25 @@ window.MainRegister = (function () {
         try {
           await doFinalSignUp(state.email, state.password, state.name);
 
-          showGlobalHint(globalHint, t('successRegistered'), 'ok');
+          // Mostrar éxito en el header (traducción desde system_translations si existe)
+          try {
+            var lang = (window.SystemLanguage && typeof window.SystemLanguage.getCurrent === 'function'
+              ? window.SystemLanguage.getCurrent()
+              : 'en') || 'en';
+            var fallbackSuccess = lang === 'es' ? 'Registro exitoso.' : 'Registration successful.';
+            var msgSuccess = (window.SystemTranslations && typeof window.SystemTranslations.get === 'function')
+              ? window.SystemTranslations.get('ui', 'register.success', 'text', lang, fallbackSuccess)
+              : fallbackSuccess;
+            if (window.HeaderMessages && typeof window.HeaderMessages.show === 'function') {
+              window.HeaderMessages.show(msgSuccess, { type: 'success', duration: 7000 });
+            }
+          } catch (eMsg) {}
+
+          // Clave de traducción esperada:
+          // entity_type: 'ui', entity_id: 'register.success', field: 'text'
+          // lang: 'en' -> "Registration successful."
+          // lang: 'es' -> "Registro exitoso."
+
           // opcional: redirigir a login
           try {
             if (window.Main && typeof window.Main.showView === 'function') {

@@ -39,6 +39,25 @@
   // Meta caches: colecciones por idioma y corpus por idioma+colección
   var metaCollectionsByLang = {};          // { 'es': ['Génesis', 'Éxodo', ...] }
   var metaCorpusByLangCollection = {};     // { 'es::Génesis': ['RV1960', ...] }
+  async function resolveCorpusLanguage(collection, corpus, fallbackLang) {
+    var client = getSupabaseClient();
+    if (!client || !collection || !corpus) return fallbackLang || "es";
+    try {
+      var res = await client
+        .from("entries_meta")
+        .select("language_code")
+        .eq("level_1", collection)
+        .eq("level_2", corpus)
+        .limit(1);
+      if (res && !res.error && res.data && res.data.length) {
+        var lc = res.data[0].language_code;
+        if (lc) return lc;
+      }
+    } catch (e) {
+      console.warn("[EntriesMemory] resolveCorpusLanguage error", e);
+    }
+    return fallbackLang || "es";
+  }
 
 
   function buildSearchFields(row) {
@@ -116,7 +135,12 @@
       return { key: null, rows: [], fuse: null };
     }
 
-    var key = makeKey(prefs);
+    var derivedLang = await resolveCorpusLanguage(
+      prefs && prefs.collection,
+      prefs && prefs.corpus,
+      (prefs && prefs.language) || "es"
+    );
+    var key = makeKey({ language: derivedLang, collection: prefs.collection, corpus: prefs.corpus });
 
     if (currentKey === key && rows.length && fuse) {
       if (typeof onProgress === "function") {
@@ -164,7 +188,7 @@
       var countRes = await client
         .from("entries")
         .select("id", { count: "exact", head: true })
-        .eq("language_code", prefs.language || "es")
+        .eq("language_code", derivedLang || prefs.language || "es")
         .eq("level_1", prefs.collection)
         .eq("level_2", prefs.corpus);
 
@@ -189,7 +213,7 @@
         .select(
           "id, language_code, entry_order, level_1, level_2, level_3, level_4, level_5, level_6, level_7"
         )
-        .eq("language_code", prefs.language || "es")
+        .eq("language_code", derivedLang || prefs.language || "es")
         .eq("level_1", prefs.collection)
         .eq("level_2", prefs.corpus)
         .order("entry_order", { ascending: true })
@@ -367,6 +391,14 @@
 
   window.EntriesMemory = {
     loadForPrefs: loadForPrefs,
+    resetCache: function () {
+      currentKey = null;
+      rows = [];
+      fuse = null;
+      loading = false;
+      waiters = [];
+      loadForPrefs._stepPct = 0;
+    },
     getRows: getRows,
     search: search,
     preloadMetaForLang: preloadMetaForLang,

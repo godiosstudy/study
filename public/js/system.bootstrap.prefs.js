@@ -183,8 +183,6 @@
       profileRow.p_font_type ||
       profileRow.p_font_size ||
       profileRow.p_language ||
-      profileRow.p_level_1 ||
-      profileRow.p_level_2 ||
       typeof profileRow.p_light === "boolean" ||
       profileRow.last_view
     );
@@ -214,9 +212,7 @@
       }
     }
 
-    // Collection / corpus preferidos
-    if (profileRow.p_level_1) merged.collection = profileRow.p_level_1;
-    if (profileRow.p_level_2) merged.corpus = profileRow.p_level_2;
+    // Collection / corpus preferidos (obsoletos en perfiles): se mantienen las prefs locales
 
     // Última vista de la sesión anterior (si existe)
     if (profileRow.last_view) {
@@ -287,7 +283,7 @@
       var res = await client
         .from("profiles")
         .select(
-          "id, email, first_name, last_name, p_color, p_font_type, p_font_size, p_light, p_language, p_level_1, p_level_2, last_view"
+          "id, email, first_name, last_name, p_color, p_font_type, p_font_size, p_light, p_language, last_view"
         )
         .eq("id", user.id);
 
@@ -374,40 +370,22 @@
       console.warn("[BootstrapPrefs] entries first row error", e);
     }
 
-    // Fallback suave: si por algún motivo no obtuvimos nada,
-    // mantenemos el comportamiento anterior (primer level_1 / level_2 válidos).
+    // Fallback: tomar el primer registro global sin filtrar idioma
     if (!collection || !corpus) {
       try {
-        var resL1 = await client
+        var resAny = await client
           .from("entries_meta")
-          .select("level_1")
-          .eq("language_code", lang)
+          .select("level_1, level_2")
           .order("level_1", { ascending: true })
+          .order("level_2", { ascending: true })
           .limit(1);
 
-        if (!resL1.error && resL1.data && resL1.data.length) {
-          collection = collection || resL1.data[0].level_1 || null;
+        if (!resAny.error && resAny.data && resAny.data.length) {
+          collection = collection || resAny.data[0].level_1 || null;
+          corpus = corpus || resAny.data[0].level_2 || null;
         }
       } catch (e) {
-        console.warn("[BootstrapPrefs] entries level_1 error", e);
-      }
-
-      if (collection) {
-        try {
-          var resL2 = await client
-            .from("entries_meta")
-            .select("level_2")
-            .eq("language_code", lang)
-            .eq("level_1", collection)
-            .order("level_2", { ascending: true })
-            .limit(1);
-
-          if (!resL2.error && resL2.data && resL2.data.length) {
-            corpus = corpus || resL2.data[0].level_2 || null;
-          }
-        } catch (e) {
-          console.warn("[BootstrapPrefs] entries level_2 error", e);
-        }
+        console.warn("[BootstrapPrefs] entries any error", e);
       }
     }
 
@@ -448,7 +426,18 @@
     }
   }
 
+  async function loadSystemWordsForLang(lang) {
+    var l = lang || "en";
+    try {
+      if (window.SystemWords && typeof window.SystemWords.init === "function") {
+        await window.SystemWords.init(l);
+      }
+    } catch (e) {
+      console.warn("[BootstrapPrefs] SystemWords load error", e);
+    }
+  }
 
+  
   
   async function loadSystemPermissionsIfNeeded() {
     try {
@@ -493,13 +482,16 @@ function showInitialView() {
 
     try {
       var langList = ["en", "es"];
+      var langForWords = "en";
       try {
         var tmpPrefs = store && typeof store.load === "function" ? store.load() : null;
         if (tmpPrefs && tmpPrefs.language && langList.indexOf(tmpPrefs.language) === -1) {
           langList.push(tmpPrefs.language);
         }
+        if (tmpPrefs && tmpPrefs.language) langForWords = tmpPrefs.language;
       } catch (eLang) {}
       await loadSystemTranslationsForLangs(langList);
+      await loadSystemWordsForLang(langForWords);
       await loadSystemPermissionsIfNeeded();
 
       var prefs = null;
@@ -507,6 +499,7 @@ function showInitialView() {
       // 1) Usuario logueado -> perfil
       prefs = await step1_UserProfile(store);
       if (prefs) {
+        await loadSystemWordsForLang((prefs && prefs.language) || langForWords);
         await loadBibleCache(prefs);
         await afterBibleLoaded(prefs);
         showInitialView();
@@ -532,6 +525,7 @@ function showInitialView() {
         } catch (e) {
           console.warn("[BootstrapPrefs] error aplicando prefs locales", e);
         }
+        await loadSystemWordsForLang((prefs && prefs.language) || langForWords);
         await loadBibleCache(prefs);
         await afterBibleLoaded(prefs);
         showInitialView();
@@ -540,6 +534,7 @@ function showInitialView() {
 
       // 3) No hay usuario ni prefs locales → mirar entries
       prefs = await step3_DefaultFromEntries(store);
+      await loadSystemWordsForLang((prefs && prefs.language) || langForWords);
       await loadBibleCache(prefs);
       await afterBibleLoaded(prefs);
       showInitialView();

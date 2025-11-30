@@ -14,6 +14,26 @@ window.MainNavigator = (function () {
     return prefs.language || "es";
   }
 
+  function getCorpusLanguageFromRows(collection, corpus) {
+    try {
+      if (
+        window.EntriesMemory &&
+        typeof window.EntriesMemory.getRows === "function"
+      ) {
+        var rows = window.EntriesMemory.getRows() || [];
+        for (var i = 0; i < rows.length; i++) {
+          var r = rows[i];
+          if (r && r.level_1 === collection && r.level_2 === corpus) {
+            if (r.language_code) return r.language_code;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("[Navigator] corpus lang resolve error", e);
+    }
+    return null;
+  }
+
   function getSupabaseClient() {
     try {
       if (
@@ -350,6 +370,44 @@ var prefs = getPrefs();
 
     var collection = prefs.collection || null;
     var corpus = prefs.corpus || null;
+    var corpusLang = getCorpusLanguageFromRows(collection, corpus) || prefs.language || "es";
+
+    // Si falta contexto, intentar derivarlo del corpus cargado en memoria
+    if (collection && corpus && (!level_3 || !level_4 || !level_5)) {
+      try {
+        var rowsAll =
+          window.EntriesMemory && typeof window.EntriesMemory.getRows === "function"
+            ? window.EntriesMemory.getRows() || []
+            : [];
+        var candidate = null;
+        for (var i = 0; i < rowsAll.length; i++) {
+          var r = rowsAll[i];
+          if (!r) continue;
+          if (r.level_1 !== collection || r.level_2 !== corpus) continue;
+          if (r.level_3 && r.level_4 && r.level_5) {
+            candidate = r;
+            break;
+          }
+        }
+        if (!candidate && rowsAll.length) {
+          candidate = rowsAll[0];
+        }
+        if (candidate) {
+          level_3 = candidate.level_3 || level_3;
+          level_4 = candidate.level_4 || level_4;
+          level_5 = candidate.level_5 || level_5;
+          window.ToolbarState = window.ToolbarState || {};
+          window.ToolbarState.level_3 = level_3;
+          window.ToolbarState.level_4 = level_4;
+          window.ToolbarState.level_5 = level_5;
+          if (window.Toolbar && typeof window.Toolbar.refreshBreadcrumb === "function") {
+            window.Toolbar.refreshBreadcrumb();
+          }
+        }
+      } catch (eCtx) {
+        console.warn("[Navigator] fallback context error", eCtx);
+      }
+    }
 
     // Encabezado principal dentro del main (sin solapa invertida)
     var header = document.createElement("div");
@@ -392,7 +450,7 @@ var prefs = getPrefs();
     }
 
     var ctxBase = {
-      language_code: prefs.language || "es",
+      language_code: corpusLang,
       level_1: collection,
       level_2: corpus,
       level_3: level_3,

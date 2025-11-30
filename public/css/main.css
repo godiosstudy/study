@@ -1198,6 +1198,33 @@ select.prefs-select-loading option {
   border-color: var(--accent, var(--header-bg));
 }
 
+.prefs-hidden {
+  display: none !important;
+}
+
+.prefs-font-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.prefs-font-row label {
+  flex: 1 1 0;
+}
+
+.collection-radio-title {
+  display: block;
+  font-weight: 600;
+  margin-top: 12px;
+  margin-bottom: 6px;
+}
+.collection-radio-list {
+  margin-top: 4px;
+}
+.collection-radio-item {
+  display: block;
+  margin-bottom: 6px;
+}
+
 
 /* Acciones de formularios de usuario (login, register, account): centradas y con color del sistema */
 .form-actions {
@@ -1445,6 +1472,19 @@ select.prefs-select-loading option {
 .reg-field select:focus + label {
   top: 6px;
   font-size: 0.75rem;
+}
+
+.form-group--static-label label {
+  position: static;
+  transform: none;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.form-group--static-label input[type="date"],
+.form-group--static-label select {
+  padding: 10px 12px;
 }
 
 .reg-counter {
